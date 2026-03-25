@@ -1,0 +1,8 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Thu vien Gson ho tro parse Object sang JSON va nguoc lai
+    api 'com.google.code.gson:gson:2.10.1'
+}

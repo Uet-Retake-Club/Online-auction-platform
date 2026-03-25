@@ -1,0 +1,21 @@
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+application {
+    mainClass = 'com.auction.client.ClientApplication'
+}
+
+javafx {
+    version = '17.0.10'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+dependencies {
+    // Nhan model tu shared module
+    implementation project(':shared')
+    
+    // Firebase Admin SDK cho viec tich hop xac thuc
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+}

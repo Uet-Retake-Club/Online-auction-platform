@@ -1,0 +1,19 @@
+plugins {
+    id 'application'
+}
+
+application {
+    mainClass = 'com.auction.server.ServerApplication'
+}
+
+dependencies {
+    // Nhan model tu shared module
+    implementation project(':shared')
+    
+    // Thu vien SQLite JDBC de ket noi CSDL
+    implementation 'org.xerial:sqlite-jdbc:3.45.1.0'
+    
+    // Thu vien SLF4J ho tro log console (khuyen nghi cho backend)
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+    implementation 'org.slf4j:slf4j-simple:2.0.12'
+}
