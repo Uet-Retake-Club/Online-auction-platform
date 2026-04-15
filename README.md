@@ -1,9 +1,10 @@
 # Online-auction-platform
+
 An auction platform using Java, Gradle, JavaFx, Firebase.
 
 ## Folder structure
 
-```
+```text
 Online-auction-platform/
 ├── build.gradle
 ├── settings.gradle
@@ -43,3 +44,32 @@ Online-auction-platform/
     └── auction.db                // File database SQLite cục bộ
 ```
 
+## Building the Maven Project
+
+First, build the entire project to compile and package all modules:
+
+``` text
+mvn clean install
+```
+
+This will:
+
+- Compile all source code
+- Run tests (if any)
+- Package JARs for each module
+- Running the Client (JavaFX Application)
+- The client is a JavaFX app. Run it with:
+
+``` text
+mvn -pl client javafx:run
+```
+
+This uses the javafx-maven-plugin configured in pom.xml.
+Running the Server
+The server is a console app. Run it with:
+
+``` text
+mvn -pl server exec:java
+```
+
+This uses the exec-maven-plugin configured in pom.xml.
