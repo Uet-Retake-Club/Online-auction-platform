@@ -1,0 +1,11 @@
+com\auction\shared\models\Auction.class
+com\auction\shared\models\Admin.class
+com\auction\shared\models\Seller.class
+com\auction\shared\models\User.class
+com\auction\shared\models\Entity.class
+com\auction\shared\models\Electronics.class
+com\auction\shared\models\Item.class
+com\auction\shared\models\Art.class
+com\auction\shared\models\Vehicle.class
+com\auction\shared\models\BidTransaction.class
+com\auction\shared\models\Bidder.class
