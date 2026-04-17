@@ -1,7 +1,0 @@
-com\auction\client\Launcher.class
-com\auction\client\utils\SceneNavigator$View.class
-com\auction\client\controllers\HomeController.class
-com\auction\client\controllers\LoginController.class
-com\auction\client\utils\SceneNavigator.class
-com\auction\client\ClientApplication.class
-com\auction\client\controllers\SignupController.class
