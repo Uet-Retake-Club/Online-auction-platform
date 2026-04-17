@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<!--
+    LoginView.fxml
+    Controller : com.auction.client.controllers.LoginController
+    CSS        : main.css loaded in ClientApplication.java
+    Size       : 900 x 560 — split left/right layout
+-->
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.auction.client.controllers.LoginController"
+      fx:id="rootPane"
+      prefWidth="900" prefHeight="560">
+
+    <!-- ════════════════════════════════════════════════════
+         LEFT PANEL  — dark brand panel
+         ════════════════════════════════════════════════════ -->
+    <VBox prefWidth="360"
+          alignment="CENTER_LEFT"
+          spacing="0"
+          style="-fx-background-color: #1a1a2e; -fx-padding: 52px 44px;">
+
+        <!-- Logo -->
+        <HBox alignment="CENTER_LEFT" spacing="0">
+            <Label text="Auction"
+                   style="-fx-font-size: 32px; -fx-font-weight: bold;
+                          -fx-text-fill: #E53238; -fx-font-family: 'Segoe UI';"/>
+            <Label text="Hub"
+                   style="-fx-font-size: 32px; -fx-font-weight: bold;
+                          -fx-text-fill: white; -fx-font-family: 'Segoe UI';"/>
+        </HBox>
+
+        <!-- Tagline -->
+        <Label text="Bid. Win. Repeat."
+               style="-fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.5);
+                      -fx-font-family: 'Segoe UI'; -fx-padding: 8px 0 36px 0;"/>
+
+        <!-- Feature bullets -->
+        <VBox spacing="14">
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Circle radius="4" fill="#E53238"/>
+                <Label text="Thousands of live auctions"
+                       style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
+                              -fx-font-family: 'Segoe UI';"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Circle radius="4" fill="#E53238"/>
+                <Label text="Real-time bidding engine"
+                       style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
+                              -fx-font-family: 'Segoe UI';"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Circle radius="4" fill="#E53238"/>
+                <Label text="Secure buyer protection"
+                       style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
+                              -fx-font-family: 'Segoe UI';"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Circle radius="4" fill="#E53238"/>
+                <Label text="Sell your items in minutes"
+                       style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
+                              -fx-font-family: 'Segoe UI';"/>
+            </HBox>
+
+        </VBox>
+
+    </VBox>
+
+    <!-- ════════════════════════════════════════════════════
+         RIGHT PANEL — login form on light grey background
+         ════════════════════════════════════════════════════ -->
+    <VBox HBox.hgrow="ALWAYS"
+          alignment="CENTER"
+          style="-fx-background-color: #F7F7F7; -fx-padding: 40px;">
+
+        <!-- White card -->
+        <VBox maxWidth="360"
+              spacing="0"
+              style="-fx-background-color: white;
+                     -fx-border-color: #EBEBEB;
+                     -fx-border-width: 1px;
+                     -fx-border-radius: 12px;
+                     -fx-background-radius: 12px;
+                     -fx-padding: 36px;">
+
+            <!-- Card heading -->
+            <Label text="Welcome back"
+                   style="-fx-font-size: 22px; -fx-font-weight: bold;
+                          -fx-font-family: 'Segoe UI'; -fx-text-fill: #111111;"/>
+            <Label text="Sign in to your account"
+                   style="-fx-font-size: 13px; -fx-text-fill: #888888;
+                          -fx-font-family: 'Segoe UI'; -fx-padding: 4px 0 28px 0;"/>
+
+            <!-- Email -->
+            <Label text="Email address"
+                   style="-fx-font-size: 12px; -fx-font-weight: bold;
+                          -fx-text-fill: #333333; -fx-font-family: 'Segoe UI';
+                          -fx-padding: 0 0 6px 0;"/>
+            <TextField fx:id="emailField"
+                       promptText="you@example.com"
+                       styleClass="text-field-base"
+                       maxWidth="Infinity"/>
+            <Label fx:id="emailError" text=""
+                   styleClass="field-error"
+                   style="-fx-min-height: 16px; -fx-padding: 3px 0 10px 0;"/>
+
+            <!-- Password -->
+            <Label text="Password"
+                   style="-fx-font-size: 12px; -fx-font-weight: bold;
+                          -fx-text-fill: #333333; -fx-font-family: 'Segoe UI';
+                          -fx-padding: 0 0 6px 0;"/>
+            <PasswordField fx:id="passwordField"
+                           promptText="Your password"
+                           styleClass="text-field-base"
+                           maxWidth="Infinity"/>
+            <Label fx:id="passwordError" text=""
+                   styleClass="field-error"
+                   style="-fx-min-height: 16px; -fx-padding: 3px 0 4px 0;"/>
+
+            <!-- Forgot password (right-aligned) -->
+            <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 0 20px 0;">
+                <Label fx:id="forgotPasswordLabel"
+                       text="Forgot password?"
+                       style="-fx-text-fill: #1A73E8; -fx-font-size: 12px;
+                              -fx-cursor: hand; -fx-font-family: 'Segoe UI';"
+                       onMouseClicked="#onForgotPassword"/>
+            </HBox>
+
+            <!-- General auth error -->
+            <Label fx:id="generalError" text=""
+                   style="-fx-text-fill: #E53238; -fx-font-size: 12px;
+                          -fx-font-family: 'Segoe UI';
+                          -fx-min-height: 16px; -fx-padding: 0 0 10px 0;"/>
+
+            <!-- Sign in button -->
+            <Button fx:id="loginButton"
+                    text="Sign in"
+                    styleClass="button, btn-primary"
+                    maxWidth="Infinity"
+                    onAction="#onLogin"
+                    style="-fx-pref-height: 42px; -fx-font-size: 14px;"/>
+
+            <!-- Divider row -->
+            <HBox alignment="CENTER" spacing="10"
+                  style="-fx-padding: 20px 0;">
+                <Separator HBox.hgrow="ALWAYS"/>
+                <Label text="or"
+                       style="-fx-font-size: 12px; -fx-text-fill: #AAAAAA;
+                              -fx-font-family: 'Segoe UI';"/>
+                <Separator HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- Sign up link -->
+            <HBox alignment="CENTER" spacing="4">
+                <Label text="Don't have an account?"
+                       style="-fx-font-size: 13px; -fx-text-fill: #888888;
+                              -fx-font-family: 'Segoe UI';"/>
+                <Label fx:id="signUpLabel"
+                       text="Create one"
+                       style="-fx-font-size: 13px; -fx-text-fill: #1A73E8;
+                              -fx-cursor: hand; -fx-font-family: 'Segoe UI';"
+                       onMouseClicked="#onGoToSignUp"/>
+            </HBox>
+
+        </VBox>
+    </VBox>
+
+</HBox>
