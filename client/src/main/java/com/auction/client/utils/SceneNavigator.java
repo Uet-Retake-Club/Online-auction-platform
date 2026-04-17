@@ -10,20 +10,24 @@ import javafx.util.Duration;
 /**
  * SceneNavigator.java
  * ─────────────────────────────────────────────
- * Central hub for ALL screen navigation.
- * Call SceneNavigator.navigateTo(View.HOME) from any controller.
+ * Trung tâm điều hướng toàn bộ ứng dụng.
+ * Gọi SceneNavigator.navigateTo(View.HOME) từ bất kỳ controller nào.
  *
- * HOW TO USE:
- *   1. In ClientApplication.java  →  SceneNavigator.init(primaryStage);
- *   2. In any controller          →  SceneNavigator.navigateTo(View.HOME);
+ * Cách dùng:
+ *   1. Trong ClientApplication.java  →  SceneNavigator.init(primaryStage);
+ *   2. Trong bất kỳ controller nào   →  SceneNavigator.navigateTo(View.HOME);
  */
 public class SceneNavigator {
 
-    // ── All screens in the app ───────────────────────────────
+    /** Danh sách toàn bộ màn hình của ứng dụng */
     public enum View {
-        LOGIN   ("/com/auction/client/views/LoginView.fxml"),
-        SIGNUP  ("/com/auction/client/views/SignUpView.fxml"),
-        HOME    ("/com/auction/client/views/HomeView.fxml");
+        LOGIN          ("/com/auction/client/views/LoginView.fxml"),
+        SIGNUP         ("/com/auction/client/views/SignUpView.fxml"),
+        HOME           ("/com/auction/client/views/HomeView.fxml"),
+        AUCTION_DETAIL ("/com/auction/client/views/AuctionDetailView.fxml"),
+        CREATE_LISTING ("/com/auction/client/views/CreateListingView.fxml"),
+        MY_BIDS        ("/com/auction/client/views/MyBidsView.fxml"),
+        ADMIN          ("/com/auction/client/views/AdminView.fxml");
 
         public final String path;
         View(String path) { this.path = path; }
@@ -31,14 +35,14 @@ public class SceneNavigator {
 
     private static Stage stage;
 
-    /** Call once in ClientApplication.start() */
+    /** Gọi một lần trong ClientApplication.start() */
     public static void init(Stage primaryStage) {
         stage = primaryStage;
     }
 
     /**
-     * Navigate to a screen with a smooth 150ms fade transition.
-     * Safe to call from any controller — no boilerplate needed.
+     * Chuyển màn hình với hiệu ứng fade mượt 120ms → 150ms.
+     * An toàn khi gọi từ bất kỳ controller nào.
      */
     public static void navigateTo(View view) {
         try {
@@ -46,8 +50,8 @@ public class SceneNavigator {
                 SceneNavigator.class.getResource(view.path)
             );
 
-            // If scene doesn't exist yet, create it
             if (stage.getScene() == null) {
+                // Tạo Scene lần đầu — gắn main.css toàn cục
                 Scene scene = new Scene(root);
                 scene.getStylesheets().add(
                     SceneNavigator.class
@@ -72,12 +76,11 @@ public class SceneNavigator {
                 fadeOut.play();
             }
 
-            // Resize window to match the new screen
             stage.sizeToScene();
             stage.centerOnScreen();
 
         } catch (Exception e) {
-            System.err.println("Navigation error → " + view.path);
+            System.err.println("Lỗi điều hướng → " + view.path);
             e.printStackTrace();
         }
     }
