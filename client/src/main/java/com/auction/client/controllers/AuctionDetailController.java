@@ -46,7 +46,15 @@ public class AuctionDetailController implements Initializable {
     @FXML private VBox     bidHistoryList;
     @FXML private Label    noBidsLabel;
 
-    // ── Dummy state (replace with real Auction object later) ─
+    // ── Auto-Bidding FXML nodes ──────────────────────────────
+    @FXML private TextField maxPriceField;
+    @FXML private TextField autoBidIncrementField;
+    @FXML private Label    autoBidError;
+    @FXML private Button   setupAutoBidBtn;
+
+    // ── Current Auction Context ──────────────────────────────
+    private String currentAuctionId = "auction_123";
+    private String currentUserId = "JD"; // mock user ID
     private double currentBidAmount = 1240.00;
     private double minimumIncrement = 20.00;
     private int    secondsRemaining = 6452; // ~1h 47m 32s
@@ -56,9 +64,7 @@ public class AuctionDetailController implements Initializable {
     private static final String[][] DUMMY_BIDS = {
         { "user_alpha",    "$1,240.00", "2 min ago",  "winning" },
         { "buyer_99",      "$1,180.00", "8 min ago",  "" },
-        { "collector_vn",  "$1,050.00", "22 min ago", "" },
-        { "techbid2025",   "$950.00",   "35 min ago", "" },
-        { "vintage_lover", "$800.00",   "1 hr ago",   "" },
+        { "collector_vn",  "$1,050.00", "22 min ago", "" }
     };
 
     // ── Lifecycle ────────────────────────────────────────────
@@ -74,7 +80,7 @@ public class AuctionDetailController implements Initializable {
             "Original bracelet, box, and papers included. Serviced in 2022. " +
             "Running perfectly with minor surface scratches consistent with age."
         );
-        updatePrice(currentBidAmount);
+        updatePrice(com.auction.client.services.BidService.getInstance().getCurrentBidAmount());
         totalBids.setText("14");
         totalBidders.setText("7");
         auctionStatus.setText("OPEN");
@@ -85,9 +91,32 @@ public class AuctionDetailController implements Initializable {
         // Populate bid history
         loadBidHistory();
 
+        // Register to BidService callbacks
+        com.auction.client.services.BidService.getInstance().setCallbacks(
+            amount -> updatePrice(amount),
+            transaction -> {
+                String priceStr = String.format("$%.2f", transaction.getBidAmount());
+                String badge = transaction.getBidderId().equals(currentUserId) ? "winning" : "";
+                addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
+                noBidsLabel.setVisible(false);
+                noBidsLabel.setManaged(false);
+                // Simple update stats
+                int currentTotal = Integer.parseInt(totalBids.getText());
+                totalBids.setText(String.valueOf(currentTotal + 1));
+            }
+        );
+
         // Clear error on typing
         bidAmountField.textProperty().addListener(
             (obs, old, val) -> bidError.setText(""));
+            
+        // Setup Auto-Bid Increment to default minimum increment
+        autoBidIncrementField.setText(String.valueOf(com.auction.client.services.BidService.getInstance().getMinimumIncrement()));
+        
+        maxPriceField.textProperty().addListener(
+            (obs, old, val) -> autoBidError.setText(""));
+        autoBidIncrementField.textProperty().addListener(
+            (obs, old, val) -> autoBidError.setText(""));
     }
 
     // ── Countdown timer ──────────────────────────────────────
@@ -142,6 +171,10 @@ public class AuctionDetailController implements Initializable {
         bidAmountField.setDisable(true);
         auctionStatus.setText("FINISHED");
         auctionStatus.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+        com.auction.client.services.BidService.getInstance().setAuctionClosed();
+        setupAutoBidBtn.setDisable(true);
+        maxPriceField.setDisable(true);
+        autoBidIncrementField.setDisable(true);
     }
 
     // ── Place bid ────────────────────────────────────────────
@@ -162,28 +195,52 @@ public class AuctionDetailController implements Initializable {
             bidError.setText("Please enter a valid number");
             return;
         }
-        double minBid = currentBidAmount + minimumIncrement;
-        if (amount < minBid) {
-            bidError.setText(String.format("Minimum bid is $%.2f", minBid));
+
+        // Use BidService to place the bid
+        String errorMsg = com.auction.client.services.BidService.getInstance()
+                            .placeBid(currentUserId, currentAuctionId, amount);
+
+        if (errorMsg != null) {
+            bidError.setText(errorMsg);
+        } else {
+            bidAmountField.clear();
+            bidError.setText("");
+        }
+    }
+
+    // ── Auto-Bidding ─────────────────────────────────────────
+    
+    @FXML
+    private void onSetupAutoBid() {
+        String maxStr = maxPriceField.getText().trim();
+        String incStr = autoBidIncrementField.getText().trim();
+        
+        if (maxStr.isEmpty() || incStr.isEmpty()) {
+            autoBidError.setText("Fill both fields");
             return;
         }
-
-        // TODO: replace with BidService.placeBid(auctionId, amount)
-        // BidService.placeBid(auctionId, amount)
-        //   .onSuccess(bid -> Platform.runLater(() -> {
-        //       updatePrice(bid.getAmount());
-        //       addBidRow(bid);
-        //   }))
-        //   .onFailure(err -> bidError.setText(err.getMessage()));
-
-        // Simulate success for UI demo
-        updatePrice(amount);
-        addBidRowToHistory("You", String.format("$%.2f", amount),
-                           "just now", "winning");
-        bidAmountField.clear();
-        bidError.setText("");
-        noBidsLabel.setVisible(false);
-        noBidsLabel.setManaged(false);
+        
+        double maxPrice;
+        double increment;
+        
+        try {
+            maxPrice = Double.parseDouble(maxStr.replace(",", ""));
+            increment = Double.parseDouble(incStr.replace(",", ""));
+        } catch (NumberFormatException ex) {
+            autoBidError.setText("Invalid numbers");
+            return;
+        }
+        
+        String errorMsg = com.auction.client.services.BidService.getInstance()
+                            .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment);
+                            
+        if (errorMsg != null) {
+            autoBidError.setText(errorMsg);
+        } else {
+            setupAutoBidBtn.setText("Auto-Bid Active");
+            setupAutoBidBtn.setStyle("-fx-background-color:#5BA55B;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;");
+            autoBidError.setText("");
+        }
     }
 
     // ── Watchlist ────────────────────────────────────────────
@@ -207,9 +264,9 @@ public class AuctionDetailController implements Initializable {
     // ── Helpers ──────────────────────────────────────────────
 
     private void updatePrice(double amount) {
-        currentBidAmount = amount;
         currentPrice.setText(String.format("$%.2f", amount));
-        minBidHint.setText(String.format("Minimum bid: $%.2f", amount + minimumIncrement));
+        double nextMin = amount + com.auction.client.services.BidService.getInstance().getMinimumIncrement();
+        minBidHint.setText(String.format("Minimum bid: $%.2f", nextMin));
     }
 
     private void loadBidHistory() {
