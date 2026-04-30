@@ -86,7 +86,7 @@
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS"
                               style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
-                            <Label fx:id="statRevenue" text="$94,200"
+                            <Label fx:id="statRevenue" text="\$94,200"
                                    style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#5BA55B;"/>
                             <Label text="Revenue this month"
                                    style="-fx-font-size:11px;-fx-text-fill:#888;-fx-padding:2px 0 0 0;"/>
