@@ -3,7 +3,7 @@ package com.auction.server.database;
 import java.sql.*;
 
 public class DatabaseConnection {
-    private static Connection connection = null;
+    private static Connection connection = null; // Singleton
 
     private DatabaseConnection() {};
     
