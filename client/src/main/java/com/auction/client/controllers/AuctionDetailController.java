@@ -85,7 +85,7 @@ public class AuctionDetailController implements Initializable {
     private String currentAuctionId = "auction_123";
     private String currentUserId;
     private String currentHighestBidder = "";
-    private int    secondsRemaining = 6452; // ~1h 47m 32s
+    private int secondsRemaining = 6452; // ~1h 47m 32s
     private Timeline countdownTimeline;
 
     // ── Dummy bid history ─────────────────────────────────────
@@ -122,24 +122,25 @@ public class AuctionDetailController implements Initializable {
 
         // Register to BidService callbacks
         com.auction.client.services.BidService.getInstance().setCallbacks(
-            amount -> updatePrice(amount),
-            transaction -> {
-                String priceStr = String.format("$%.2f", transaction.getBidAmount());
-                boolean isWinning = transaction.getBidderId().equals(currentUserId);
-                if (isWinning) {
-                    ToastNotification.show(userLabel, "Your bid was placed successfully.", ToastNotification.Type.SUCCESS);
-                } else if (currentHighestBidder.equals(currentUserId)) {
-                    ToastNotification.show(userLabel, "You were outbid by " + transaction.getBidderId() + ".", ToastNotification.Type.WARNING);
-                }
-                currentHighestBidder = transaction.getBidderId();
-                String badge = isWinning ? "winning" : "";
-                addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
-                noBidsLabel.setVisible(false);
-                noBidsLabel.setManaged(false);
-                int currentTotal = Integer.parseInt(totalBids.getText());
-                totalBids.setText(String.valueOf(currentTotal + 1));
-            }
-        );
+                amount -> updatePrice(amount),
+                transaction -> {
+                    String priceStr = String.format("$%.2f", transaction.getBidAmount());
+                    boolean isWinning = transaction.getBidderId().equals(currentUserId);
+                    if (isWinning) {
+                        ToastNotification.show(userLabel, "Your bid was placed successfully.",
+                                ToastNotification.Type.SUCCESS);
+                    } else if (currentHighestBidder.equals(currentUserId)) {
+                        ToastNotification.show(userLabel, "You were outbid by " + transaction.getBidderId() + ".",
+                                ToastNotification.Type.WARNING);
+                    }
+                    currentHighestBidder = transaction.getBidderId();
+                    String badge = isWinning ? "winning" : "";
+                    addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
+                    noBidsLabel.setVisible(false);
+                    noBidsLabel.setManaged(false);
+                    int currentTotal = Integer.parseInt(totalBids.getText());
+                    totalBids.setText(String.valueOf(currentTotal + 1));
+                });
 
         // Clear error on typing
         bidAmountField.textProperty().addListener(
@@ -295,12 +296,35 @@ public class AuctionDetailController implements Initializable {
 
     // ── Navigation ───────────────────────────────────────────
 
-    @FXML private void onBack()      { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-    @FXML private void onHome()      { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-    @FXML private void onMyBids()    { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-    @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-    @FXML private void onSell()      { SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING); }
-    @FXML private void onProfile()   { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
+    @FXML
+    private void onBack() {
+        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    }
+
+    @FXML
+    private void onHome() {
+        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    }
+
+    @FXML
+    private void onMyBids() {
+        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+    }
+
+    @FXML
+    private void onWatchlist() {
+        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+    }
+
+    @FXML
+    private void onSell() {
+        SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+    }
+
+    @FXML
+    private void onProfile() {
+        SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
+    }
 
     // ── Helpers ──────────────────────────────────────────────
 
