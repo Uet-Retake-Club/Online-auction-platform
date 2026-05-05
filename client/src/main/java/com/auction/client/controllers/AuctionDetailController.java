@@ -1,17 +1,24 @@
 package com.auction.client.controllers;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.ToastNotification;
+import com.auction.client.utils.UserSession;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ResourceBundle;
 
 /**
  * AuctionDetailController.java
@@ -76,10 +83,9 @@ public class AuctionDetailController implements Initializable {
 
     // ── Current Auction Context ──────────────────────────────
     private String currentAuctionId = "auction_123";
-    private String currentUserId = "JD"; // mock user ID
-    private double currentBidAmount = 1240.00;
-    private double minimumIncrement = 20.00;
-    private int secondsRemaining = 6452; // ~1h 47m 32s
+    private String currentUserId;
+    private String currentHighestBidder = "";
+    private int    secondsRemaining = 6452; // ~1h 47m 32s
     private Timeline countdownTimeline;
 
     // ── Dummy bid history ─────────────────────────────────────
@@ -92,7 +98,8 @@ public class AuctionDetailController implements Initializable {
     // ── Lifecycle ────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        userLabel.setText("JD"); // TODO: UserSession.getInstance().getInitials()
+        currentUserId = UserSession.getInstance().getUsername();
+        userLabel.setText(UserSession.getInstance().getInitials());
 
         // Populate dummy data — replace with real Auction object later
         itemTitle.setText("Vintage Rolex Submariner 1969");
@@ -111,20 +118,28 @@ public class AuctionDetailController implements Initializable {
 
         // Populate bid history
         loadBidHistory();
+        currentHighestBidder = DUMMY_BIDS.length > 0 ? DUMMY_BIDS[0][0] : "";
 
         // Register to BidService callbacks
         com.auction.client.services.BidService.getInstance().setCallbacks(
-                amount -> updatePrice(amount),
-                transaction -> {
-                    String priceStr = String.format("$%.2f", transaction.getBidAmount());
-                    String badge = transaction.getBidderId().equals(currentUserId) ? "winning" : "";
-                    addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
-                    noBidsLabel.setVisible(false);
-                    noBidsLabel.setManaged(false);
-                    // Simple update stats
-                    int currentTotal = Integer.parseInt(totalBids.getText());
-                    totalBids.setText(String.valueOf(currentTotal + 1));
-                });
+            amount -> updatePrice(amount),
+            transaction -> {
+                String priceStr = String.format("$%.2f", transaction.getBidAmount());
+                boolean isWinning = transaction.getBidderId().equals(currentUserId);
+                if (isWinning) {
+                    ToastNotification.show(userLabel, "Your bid was placed successfully.", ToastNotification.Type.SUCCESS);
+                } else if (currentHighestBidder.equals(currentUserId)) {
+                    ToastNotification.show(userLabel, "You were outbid by " + transaction.getBidderId() + ".", ToastNotification.Type.WARNING);
+                }
+                currentHighestBidder = transaction.getBidderId();
+                String badge = isWinning ? "winning" : "";
+                addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
+                noBidsLabel.setVisible(false);
+                noBidsLabel.setManaged(false);
+                int currentTotal = Integer.parseInt(totalBids.getText());
+                totalBids.setText(String.valueOf(currentTotal + 1));
+            }
+        );
 
         // Clear error on typing
         bidAmountField.textProperty().addListener(
@@ -216,6 +231,10 @@ public class AuctionDetailController implements Initializable {
             return;
         }
 
+        if (!ConfirmBidDialog.show("Confirm bid", String.format("Place a bid of $%.2f?", amount))) {
+            return;
+        }
+
         // Use BidService to place the bid
         String errorMsg = com.auction.client.services.BidService.getInstance()
                 .placeBid(currentUserId, currentAuctionId, amount);
@@ -270,40 +289,18 @@ public class AuctionDetailController implements Initializable {
     private void onAddWatchlist() {
         watchlistBtn.setText("Added to watchlist");
         watchlistBtn.setDisable(true);
+        ToastNotification.show(userLabel, "Added to your watchlist.", ToastNotification.Type.INFO);
         // TODO: WatchlistService.add(auctionId)
     }
 
     // ── Navigation ───────────────────────────────────────────
 
-    @FXML
-    private void onBack() {
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-    }
-
-    @FXML
-    private void onHome() {
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-    }
-
-    @FXML
-    private void onMyBids() {
-        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
-    }
-
-    @FXML
-    private void onWatchlist() {
-        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
-    }
-
-    @FXML
-    private void onSell() {
-        SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
-    }
-
-    @FXML
-    private void onProfile() {
-        System.out.println("TODO: ProfileView");
-    }
+    @FXML private void onBack()      { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
+    @FXML private void onHome()      { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
+    @FXML private void onMyBids()    { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
+    @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
+    @FXML private void onSell()      { SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING); }
+    @FXML private void onProfile()   { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
 
     // ── Helpers ──────────────────────────────────────────────
 
