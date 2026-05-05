@@ -1,9 +1,10 @@
 package com.auction.shared.dto;
 
 public enum MessageType {
-    PLACE_BID,          // Client gửi yêu cầu đặt giá
-    SETUP_AUTO_BID,     // Client gửi cài đặt auto-bid
-    BID_RESPONSE,       // Server trả lời kết quả đặt giá (thành công/thất bại)
-    NEW_BID_BROADCAST,  // Server thông báo có giá mới cho toàn bộ Client
-    ERROR               // Lỗi chung
+    PLACE_BID,          // Yêu cầu đặt giá
+    SETUP_AUTO_BID,     // Cài đặt auto-bid
+    BID_SUCCESS,        // Server xác nhận đặt giá hợp lệ
+    BID_ERROR,          // Lỗi (giá thấp, phiên đã đóng...)
+    NEW_BID_BROADCAST,  // Cập nhật giá realtime cho tất cả (Observer)
+    AUCTION_ENDED       // Thông báo kết thúc phiên
 }
