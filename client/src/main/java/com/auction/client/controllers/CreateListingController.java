@@ -15,34 +15,55 @@ import java.util.ResourceBundle;
  * Xử lý màn hình đăng sản phẩm đấu giá (CreateListingView.fxml).
  *
  * Chức năng:
- *  - Validate tất cả trường: tiêu đề, danh mục, mô tả, giá, thời gian
- *  - Publish listing → gửi lên server (TODO: AuctionService)
- *  - Save draft → lưu tạm (TODO)
- *  - Chọn ảnh sản phẩm từ filesystem
+ * - Validate tất cả trường: tiêu đề, danh mục, mô tả, giá, thời gian
+ * - Publish listing → gửi lên server (TODO: AuctionService)
+ * - Save draft → lưu tạm (TODO)
+ * - Chọn ảnh sản phẩm từ filesystem
  */
+
 public class CreateListingController implements Initializable {
 
     // ── FXML nodes ───────────────────────────────────────────
-    @FXML private Label      userLabel;
-    @FXML private TextField  titleField;
-    @FXML private ComboBox<String> categoryCombo;
-    @FXML private TextArea   descriptionField;
-    @FXML private TextField  startPriceField;
-    @FXML private TextField  incrementField;
-    @FXML private TextField  startTimeField;
-    @FXML private TextField  endTimeField;
-    @FXML private VBox       imageDropZone;
-    @FXML private Label      imageLabel;
-    @FXML private Label      titleError;
-    @FXML private Label      categoryError;
-    @FXML private Label      descriptionError;
-    @FXML private Label      startPriceError;
-    @FXML private Label      incrementError;
-    @FXML private Label      startTimeError;
-    @FXML private Label      endTimeError;
-    @FXML private Label      generalError;
-    @FXML private Button     publishBtn;
-    @FXML private Button     draftBtn;
+    @FXML
+    private Label userLabel;
+    @FXML
+    private TextField titleField;
+    @FXML
+    private ComboBox<String> categoryCombo;
+    @FXML
+    private TextArea descriptionField;
+    @FXML
+    private TextField startPriceField;
+    @FXML
+    private TextField incrementField;
+    @FXML
+    private TextField startTimeField;
+    @FXML
+    private TextField endTimeField;
+    @FXML
+    private VBox imageDropZone;
+    @FXML
+    private Label imageLabel;
+    @FXML
+    private Label titleError;
+    @FXML
+    private Label categoryError;
+    @FXML
+    private Label descriptionError;
+    @FXML
+    private Label startPriceError;
+    @FXML
+    private Label incrementError;
+    @FXML
+    private Label startTimeError;
+    @FXML
+    private Label endTimeError;
+    @FXML
+    private Label generalError;
+    @FXML
+    private Button publishBtn;
+    @FXML
+    private Button draftBtn;
 
     // ── Lifecycle ────────────────────────────────────────────
     @Override
@@ -51,30 +72,30 @@ public class CreateListingController implements Initializable {
 
         // Populate category dropdown
         categoryCombo.getItems().addAll(
-            "Electronics", "Fashion", "Home & Garden",
-            "Sports", "Collectibles", "Vehicles", "Art", "Other"
-        );
+                "Electronics", "Fashion", "Home & Garden",
+                "Sports", "Collectibles", "Vehicles", "Art", "Other");
 
         // Clear errors on typing
-        titleField.textProperty().addListener((o,v,n)       -> clearError(titleError, titleField));
-        descriptionField.textProperty().addListener((o,v,n) -> clearError(descriptionError, descriptionField));
-        startPriceField.textProperty().addListener((o,v,n)  -> clearError(startPriceError, startPriceField));
-        incrementField.textProperty().addListener((o,v,n)   -> clearError(incrementError, incrementField));
-        startTimeField.textProperty().addListener((o,v,n)   -> clearError(startTimeError, startTimeField));
-        endTimeField.textProperty().addListener((o,v,n)     -> clearError(endTimeError, endTimeField));
+        titleField.textProperty().addListener((o, v, n) -> clearError(titleError, titleField));
+        descriptionField.textProperty().addListener((o, v, n) -> clearError(descriptionError, descriptionField));
+        startPriceField.textProperty().addListener((o, v, n) -> clearError(startPriceError, startPriceField));
+        incrementField.textProperty().addListener((o, v, n) -> clearError(incrementError, incrementField));
+        startTimeField.textProperty().addListener((o, v, n) -> clearError(startTimeError, startTimeField));
+        endTimeField.textProperty().addListener((o, v, n) -> clearError(endTimeError, endTimeField));
     }
 
     // ── Handlers ─────────────────────────────────────────────
 
     @FXML
     private void onPublish() {
-        if (!validateAll()) return;
+        if (!validateAll())
+            return;
 
         // TODO: AuctionService.createAuction(...)
         // AuctionService.create(title, category, description,
-        //                       startPrice, increment, startTime, endTime)
-        //   .onSuccess(auction -> SceneNavigator.navigateTo(View.HOME))
-        //   .onFailure(err -> showGeneralError(err.getMessage()));
+        // startPrice, increment, startTime, endTime)
+        // .onSuccess(auction -> SceneNavigator.navigateTo(View.HOME))
+        // .onFailure(err -> showGeneralError(err.getMessage()));
 
         System.out.println("Publish: " + titleField.getText());
         SceneNavigator.navigateTo(SceneNavigator.View.HOME);
@@ -92,20 +113,52 @@ public class CreateListingController implements Initializable {
     private void onSelectImage() {
         // TODO: FileChooser to select image
         // FileChooser fc = new FileChooser();
-        // fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images","*.png","*.jpg"));
+        // fc.getExtensionFilters().add(new
+        // FileChooser.ExtensionFilter("Images","*.png","*.jpg"));
         // File f = fc.showOpenDialog(rootPane.getScene().getWindow());
         // if (f != null) imageLabel.setText(f.getName());
         imageLabel.setText("image_selected.jpg");
     }
 
-    @FXML private void onCancel()        { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-    @FXML private void onHome()          { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-    @FXML private void onMyListings()    { System.out.println("TODO: MyListingsView"); }
-    @FXML private void onActiveAuctions(){ System.out.println("TODO: ActiveAuctionsView"); }
-    @FXML private void onDrafts()        { System.out.println("TODO: DraftsView"); }
-    @FXML private void onCompleted()     { System.out.println("TODO: CompletedView"); }
-    @FXML private void onProfile()       { System.out.println("TODO: ProfileView"); }
-    @FXML private void onLogout()        { SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
+    @FXML
+    private void onCancel() {
+        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    }
+
+    @FXML
+    private void onHome() {
+        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    }
+
+    @FXML
+    private void onMyListings() {
+        System.out.println("TODO: MyListingsView");
+    }
+
+    @FXML
+    private void onActiveAuctions() {
+        System.out.println("TODO: ActiveAuctionsView");
+    }
+
+    @FXML
+    private void onDrafts() {
+        System.out.println("TODO: DraftsView");
+    }
+
+    @FXML
+    private void onCompleted() {
+        System.out.println("TODO: CompletedView");
+    }
+
+    @FXML
+    private void onProfile() {
+        System.out.println("TODO: ProfileView");
+    }
+
+    @FXML
+    private void onLogout() {
+        SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
+    }
 
     // ── Validation ───────────────────────────────────────────
 

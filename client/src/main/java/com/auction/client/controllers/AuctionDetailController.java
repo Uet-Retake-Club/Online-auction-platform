@@ -19,52 +19,74 @@ import java.util.ResourceBundle;
  * Xử lý màn hình chi tiết đấu giá (AuctionDetailView.fxml).
  *
  * Chức năng:
- *  - Hiển thị thông tin sản phẩm, giá hiện tại, số lượt đặt giá
- *  - Đồng hồ đếm ngược cập nhật mỗi giây bằng JavaFX Timeline
- *  - Validate và đặt giá (placeBid)
- *  - Hiển thị lịch sử đặt giá (bidHistoryList)
- *  - Đổi màu timer theo thời gian còn lại
+ * - Hiển thị thông tin sản phẩm, giá hiện tại, số lượt đặt giá
+ * - Đồng hồ đếm ngược cập nhật mỗi giây bằng JavaFX Timeline
+ * - Validate và đặt giá (placeBid)
+ * - Hiển thị lịch sử đặt giá (bidHistoryList)
+ * - Đổi màu timer theo thời gian còn lại
  */
+
 public class AuctionDetailController implements Initializable {
 
     // ── FXML nodes ───────────────────────────────────────────
-    @FXML private Label    userLabel;
-    @FXML private Label    backLabel;
-    @FXML private Label    itemTitle;
-    @FXML private Label    itemMeta;
-    @FXML private Label    itemDescription;
-    @FXML private Label    currentPrice;
-    @FXML private Label    totalBids;
-    @FXML private Label    totalBidders;
-    @FXML private Label    auctionStatus;
-    @FXML private Label    countdownTimer;
-    @FXML private Label    minBidHint;
-    @FXML private TextField bidAmountField;
-    @FXML private Label    bidError;
-    @FXML private Button   placeBidBtn;
-    @FXML private Button   watchlistBtn;
-    @FXML private VBox     bidHistoryList;
-    @FXML private Label    noBidsLabel;
+    @FXML
+    private Label userLabel;
+    @FXML
+    private Label backLabel;
+    @FXML
+    private Label itemTitle;
+    @FXML
+    private Label itemMeta;
+    @FXML
+    private Label itemDescription;
+    @FXML
+    private Label currentPrice;
+    @FXML
+    private Label totalBids;
+    @FXML
+    private Label totalBidders;
+    @FXML
+    private Label auctionStatus;
+    @FXML
+    private Label countdownTimer;
+    @FXML
+    private Label minBidHint;
+    @FXML
+    private TextField bidAmountField;
+    @FXML
+    private Label bidError;
+    @FXML
+    private Button placeBidBtn;
+    @FXML
+    private Button watchlistBtn;
+    @FXML
+    private VBox bidHistoryList;
+    @FXML
+    private Label noBidsLabel;
 
     // ── Auto-Bidding FXML nodes ──────────────────────────────
-    @FXML private TextField maxPriceField;
-    @FXML private TextField autoBidIncrementField;
-    @FXML private Label    autoBidError;
-    @FXML private Button   setupAutoBidBtn;
+    @FXML
+    private TextField maxPriceField;
+    @FXML
+    private TextField autoBidIncrementField;
+    @FXML
+    private Label autoBidError;
+    @FXML
+    private Button setupAutoBidBtn;
 
     // ── Current Auction Context ──────────────────────────────
     private String currentAuctionId = "auction_123";
     private String currentUserId = "JD"; // mock user ID
     private double currentBidAmount = 1240.00;
     private double minimumIncrement = 20.00;
-    private int    secondsRemaining = 6452; // ~1h 47m 32s
+    private int secondsRemaining = 6452; // ~1h 47m 32s
     private Timeline countdownTimeline;
 
     // ── Dummy bid history ─────────────────────────────────────
     private static final String[][] DUMMY_BIDS = {
-        { "user_alpha",    "$1,240.00", "2 min ago",  "winning" },
-        { "buyer_99",      "$1,180.00", "8 min ago",  "" },
-        { "collector_vn",  "$1,050.00", "22 min ago", "" }
+            { "user_alpha", "$1,240.00", "2 min ago", "winning" },
+            { "buyer_99", "$1,180.00", "8 min ago", "" },
+            { "collector_vn", "$1,050.00", "22 min ago", "" }
     };
 
     // ── Lifecycle ────────────────────────────────────────────
@@ -76,10 +98,9 @@ public class AuctionDetailController implements Initializable {
         itemTitle.setText("Vintage Rolex Submariner 1969");
         itemMeta.setText("Collectibles  ·  Seller: watch_king99");
         itemDescription.setText(
-            "Original 1969 Rolex Submariner in excellent condition. " +
-            "Original bracelet, box, and papers included. Serviced in 2022. " +
-            "Running perfectly with minor surface scratches consistent with age."
-        );
+                "Original 1969 Rolex Submariner in excellent condition. " +
+                        "Original bracelet, box, and papers included. Serviced in 2022. " +
+                        "Running perfectly with minor surface scratches consistent with age.");
         updatePrice(com.auction.client.services.BidService.getInstance().getCurrentBidAmount());
         totalBids.setText("14");
         totalBidders.setText("7");
@@ -93,30 +114,30 @@ public class AuctionDetailController implements Initializable {
 
         // Register to BidService callbacks
         com.auction.client.services.BidService.getInstance().setCallbacks(
-            amount -> updatePrice(amount),
-            transaction -> {
-                String priceStr = String.format("$%.2f", transaction.getBidAmount());
-                String badge = transaction.getBidderId().equals(currentUserId) ? "winning" : "";
-                addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
-                noBidsLabel.setVisible(false);
-                noBidsLabel.setManaged(false);
-                // Simple update stats
-                int currentTotal = Integer.parseInt(totalBids.getText());
-                totalBids.setText(String.valueOf(currentTotal + 1));
-            }
-        );
+                amount -> updatePrice(amount),
+                transaction -> {
+                    String priceStr = String.format("$%.2f", transaction.getBidAmount());
+                    String badge = transaction.getBidderId().equals(currentUserId) ? "winning" : "";
+                    addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
+                    noBidsLabel.setVisible(false);
+                    noBidsLabel.setManaged(false);
+                    // Simple update stats
+                    int currentTotal = Integer.parseInt(totalBids.getText());
+                    totalBids.setText(String.valueOf(currentTotal + 1));
+                });
 
         // Clear error on typing
         bidAmountField.textProperty().addListener(
-            (obs, old, val) -> bidError.setText(""));
-            
+                (obs, old, val) -> bidError.setText(""));
+
         // Setup Auto-Bid Increment to default minimum increment
-        autoBidIncrementField.setText(String.valueOf(com.auction.client.services.BidService.getInstance().getMinimumIncrement()));
-        
+        autoBidIncrementField
+                .setText(String.valueOf(com.auction.client.services.BidService.getInstance().getMinimumIncrement()));
+
         maxPriceField.textProperty().addListener(
-            (obs, old, val) -> autoBidError.setText(""));
+                (obs, old, val) -> autoBidError.setText(""));
         autoBidIncrementField.textProperty().addListener(
-            (obs, old, val) -> autoBidError.setText(""));
+                (obs, old, val) -> autoBidError.setText(""));
     }
 
     // ── Countdown timer ──────────────────────────────────────
@@ -128,17 +149,16 @@ public class AuctionDetailController implements Initializable {
      */
     private void startCountdown() {
         countdownTimeline = new Timeline(
-            new KeyFrame(Duration.seconds(1), e -> {
-                if (secondsRemaining > 0) {
-                    secondsRemaining--;
-                    updateTimerDisplay();
-                } else {
-                    countdownTimer.setText("ENDED");
-                    countdownTimeline.stop();
-                    onAuctionEnded();
-                }
-            })
-        );
+                new KeyFrame(Duration.seconds(1), e -> {
+                    if (secondsRemaining > 0) {
+                        secondsRemaining--;
+                        updateTimerDisplay();
+                    } else {
+                        countdownTimer.setText("ENDED");
+                        countdownTimeline.stop();
+                        onAuctionEnded();
+                    }
+                }));
         countdownTimeline.setCycleCount(Timeline.INDEFINITE);
         countdownTimeline.play();
         updateTimerDisplay();
@@ -154,15 +174,15 @@ public class AuctionDetailController implements Initializable {
         if (secondsRemaining < 60) {
             // Đỏ — dưới 1 phút
             countdownTimer.setStyle(
-                "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';");
+                    "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';");
         } else if (secondsRemaining < 600) {
             // Vàng — dưới 10 phút
             countdownTimer.setStyle(
-                "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';");
+                    "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';");
         } else {
             // Bình thường
             countdownTimer.setStyle(
-                "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';");
+                    "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';");
         }
     }
 
@@ -198,7 +218,7 @@ public class AuctionDetailController implements Initializable {
 
         // Use BidService to place the bid
         String errorMsg = com.auction.client.services.BidService.getInstance()
-                            .placeBid(currentUserId, currentAuctionId, amount);
+                .placeBid(currentUserId, currentAuctionId, amount);
 
         if (errorMsg != null) {
             bidError.setText(errorMsg);
@@ -209,20 +229,20 @@ public class AuctionDetailController implements Initializable {
     }
 
     // ── Auto-Bidding ─────────────────────────────────────────
-    
+
     @FXML
     private void onSetupAutoBid() {
         String maxStr = maxPriceField.getText().trim();
         String incStr = autoBidIncrementField.getText().trim();
-        
+
         if (maxStr.isEmpty() || incStr.isEmpty()) {
             autoBidError.setText("Fill both fields");
             return;
         }
-        
+
         double maxPrice;
         double increment;
-        
+
         try {
             maxPrice = Double.parseDouble(maxStr.replace(",", ""));
             increment = Double.parseDouble(incStr.replace(",", ""));
@@ -230,15 +250,16 @@ public class AuctionDetailController implements Initializable {
             autoBidError.setText("Invalid numbers");
             return;
         }
-        
+
         String errorMsg = com.auction.client.services.BidService.getInstance()
-                            .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment);
-                            
+                .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment);
+
         if (errorMsg != null) {
             autoBidError.setText(errorMsg);
         } else {
             setupAutoBidBtn.setText("Auto-Bid Active");
-            setupAutoBidBtn.setStyle("-fx-background-color:#5BA55B;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;");
+            setupAutoBidBtn.setStyle(
+                    "-fx-background-color:#5BA55B;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;");
             autoBidError.setText("");
         }
     }
@@ -254,12 +275,35 @@ public class AuctionDetailController implements Initializable {
 
     // ── Navigation ───────────────────────────────────────────
 
-    @FXML private void onBack()      { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-    @FXML private void onHome()      { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-    @FXML private void onMyBids()    { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-    @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-    @FXML private void onSell()      { SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING); }
-    @FXML private void onProfile()   { System.out.println("TODO: ProfileView"); }
+    @FXML
+    private void onBack() {
+        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    }
+
+    @FXML
+    private void onHome() {
+        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    }
+
+    @FXML
+    private void onMyBids() {
+        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+    }
+
+    @FXML
+    private void onWatchlist() {
+        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+    }
+
+    @FXML
+    private void onSell() {
+        SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+    }
+
+    @FXML
+    private void onProfile() {
+        System.out.println("TODO: ProfileView");
+    }
 
     // ── Helpers ──────────────────────────────────────────────
 
@@ -286,10 +330,10 @@ public class AuctionDetailController implements Initializable {
      * TODO: khi có dữ liệu thật, thay String[] bằng BidTransaction object.
      */
     private void addBidRowToHistory(String name, String price,
-                                    String time, String badge) {
+            String time, String badge) {
         HBox row = new HBox();
         row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;" +
-                     "-fx-border-width:0 0 1px 0;-fx-padding:8px 0;-fx-alignment:CENTER_LEFT;");
+                "-fx-border-width:0 0 1px 0;-fx-padding:8px 0;-fx-alignment:CENTER_LEFT;");
         row.setSpacing(8);
 
         Label nameLbl = new Label(name);
@@ -307,8 +351,8 @@ public class AuctionDetailController implements Initializable {
         if (!badge.isEmpty()) {
             Label bdg = new Label("Winning");
             bdg.setStyle("-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;" +
-                         "-fx-font-size:10px;-fx-font-weight:bold;" +
-                         "-fx-padding:2px 8px;-fx-background-radius:10px;");
+                    "-fx-font-size:10px;-fx-font-weight:bold;" +
+                    "-fx-padding:2px 8px;-fx-background-radius:10px;");
             row.getChildren().add(bdg);
         }
 
