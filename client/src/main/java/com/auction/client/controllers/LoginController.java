@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -51,13 +52,10 @@ public class LoginController implements Initializable {
     private void onLogin() {
         if (!validateFields()) return;
 
-        // ── TODO: replace this block with your AuthService call ──
-        // AuthService.login(email, password)
-        //   .onSuccess(user -> SceneNavigator.navigateTo(View.HOME))
-        //   .onFailure(err -> showGeneralError("Wrong email or password"));
-        // ─────────────────────────────────────────────────────────
+        String email = emailField.getText().trim();
+        String username = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
+        UserSession.getInstance().signIn("", "", username, email, "BIDDER");
 
-        // For now: any non-empty valid input goes straight to Home
         SceneNavigator.navigateTo(SceneNavigator.View.HOME);
     }
 

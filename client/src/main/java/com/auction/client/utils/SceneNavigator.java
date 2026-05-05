@@ -27,6 +27,7 @@ public class SceneNavigator {
         AUCTION_DETAIL ("/com/auction/client/views/AuctionDetailView.fxml"),
         CREATE_LISTING ("/com/auction/client/views/CreateListingView.fxml"),
         MY_BIDS        ("/com/auction/client/views/MyBidsView.fxml"),
+        PROFILE        ("/com/auction/client/views/ProfileView.fxml"),
         ADMIN          ("/com/auction/client/views/AdminView.fxml");
 
         public final String path;

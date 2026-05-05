@@ -1,13 +1,20 @@
 package com.auction.client.controllers;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
+
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 
 /**
  * CreateListingController.java
@@ -47,7 +54,7 @@ public class CreateListingController implements Initializable {
     // ── Lifecycle ────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        userLabel.setText("JD"); // TODO: UserSession
+        userLabel.setText(UserSession.getInstance().getInitials());
 
         // Populate category dropdown
         categoryCombo.getItems().addAll(
@@ -104,8 +111,8 @@ public class CreateListingController implements Initializable {
     @FXML private void onActiveAuctions(){ System.out.println("TODO: ActiveAuctionsView"); }
     @FXML private void onDrafts()        { System.out.println("TODO: DraftsView"); }
     @FXML private void onCompleted()     { System.out.println("TODO: CompletedView"); }
-    @FXML private void onProfile()       { System.out.println("TODO: ProfileView"); }
-    @FXML private void onLogout()        { SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
+    @FXML private void onProfile()       { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
+    @FXML private void onLogout()        { UserSession.getInstance().clear(); SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
 
     // ── Validation ───────────────────────────────────────────
 
