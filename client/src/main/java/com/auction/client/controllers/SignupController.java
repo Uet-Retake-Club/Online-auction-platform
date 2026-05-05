@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -65,13 +66,12 @@ public class SignupController implements Initializable {
     private void onSignUp() {
         if (!validateFields()) return;
 
-        // ── TODO: replace with AuthService.register(...) ─────────
-        // AuthService.register(firstName, lastName, username, email, password)
-        //   .onSuccess(user -> SceneNavigator.navigateTo(View.HOME))
-        //   .onFailure(err -> showGeneralError(err.getMessage()));
-        // ─────────────────────────────────────────────────────────
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+        String username = usernameField.getText().trim();
+        String email = emailField.getText().trim();
+        UserSession.getInstance().signIn(firstName, lastName, username, email, "BIDDER");
 
-        // For now: valid form → straight to Home
         SceneNavigator.navigateTo(SceneNavigator.View.HOME);
     }
 

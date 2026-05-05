@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -53,7 +54,7 @@ public class HomeController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         activeCategory = allCategoriesBtn;
-        userLabel.setText("JD");
+        userLabel.setText(UserSession.getInstance().getInitials());
         populateGrid(endingSoonGrid, ENDING_SOON);
         populateGrid(recentGrid,     RECENTLY_LISTED);
     }
@@ -91,8 +92,8 @@ public class HomeController implements Initializable {
     @FXML private void onSell()      { SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING); }
     @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
     @FXML private void onMyBids()    { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-    @FXML private void onProfile()   { System.out.println("TODO: ProfileView chưa tạo"); }
-    @FXML private void onLogout()    { SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
+    @FXML private void onProfile()   { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
+    @FXML private void onLogout()    { UserSession.getInstance().clear(); SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
     @FXML private void onSeeAllEndingSoon() { System.out.println("See all ending soon"); }
     @FXML private void onSeeAllRecent()     { System.out.println("See all recent");      }
 
