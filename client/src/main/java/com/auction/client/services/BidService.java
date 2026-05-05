@@ -1,43 +1,38 @@
 package com.auction.client.services;
 
+import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Request;
+import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
+import com.google.gson.Gson;
 import javafx.application.Platform;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * Service to handle bidding logic locally for now.
- * Simulates MVC Controller -> Service -> Network architecture.
+ * Lớp trung gian giữa UI và Mạng.
+ * Kế thừa logic UI cũ nhưng dữ liệu lấy từ Socket thật.
  */
-public class BidService {
+public class BidService implements NetworkClientService.ServerMessageListener {
 
     private static BidService instance;
-    private double currentBidAmount;
-    private double minimumIncrement;
+    private double currentBidAmount = 0.0;
+    private double minimumIncrement = 20.00;
     private boolean isAuctionOpen = true;
     
     private final List<BidTransaction> bidHistory = new ArrayList<>();
-    private final List<AutoBidSettings> autoBids = new ArrayList<>();
+    private final Gson gson = new Gson();
     
     private Consumer<Double> onPriceUpdated;
     private Consumer<BidTransaction> onNewBid;
-    
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     private BidService() {
-        // Dummy initialization
-        this.currentBidAmount = 1240.00;
-        this.minimumIncrement = 20.00;
-        
-        // Simulating external bids for Auto-bidding demonstration
-        scheduler.scheduleAtFixedRate(this::simulateExternalBid, 15, 20, TimeUnit.SECONDS);
+        // Đăng ký làm Observer để nhận thông báo từ Socket
+        NetworkClientService.getInstance().addListener(this);
     }
 
     public static BidService getInstance() {
@@ -52,158 +47,62 @@ public class BidService {
         this.onNewBid = onNewBid;
     }
 
-    public double getCurrentBidAmount() {
-        return currentBidAmount;
-    }
-
-    public double getMinimumIncrement() {
-        return minimumIncrement;
-    }
+    public double getCurrentBidAmount() { return currentBidAmount; }
+    public double getMinimumIncrement() { return minimumIncrement; }
 
     public void setAuctionClosed() {
         this.isAuctionOpen = false;
     }
 
-    /**
-     * Attempts to place a bid. Validates the bid.
-     * @return error message if invalid, or null if successful
-     */
+    // Xử lý gửi lệnh đặt giá lên Server
     public String placeBid(String bidderId, String auctionId, double amount) {
-        if (!isAuctionOpen) {
-            return "The auction is already closed.";
-        }
+        if (!isAuctionOpen) return "Phiên đấu giá đã đóng.";
         
-        double minBid = currentBidAmount + minimumIncrement;
-        if (amount < minBid) {
-            return String.format("Minimum bid is $%.2f", minBid);
-        }
-
-        // Place the bid
-        processNewBid(bidderId, auctionId, amount);
+        // Tạo giao dịch và bọc thành JSON
+        BidTransaction transaction = new BidTransaction("", auctionId, bidderId, amount, System.currentTimeMillis());
+        String payload = gson.toJson(transaction);
         
-        return null; // Success
+        Request req = new Request(MessageType.PLACE_BID, UserSession.getInstance().getUsername(), payload);
+        NetworkClientService.getInstance().sendRequest(req);
+        
+        return null; // Trả về null tức là đã gửi đi, chờ Server xác nhận
     }
     
-    /**
-     * Sets up auto-bidding for a user.
-     */
+    // Xử lý gửi lệnh Auto-bid lên Server
     public String setupAutoBid(String bidderId, String auctionId, double maxPrice, double bidIncrement) {
-        if (!isAuctionOpen) {
-            return "The auction is already closed.";
-        }
-        
-        if (maxPrice <= currentBidAmount) {
-            return "Max price must be higher than the current bid.";
-        }
-        
-        // Remove existing auto-bid for this user
-        autoBids.removeIf(ab -> ab.getBidderId().equals(bidderId) && ab.getAuctionId().equals(auctionId));
+        if (!isAuctionOpen) return "Phiên đấu giá đã đóng.";
         
         AutoBidSettings settings = new AutoBidSettings(bidderId, auctionId, maxPrice, bidIncrement);
-        autoBids.add(settings);
+        String payload = gson.toJson(settings);
         
-        // Trigger auto-bid evaluation immediately in case they need to take the lead
-        evaluateAutoBids(auctionId);
+        Request req = new Request(MessageType.SETUP_AUTO_BID, UserSession.getInstance().getUsername(), payload);
+        NetworkClientService.getInstance().sendRequest(req);
         
         return null;
     }
 
-    private synchronized void processNewBid(String bidderId, String auctionId, double amount) {
-        if (!isAuctionOpen) return;
-        
-        this.currentBidAmount = amount;
-        
-        BidTransaction transaction = new BidTransaction(
-                UUID.randomUUID().toString(),
-                auctionId,
-                bidderId,
-                amount,
-                System.currentTimeMillis()
-        );
-        bidHistory.add(transaction);
-        
-        if (onPriceUpdated != null) {
-            Platform.runLater(() -> onPriceUpdated.accept(amount));
-        }
-        if (onNewBid != null) {
-            Platform.runLater(() -> onNewBid.accept(transaction));
-        }
-        
-        // After any new bid, evaluate auto bids
-        evaluateAutoBids(auctionId);
-    }
-    
-    private void evaluateAutoBids(String auctionId) {
-        if (!isAuctionOpen) return;
-        
-        // Find the active auto-bids that can still bid
-        List<AutoBidSettings> activeBids = new ArrayList<>();
-        for (AutoBidSettings ab : autoBids) {
-            if (ab.isActive() && ab.getAuctionId().equals(auctionId)) {
-                activeBids.add(ab);
-            }
-        }
-        
-        if (activeBids.isEmpty()) return;
-        
-        // Find the auto-bid that should win
-        AutoBidSettings bestAutoBid = null;
-        
-        // Check if the current highest bidder is an auto-bidder
-        String currentHighestBidder = bidHistory.isEmpty() ? "" : bidHistory.get(bidHistory.size() - 1).getBidderId();
-        
-        for (AutoBidSettings ab : activeBids) {
-            // If they are already winning, they don't need to bid
-            if (ab.getBidderId().equals(currentHighestBidder)) {
-                continue;
-            }
+    // ĐÂY LÀ NƠI NHẬN DỮ LIỆU TỪ SOCKET VÀ BƠM LÊN GIAO DIỆN
+    @Override
+    public void onMessageReceived(Response response) {
+        if (response.getType() == MessageType.NEW_BID_BROADCAST || response.getType() == MessageType.BID_SUCCESS) {
             
-            // Calculate next bid
-            double nextBid = currentBidAmount + ab.getBidIncrement();
+            // Giải nén JSON thành Object
+            BidTransaction newBid = gson.fromJson(response.getPayload(), BidTransaction.class);
             
-            // Can they afford it?
-            if (nextBid <= ab.getMaxPrice()) {
-                if (bestAutoBid == null || ab.getMaxPrice() > bestAutoBid.getMaxPrice()) {
-                    bestAutoBid = ab;
-                }
-            } else {
-                // Deactivate if they can't meet the next minimum increment
-                ab.setActive(false);
-            }
-        }
-        
-        // Execute the best auto-bid
-        if (bestAutoBid != null) {
-            double nextBidAmount = currentBidAmount + bestAutoBid.getBidIncrement();
-            final AutoBidSettings finalBest = bestAutoBid;
+            this.currentBidAmount = newBid.getBidAmount();
+            bidHistory.add(newBid);
             
-            // Simulate network delay for auto-bidding
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1000); // 1 second delay
-                    Platform.runLater(() -> {
-                        if (isAuctionOpen && currentBidAmount < finalBest.getMaxPrice()) {
-                             processNewBid(finalBest.getBidderId(), auctionId, nextBidAmount);
-                        }
-                    });
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
+            // Ép luồng chạy trên JavaFX Thread để update giao diện an toàn
+            Platform.runLater(() -> {
+                if (onPriceUpdated != null) onPriceUpdated.accept(currentBidAmount);
+                if (onNewBid != null) onNewBid.accept(newBid);
+            });
+            
+        } else if (response.getType() == MessageType.AUCTION_ENDED) {
+            this.isAuctionOpen = false;
+        } else if (response.getType() == MessageType.BID_ERROR) {
+            System.err.println("Lỗi đặt giá: " + response.getMessage());
+            // Có thể thêm callback để báo lỗi lên ToastNotification của UI ở đây
         }
-    }
-    
-    private void simulateExternalBid() {
-        if (!isAuctionOpen) return;
-        
-        Platform.runLater(() -> {
-            // Randomly someone else bids
-            double nextBidAmount = currentBidAmount + minimumIncrement;
-            processNewBid("external_competitor", "auction_1", nextBidAmount);
-        });
-    }
-    
-    public void shutdown() {
-        scheduler.shutdownNow();
     }
 }
