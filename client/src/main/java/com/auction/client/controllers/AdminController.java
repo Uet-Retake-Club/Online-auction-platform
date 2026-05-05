@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -63,7 +64,7 @@ public class AdminController implements Initializable {
     // ── Lifecycle ────────────────────────────────────────────
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        adminLabel.setText("admin_root"); // TODO: UserSession
+        adminLabel.setText(UserSession.getInstance().getDisplayName());
         activeNav = navDashboard;
 
         // Load stats
@@ -124,7 +125,7 @@ public class AdminController implements Initializable {
 
     @FXML
     private void onLogout() {
-        // TODO: UserSession.getInstance().clear();
+        UserSession.getInstance().clear();
         SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
     }
 
