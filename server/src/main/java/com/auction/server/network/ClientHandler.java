@@ -16,7 +16,7 @@ public class ClientHandler implements Runnable {
     private String clientId = "Unknown"; // Không dùng UUID nữa, sẽ cập nhật khi có lệnh LOGIN
     private PrintWriter out;
     private BufferedReader in;
-    private final Gson gson = new Gson();
+    private static final Gson gson = new Gson();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
