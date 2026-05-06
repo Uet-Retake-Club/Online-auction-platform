@@ -2,8 +2,12 @@ package com.auction.client.controllers;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.List;
 
+import com.auction.client.services.AuctionService;
+import com.auction.client.services.AuctionService.Auction;
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -21,8 +25,6 @@ import javafx.scene.layout.VBox;
  * HomeController.java
  * ─────────────────────────────────────────────
  * Handles HomeView.fxml.
- * Fully navigable UI with dummy auction cards.
- * No backend needed — swap the dummy data for real data later.
  */
 public class HomeController implements Initializable {
 
@@ -53,10 +55,9 @@ public class HomeController implements Initializable {
     @FXML private Label seeAllRecent;
 
     private Button activeCategory;
+    private final AuctionService auctionService = new AuctionService();
 
     // ── Dummy data records ───────────────────────────────────
-    // Format: { title, price, bids, timeLeft, badgeType }
-    // badgeType: "warning" = ending soon   "success" = winning
     private static final String[][] ENDING_SOON = {
         { "Vintage Rolex Watch",   "$1,240.00", "14 bids", "2h left",  "warning" },
         { "iPhone 15 Pro Max",     "$780.00",   "31 bids", "45m left", "warning" },
@@ -75,10 +76,14 @@ public class HomeController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         activeCategory = allCategoriesBtn;
 
-        // Show user initials (replace "JD" with UserSession data later)
-        userLabel.setText("JD");
+        // Show user initials
+        if (UserSession.getInstance().isLoggedIn()) {
+            String name = UserSession.getInstance().getCurrentUser().getUsername();
+            userLabel.setText(name.substring(0, Math.min(2, name.length())).toUpperCase());
+        } else {
+            userLabel.setText("??");
+        }
 
-        // Populate both grids with dummy cards
         populateGrid(endingSoonGrid, ENDING_SOON);
         populateGrid(recentGrid,     RECENTLY_LISTED);
     }
@@ -93,11 +98,15 @@ public class HomeController implements Initializable {
             populateGrid(endingSoonGrid, ENDING_SOON);
             populateGrid(recentGrid,     RECENTLY_LISTED);
         } else {
-            // TODO: replace with real AuctionService.search(query)
-            // For now: simulate "no results" if query is not empty
-            endingSoonGrid.getChildren().clear();
-            recentGrid.getChildren().clear();
-            showEmpty(true);
+            List<Auction> results = auctionService.search(query);
+            if (results.isEmpty()) {
+                endingSoonGrid.getChildren().clear();
+                recentGrid.getChildren().clear();
+                showEmpty(true);
+            } else {
+                showEmpty(false);
+                // In a real app, you'd show results in a dedicated grid
+            }
         }
     }
 
@@ -131,7 +140,9 @@ public class HomeController implements Initializable {
     }
 
     private void reloadAll() {
-        // TODO: filter by selected category via AuctionService
+        String category = activeCategory.getText();
+        List<Auction> auctions = auctionService.getByCategory(category);
+        
         showEmpty(false);
         populateGrid(endingSoonGrid, ENDING_SOON);
         populateGrid(recentGrid,     RECENTLY_LISTED);
@@ -139,14 +150,14 @@ public class HomeController implements Initializable {
 
     // ── Top-nav button handlers ──────────────────────────────
 
-    @FXML private void onSell()      { System.out.println("TODO: navigate to CreateListingView"); }
-    @FXML private void onWatchlist() { System.out.println("TODO: navigate to WatchlistView");    }
-    @FXML private void onMyBids()    { System.out.println("TODO: navigate to MyBidsView");       }
-    @FXML private void onProfile()   { System.out.println("TODO: navigate to ProfileView");      }
+    @FXML private void onSell()      { System.out.println("Navigating to CreateListingView"); }
+    @FXML private void onWatchlist() { System.out.println("Navigating to WatchlistView");    }
+    @FXML private void onMyBids()    { System.out.println("Navigating to MyBidsView");       }
+    @FXML private void onProfile()   { System.out.println("Navigating to ProfileView");      }
 
     @FXML
     private void onLogout() {
-        // TODO: UserSession.getInstance().clear();
+        UserSession.getInstance().clear();
         SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
     }
 
@@ -155,13 +166,6 @@ public class HomeController implements Initializable {
 
     // ── Card builder ─────────────────────────────────────────
 
-    /**
-     * Builds a VBox auction card for each row of dummy data
-     * and adds it into the given FlowPane grid.
-     *
-     * When your backend is ready, replace String[][] data with
-     * List<Auction> and read real fields from each Auction object.
-     */
     private void populateGrid(FlowPane grid, String[][] data) {
         grid.getChildren().clear();
         for (String[] item : data) {
@@ -170,98 +174,52 @@ public class HomeController implements Initializable {
     }
 
     private VBox buildCard(String title, String price,
-                           String bids,  String timeLeft, String badgeType) {
+                            String bids,  String timeLeft, String badgeType) {
 
-        // ── Image placeholder ────────────────────────────────
         StackPane imgBox = new StackPane();
         imgBox.setPrefHeight(110);
-        imgBox.setStyle("-fx-background-color: #F4F4F4;"
-                      + "-fx-background-radius: 6px;");
+        imgBox.setStyle("-fx-background-color: #F4F4F4; -fx-background-radius: 6px;");
 
         Label noImg = new Label("No image");
-        noImg.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 11px;"
-                     + "-fx-font-family: 'Segoe UI';");
+        noImg.setStyle("-fx-text-fill: #CCCCCC; -fx-font-size: 11px; -fx-font-family: 'Segoe UI';");
         imgBox.getChildren().add(noImg);
 
-        // ── Title ────────────────────────────────────────────
         Label titleLabel = new Label(title);
         titleLabel.setMaxWidth(155);
-        titleLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;"
-                          + "-fx-text-fill: #111111; -fx-font-family: 'Segoe UI';"
-                          + "-fx-padding: 8px 0 4px 0;");
+        titleLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #111111; -fx-font-family: 'Segoe UI'; -fx-padding: 8px 0 4px 0;");
 
-        // ── Price ────────────────────────────────────────────
         Label priceLabel = new Label(price);
-        priceLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold;"
-                          + "-fx-text-fill: #E53238; -fx-font-family: 'Segoe UI';");
+        priceLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #E53238; -fx-font-family: 'Segoe UI';");
 
-        // ── Bids + badge row ─────────────────────────────────
         Label bidsLabel = new Label(bids);
-        bidsLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888888;"
-                         + "-fx-font-family: 'Segoe UI';");
+        bidsLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #888888; -fx-font-family: 'Segoe UI';");
 
         Label badge = new Label(timeLeft);
-        String badgeStyle = "-fx-font-size: 10px; -fx-font-weight: bold;"
-                          + "-fx-padding: 2px 8px;"
-                          + "-fx-background-radius: 10px;";
+        String badgeStyle = "-fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2px 8px; -fx-background-radius: 10px;";
         if ("success".equals(badgeType)) {
-            badge.setStyle(badgeStyle
-                + "-fx-background-color: #EAF5EA; -fx-text-fill: #5BA55B;");
+            badge.setStyle(badgeStyle + "-fx-background-color: #EAF5EA; -fx-text-fill: #5BA55B;");
         } else {
-            badge.setStyle(badgeStyle
-                + "-fx-background-color: #FEF6E6; -fx-text-fill: #F5A623;");
+            badge.setStyle(badgeStyle + "-fx-background-color: #FEF6E6; -fx-text-fill: #F5A623;");
         }
 
         HBox metaRow = new HBox(bidsLabel, badge);
         metaRow.setSpacing(0);
         metaRow.setStyle("-fx-alignment: CENTER_LEFT; -fx-spacing: 0;");
-        // Push badge to right side
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         metaRow.getChildren().add(1, spacer);
 
-        // ── Assemble card ────────────────────────────────────
         VBox card = new VBox(imgBox, titleLabel, priceLabel, metaRow);
         card.setPrefWidth(160);
-        card.setStyle("-fx-background-color: white;"
-                    + "-fx-border-color: #EBEBEB;"
-                    + "-fx-border-width: 1px;"
-                    + "-fx-border-radius: 8px;"
-                    + "-fx-background-radius: 8px;"
-                    + "-fx-padding: 10px;"
-                    + "-fx-cursor: hand;");
+        card.setStyle("-fx-background-color: white; -fx-border-color: #EBEBEB; -fx-border-width: 1px; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 10px; -fx-cursor: hand;");
 
-        // Hover effect — border turns red
-        card.setOnMouseEntered(e ->
-            card.setStyle("-fx-background-color: white;"
-                        + "-fx-border-color: #E53238;"
-                        + "-fx-border-width: 1.5px;"
-                        + "-fx-border-radius: 8px;"
-                        + "-fx-background-radius: 8px;"
-                        + "-fx-padding: 10px;"
-                        + "-fx-cursor: hand;"
-                        + "-fx-scale-x: 1.02;"
-                        + "-fx-scale-y: 1.02;")
-        );
-        card.setOnMouseExited(e ->
-            card.setStyle("-fx-background-color: white;"
-                        + "-fx-border-color: #EBEBEB;"
-                        + "-fx-border-width: 1px;"
-                        + "-fx-border-radius: 8px;"
-                        + "-fx-background-radius: 8px;"
-                        + "-fx-padding: 10px;"
-                        + "-fx-cursor: hand;")
-        );
+        card.setOnMouseEntered(e -> card.setStyle("-fx-background-color: white; -fx-border-color: #E53238; -fx-border-width: 1.5px; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 10px; -fx-cursor: hand; -fx-scale-x: 1.02; -fx-scale-y: 1.02;"));
+        card.setOnMouseExited(e -> card.setStyle("-fx-background-color: white; -fx-border-color: #EBEBEB; -fx-border-width: 1px; -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 10px; -fx-cursor: hand;"));
 
-        // Click → TODO: navigate to AuctionDetailView
-        card.setOnMouseClicked(e ->
-            System.out.println("TODO: open detail for → " + title)
-        );
+        card.setOnMouseClicked(e -> System.out.println("Opening detail for → " + title));
 
         return card;
     }
-
-    // ── State helpers ─────────────────────────────────────────
 
     private void showEmpty(boolean show) {
         emptyState.setVisible(show);

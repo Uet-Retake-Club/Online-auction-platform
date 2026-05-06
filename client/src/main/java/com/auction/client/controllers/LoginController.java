@@ -3,7 +3,9 @@ package com.auction.client.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.auction.client.services.AuthService;
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -18,11 +20,6 @@ import javafx.scene.layout.HBox;
  * LoginController.java
  * ─────────────────────────────────────────────
  * Handles LoginView.fxml.
- * Navigation is fully wired — no backend needed yet.
- *
- * Flow:
- *   "Sign in"    → validates fields → goes to HomeView
- *   "Create one" → goes to SignUpView
  */
 public class LoginController implements Initializable {
 
@@ -38,7 +35,6 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Clear field errors as the user types
         emailField.textProperty().addListener(
             (obs, old, val) -> clearFieldError(emailError, emailField));
         passwordField.textProperty().addListener(
@@ -51,14 +47,20 @@ public class LoginController implements Initializable {
     private void onLogin() {
         if (!validateFields()) return;
 
-        // ── TODO: replace this block with your AuthService call ──
-        // AuthService.login(email, password)
-        //   .onSuccess(user -> SceneNavigator.navigateTo(View.HOME))
-        //   .onFailure(err -> showGeneralError("Wrong email or password"));
-        // ─────────────────────────────────────────────────────────
-
-        // For now: any non-empty valid input goes straight to Home
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+        AuthService authService = new AuthService();
+        authService.login(emailField.getText(), passwordField.getText())
+            .thenAccept(user -> {
+                UserSession.getInstance().login(user);
+                javafx.application.Platform.runLater(() -> 
+                    SceneNavigator.navigateTo(SceneNavigator.View.HOME)
+                );
+            })
+            .exceptionally(err -> {
+                javafx.application.Platform.runLater(() -> 
+                    showGeneralError("Wrong email or password")
+                );
+                return null;
+            });
     }
 
     @FXML
@@ -68,7 +70,6 @@ public class LoginController implements Initializable {
 
     @FXML
     private void onForgotPassword() {
-        // TODO: open forgot-password screen when built
         showGeneralError("Forgot password is not available yet.");
     }
 

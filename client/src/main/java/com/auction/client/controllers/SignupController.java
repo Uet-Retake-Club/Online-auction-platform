@@ -3,7 +3,9 @@ package com.auction.client.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.auction.client.services.AuthService;
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -18,11 +20,6 @@ import javafx.scene.layout.HBox;
  * SignupController.java
  * ─────────────────────────────────────────────
  * Handles SignUpView.fxml.
- * Navigation is fully wired — no backend needed yet.
- *
- * Flow:
- *   "Create account" → validates all fields → goes to HomeView
- *   "Sign in"        → goes back to LoginView
  */
 public class SignupController implements Initializable {
 
@@ -65,14 +62,24 @@ public class SignupController implements Initializable {
     private void onSignUp() {
         if (!validateFields()) return;
 
-        // ── TODO: replace with AuthService.register(...) ─────────
-        // AuthService.register(firstName, lastName, username, email, password)
-        //   .onSuccess(user -> SceneNavigator.navigateTo(View.HOME))
-        //   .onFailure(err -> showGeneralError(err.getMessage()));
-        // ─────────────────────────────────────────────────────────
-
-        // For now: valid form → straight to Home
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+        AuthService authService = new AuthService();
+        authService.register(
+            firstNameField.getText(),
+            lastNameField.getText(),
+            usernameField.getText(),
+            emailField.getText(),
+            passwordField.getText()
+        ).thenAccept(user -> {
+            UserSession.getInstance().login(user);
+            javafx.application.Platform.runLater(() -> 
+                SceneNavigator.navigateTo(SceneNavigator.View.HOME)
+            );
+        }).exceptionally(err -> {
+            javafx.application.Platform.runLater(() -> 
+                showGeneralError(err.getMessage())
+            );
+            return null;
+        });
     }
 
     @FXML
