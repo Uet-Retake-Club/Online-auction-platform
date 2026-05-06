@@ -60,10 +60,10 @@ public class ClientHandler implements Runnable {
                 break;
 
             case SETUP_AUTO_BID:
-                // Giải mã cài đặt Auto-bid từ UI gửi lên và đưa cho Manager
                 AutoBidSettings settings = gson.fromJson(request.getPayload(), AutoBidSettings.class);
-                AuctionManager.getInstance().registerAutoBid(settings);
-                sendResponse(new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Đã lưu cấu hình Auto-Bid", null));
+                // Hứng kết quả từ Manager thay vì tự tạo Response mới
+                Response autoBidResult = AuctionManager.getInstance().registerAutoBid(settings);
+                sendResponse(autoBidResult);
                 break;
 
             default:

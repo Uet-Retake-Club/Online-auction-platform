@@ -48,12 +48,39 @@ public class AuctionManager {
     }
 
     // THÊM MỚI: Đăng ký Auto-bid
-    public void registerAutoBid(AutoBidSettings settings) {
-        autoBidders.put(settings.getBidderId(), settings);
-        System.out.println("⚙️ [MANAGER] Kích hoạt Auto-Bid cho: " + settings.getBidderId() + " (Max: $" + settings.getMaxPrice() + ")");
-        // Quét ngay lập tức xem có cần tự động đặt giá luôn không
-        new Thread(this::evaluateAutoBids).start(); 
+    // NÂNG CẤP: Chuyển sang trả về Response để ClientHandler có thể báo lỗi
+public Response registerAutoBid(AutoBidSettings settings) {
+    double requiredMinBid = currentHighestBid + minIncrement;
+
+    // Kiểm tra 1: Giá tối đa có đủ để tham gia vòng tiếp theo không?
+    if (settings.getMaxPrice() < requiredMinBid) {
+        return new Response(
+            MessageType.SETUP_AUTO_BID, 
+            "FAIL", 
+            "Giá tối đa ($" + settings.getMaxPrice() + ") phải cao hơn mức giá tiếp theo ($" + requiredMinBid + ")", 
+            null
+        );
     }
+
+    // Kiểm tra 2: Bước giá tự động có tuân thủ quy định không?
+    if (settings.getBidIncrement() < minIncrement) {
+        return new Response(
+            MessageType.SETUP_AUTO_BID, 
+            "FAIL", 
+            "Bước giá tự động không được thấp hơn bước giá hệ thống ($" + minIncrement + ")", 
+            null
+        );
+    }
+
+    // Nếu vượt qua các vòng gửi xe, tiến hành lưu cấu hình
+    autoBidders.put(settings.getBidderId(), settings);
+    System.out.println("⚙️ [MANAGER] Kích hoạt Auto-Bid thành công cho: " + settings.getBidderId());
+
+    // Kích hoạt luồng kiểm tra để tự nâng giá ngay nếu cần
+    new Thread(this::evaluateAutoBids).start(); 
+
+    return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid đã được kích hoạt!", null);
+}
 
     public synchronized Response processBid(String bidderId, double amount, String payload) {
         double requiredMinBid = currentHighestBid + minIncrement;
