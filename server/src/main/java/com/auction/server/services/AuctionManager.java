@@ -15,9 +15,10 @@ public class AuctionManager {
     // THÊM MỚI: Nơi lưu trữ cấu hình Auto-Bid của các Client
     private final Map<String, AutoBidSettings> autoBidders = new ConcurrentHashMap<>();
 
-    private double currentHighestBid = 1240.00; 
-    private final double minIncrement = 20.00;  
-    private String currentHighestBidder = "None";
+    private final double startingPrice = 1240.00; // Giá khởi điểm cố định
+    private double currentHighestBid = 0.0;       // Chưa ai đặt thì bằng 0
+    private final double minIncrement = 20.00;
+    private String currentHighestBidder = null;   // null nghĩa là chưa có ai
 
     private AuctionManager() {}
 
@@ -49,15 +50,26 @@ public class AuctionManager {
 
     // THÊM MỚI: Đăng ký Auto-bid
     // NÂNG CẤP: Chuyển sang trả về Response để ClientHandler có thể báo lỗi
+// THÊM MỚI: Đăng ký Auto-bid
+// NÂNG CẤP: Phân biệt Giá khởi điểm và Giá hiện tại để Robot không bị oan
 public Response registerAutoBid(AutoBidSettings settings) {
-    double requiredMinBid = currentHighestBid + minIncrement;
+    double requiredMinBid;
+
+    // Logic "Vé vào cửa" mới: Kiểm tra xem đã có ai mở bát chưa?
+    if (currentHighestBidder == null) {
+        // Nếu Server vừa bật, chưa ai đặt giá -> Vé vào cửa chỉ là Giá khởi điểm (1240.00)
+        requiredMinBid = startingPrice; 
+    } else {
+        // Nếu đã có người dẫn đầu -> Vé vào cửa là Giá hiện tại + Bước giá (20.00)
+        requiredMinBid = currentHighestBid + minIncrement;
+    }
 
     // Kiểm tra 1: Giá tối đa có đủ để tham gia vòng tiếp theo không?
     if (settings.getMaxPrice() < requiredMinBid) {
         return new Response(
             MessageType.SETUP_AUTO_BID, 
             "FAIL", 
-            "Giá tối đa ($" + settings.getMaxPrice() + ") phải cao hơn mức giá tiếp theo ($" + requiredMinBid + ")", 
+            "Giá tối đa ($" + settings.getMaxPrice() + ") phải lớn hơn hoặc bằng mức giá yêu cầu hiện tại ($" + requiredMinBid + ")", 
             null
         );
     }
@@ -72,7 +84,7 @@ public Response registerAutoBid(AutoBidSettings settings) {
         );
     }
 
-    // Nếu vượt qua các vòng gửi xe, tiến hành lưu cấu hình
+    // Nếu vượt qua các bài kiểm tra, tiến hành lưu cấu hình
     autoBidders.put(settings.getBidderId(), settings);
     System.out.println("⚙️ [MANAGER] Kích hoạt Auto-Bid thành công cho: " + settings.getBidderId());
 
