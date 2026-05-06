@@ -99,10 +99,9 @@ public Response registerAutoBid(AutoBidSettings settings) {
     double requiredMinBid;
 
     // ĐỒNG BỘ LUẬT CHƠI: Kiểm tra xem phiên đấu giá đã có ai "mở bát" chưa?
-    // Dùng == null là chuẩn xác nhất trong Java cho trường hợp này
     if (currentHighestBidder == null) { 
         // Nếu là người đầu tiên đặt giá, vé vào cửa chỉ là Giá khởi điểm (1240.00)
-        requiredMinBid = 1240.00; 
+        requiredMinBid = startingPrice; 
     } else {
         // Nếu từ người thứ 2 trở đi, vé vào cửa = Giá hiện tại + Bước giá tối thiểu
         requiredMinBid = currentHighestBid + minIncrement;
