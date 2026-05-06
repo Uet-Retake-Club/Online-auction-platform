@@ -1,6 +1,7 @@
 package com.auction.shared.dto;
 
 public enum MessageType {
+    LOGIN,
     PLACE_BID,          // Yêu cầu đặt giá
     SETUP_AUTO_BID,     // Cài đặt auto-bid
     BID_SUCCESS,        // Server xác nhận đặt giá hợp lệ
