@@ -97,9 +97,3 @@ mvn -pl server exec:java
 ## Design Philosophy
 
 This application prioritizes **Visual Excellence**. By utilizing the **AtlantaFX** library, we provide a premium, system-native feel with glassmorphism elements, subtle micro-animations, and a responsive layout that adapts to various window sizes.
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
