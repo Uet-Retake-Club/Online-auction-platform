@@ -6,3 +6,10 @@ build
 
 # Ignore Kotlin plugin data
 .kotlin
+# Bỏ qua tất cả các file đã compile của Java
+*.class
+
+# Bỏ qua các thư mục build khác của IDE
+target/
+bin/
+out/
