@@ -6,13 +6,15 @@ public class AutoBidSettings {
     private double maxPrice;
     private double bidIncrement;
     private boolean active;
+    private boolean aggressiveMode;
 
-    public AutoBidSettings(String bidderId, String auctionId, double maxPrice, double bidIncrement) {
+    public AutoBidSettings(String bidderId, String auctionId, double maxPrice, double bidIncrement,boolean aggressiveMode) {
         this.bidderId = bidderId;
         this.auctionId = auctionId;
         this.maxPrice = maxPrice;
         this.bidIncrement = bidIncrement;
         this.active = true;
+        this.aggressiveMode=aggressiveMode;
     }
 
     public String getBidderId() { return bidderId; }
@@ -26,4 +28,5 @@ public class AutoBidSettings {
     
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public boolean isAggressiveMode() {return aggressiveMode;}
 }

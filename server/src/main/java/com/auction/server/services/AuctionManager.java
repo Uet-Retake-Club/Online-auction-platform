@@ -19,6 +19,7 @@ public class AuctionManager {
     private double currentHighestBid = 0.0;       // Chưa ai đặt thì bằng 0
     private final double minIncrement = 20.00;
     private String currentHighestBidder = null;   // null nghĩa là chưa có ai
+    
 
     private AuctionManager() {}
 
@@ -146,17 +147,28 @@ public Response registerAutoBid(AutoBidSettings settings) {
 
             // Nếu tìm thấy người nâng giá, Server tự động thay mặt họ đặt giá
             if (bestCandidate != null) {
-                double nextBid = currentHighestBid + bestCandidate.getBidIncrement();
-                if (nextBid > bestCandidate.getMaxPrice()) nextBid = bestCandidate.getMaxPrice();
+               // BƯỚC 1: XÁC ĐỊNH CHIẾN THUẬT - Đây là đoạn code mới vẹn cả đôi đường
+                    double step = bestCandidate.isAggressiveMode() 
+                                ? bestCandidate.getBidIncrement() 
+                                : minIncrement;
 
-                if (nextBid >= currentHighestBid + minIncrement) {
-                    currentHighestBid = nextBid;
-                    currentHighestBidder = bestCandidate.getBidderId();
-                    System.out.println("🤖 [AUTO-BID] Tự động nâng giá lên: $" + currentHighestBid + " cho " + currentHighestBidder);
+                    // BƯỚC 2: TÍNH TOÁN GIÁ TIẾP THEO
+                    double nextBid = currentHighestBid + step;
+
+                    // BƯỚC 3: CẮT NGỌN (Bảo vệ ví tiền - giữ nguyên logic cũ)
+                    if (nextBid > bestCandidate.getMaxPrice()) {
+                        nextBid = bestCandidate.getMaxPrice();
+                    }
+
+                    // BƯỚC 4: KIỂM TRA ĐIỀU KIỆN ĐẶT GIÁ (Giữ nguyên logic cũ)
+                    if (nextBid >= currentHighestBid + minIncrement) {
+                        currentHighestBid = nextBid;
+                        currentHighestBidder = bestCandidate.getBidderId();
+                        System.out.println("🤖 [AUTO-BID] Tự động nâng giá lên: $" + currentHighestBid + " cho " + currentHighestBidder);
                     
-                    Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Hệ thống tự động trả giá", null);
-                    broadcast(broadcastResp);
-                    bidChanged = true; // Tiếp tục vòng lặp xem có ai bật Auto-bid đè lại không
+                        Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Hệ thống tự động trả giá", null);
+                        broadcast(broadcastResp);
+                        bidChanged = true; // Tiếp tục vòng lặp xem có ai bật Auto-bid đè lại không
                 }
             }
         } while (bidChanged);

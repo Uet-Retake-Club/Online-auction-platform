@@ -69,10 +69,10 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     }
     
     // Xử lý gửi lệnh Auto-bid lên Server
-    public String setupAutoBid(String bidderId, String auctionId, double maxPrice, double bidIncrement) {
+    public String setupAutoBid(String bidderId, String auctionId, double maxPrice, double bidIncrement , boolean aggressiveMode) {
         if (!isAuctionOpen) return "Phiên đấu giá đã đóng.";
         
-        AutoBidSettings settings = new AutoBidSettings(bidderId, auctionId, maxPrice, bidIncrement);
+        AutoBidSettings settings = new AutoBidSettings(bidderId, auctionId, maxPrice, bidIncrement,aggressiveMode);
         String payload = gson.toJson(settings);
         
         Request req = new Request(MessageType.SETUP_AUTO_BID, UserSession.getInstance().getUsername(), payload);

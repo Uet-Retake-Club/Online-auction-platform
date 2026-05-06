@@ -13,6 +13,7 @@ import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -80,6 +81,8 @@ public class AuctionDetailController implements Initializable {
     private Label autoBidError;
     @FXML
     private Button setupAutoBidBtn;
+    @FXML
+    private CheckBox aggressiveModeCheckBox; // Vuong nho keo tha cai checkbox nay vao file.fxml nhee
 
     // ── Current Auction Context ──────────────────────────────
     private String currentAuctionId = "auction_123";
@@ -270,9 +273,15 @@ public class AuctionDetailController implements Initializable {
             autoBidError.setText("Invalid numbers");
             return;
         }
+        //  ĐỌC TRẠNG THÁI CỦA CHECKBOX 
+        // Nếu checkbox được tích -> true (Hổ báo), nếu không -> false (Tiết kiệm)
+        boolean isAggressive = false; 
+        if (aggressiveModeCheckBox != null) {
+            isAggressive = aggressiveModeCheckBox.isSelected();
+        }
 
         String errorMsg = com.auction.client.services.BidService.getInstance()
-                .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment);
+                .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment,isAggressive);
 
         if (errorMsg != null) {
             autoBidError.setText(errorMsg);
