@@ -3,8 +3,12 @@ package com.auction.shared.models;
 public class Vehicle extends Item {
     private String ownerName;
 
-    public Vehicle(String id, String name, String description, double startingPrice, long startTime, long endTime, String ownerName) {
-        super(id, name, description, startingPrice, startTime, endTime);
+    public Vehicle() {
+        super(0, "", "", ItemCategory.VEHICLE, 0.0, 0L, 0L);
+    }
+
+    public Vehicle(int id, String name, String description, double startingPrice, long startTime, long endTime, String ownerName) {
+        super(id, name, description, ItemCategory.VEHICLE, startingPrice, startTime, endTime);
         this.ownerName = ownerName;
     }
 

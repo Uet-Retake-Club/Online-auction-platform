@@ -11,6 +11,7 @@ CREATE TABLE items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
+    categories TEXT,
     start_price REAL NOT NULL,
     current_price REAL DEFAULT 0,
     start_time DATETIME NOT NULL,
