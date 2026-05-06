@@ -7,6 +7,14 @@ public class Response {
     private String payload; // Dữ liệu đính kèm (nếu có)
 
     // Khởi tạo, Getters và Setters...
+
+    // Constructor
+    public Response(MessageType type, String status, String message, String payload) {
+            this.type = type;
+            this.status = status;
+            this.message = message;
+            this.payload = payload;
+}
     public MessageType getType() { return type; }
     public String getStatus() { return status; }
     public String getMessage() { return message; }
