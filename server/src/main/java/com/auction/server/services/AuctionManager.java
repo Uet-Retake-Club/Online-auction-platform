@@ -94,25 +94,37 @@ public Response registerAutoBid(AutoBidSettings settings) {
     return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid đã được kích hoạt!", null);
 }
 
+
     public synchronized Response processBid(String bidderId, double amount, String payload) {
-        double requiredMinBid = currentHighestBid + minIncrement;
+    double requiredMinBid;
 
-        if (amount >= requiredMinBid) {
-            currentHighestBid = amount;
-            currentHighestBidder = bidderId;
-            System.out.println("✅ [MANAGER] Giá mới: $" + amount + " từ " + bidderId);
-
-            Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có người đặt giá mới", payload);
-            broadcast(broadcastResp);
-
-            // THÊM MỚI: Sau khi có người đặt giá, kích hoạt luồng kiểm tra Auto-Bid ngầm
-            new Thread(this::evaluateAutoBids).start();
-
-            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
-        } else {
-            return new Response(MessageType.BID_ERROR, "FAIL", "Giá tối thiểu là $" + requiredMinBid, null);
-        }
+    // ĐỒNG BỘ LUẬT CHƠI: Kiểm tra xem phiên đấu giá đã có ai "mở bát" chưa?
+    // Dùng == null là chuẩn xác nhất trong Java cho trường hợp này
+    if (currentHighestBidder == null) { 
+        // Nếu là người đầu tiên đặt giá, vé vào cửa chỉ là Giá khởi điểm (1240.00)
+        requiredMinBid = 1240.00; 
+    } else {
+        // Nếu từ người thứ 2 trở đi, vé vào cửa = Giá hiện tại + Bước giá tối thiểu
+        requiredMinBid = currentHighestBid + minIncrement;
     }
+
+    // Trạm kiểm duyệt vé vào cửa
+    if (amount >= requiredMinBid) {
+        currentHighestBid = amount;
+        currentHighestBidder = bidderId;
+        System.out.println("✅ [MANAGER] Giá mới: $" + amount + " từ " + bidderId);
+
+        Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có người đặt giá mới", payload);
+        broadcast(broadcastResp);
+
+        // Kích hoạt luồng kiểm tra Auto-Bid ngầm
+        new Thread(this::evaluateAutoBids).start();
+
+        return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
+    } else {
+        return new Response(MessageType.BID_ERROR, "FAIL", "Giá tối thiểu là $" + requiredMinBid, null);
+    }
+}
 
     // THÊM MỚI: Logic Đấu giá tự động (Giải quyết bài toán 2 người cùng Auto-bid)
     private synchronized void evaluateAutoBids() {
