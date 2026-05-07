@@ -7,9 +7,12 @@ import com.auction.shared.models.AutoBidSettings; // Nhớ import model này
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class AuctionManager {
     private static volatile AuctionManager instance;
+    private final ExecutorService autoBidThreadPool = Executors.newFixedThreadPool(10);
     private final Map<String, ClientHandler> activeClients = new ConcurrentHashMap<>();
     
     // THÊM MỚI: Nơi lưu trữ cấu hình Auto-Bid của các Client
@@ -90,7 +93,7 @@ public Response registerAutoBid(AutoBidSettings settings) {
     System.out.println("⚙️ [MANAGER] Kích hoạt Auto-Bid thành công cho: " + settings.getBidderId());
 
     // Kích hoạt luồng kiểm tra để tự nâng giá ngay nếu cần
-    new Thread(this::evaluateAutoBids).start(); 
+    autoBidThreadPool.submit(this::evaluateAutoBids);
 
     return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid đã được kích hoạt!", null);
 }
@@ -118,7 +121,7 @@ public Response registerAutoBid(AutoBidSettings settings) {
         broadcast(broadcastResp);
 
         // Kích hoạt luồng kiểm tra Auto-Bid ngầm
-        new Thread(this::evaluateAutoBids).start();
+        autoBidThreadPool.submit(this::evaluateAutoBids);
 
         return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
     } else {
