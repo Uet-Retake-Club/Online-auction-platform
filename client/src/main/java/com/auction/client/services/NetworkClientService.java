@@ -37,7 +37,11 @@ public class NetworkClientService {
 
     public static NetworkClientService getInstance() {
         if (instance == null) {
-            instance = new NetworkClientService();
+            synchronized(NetworkClientService.class){
+                if (instance == null) {
+                    instance = new NetworkClientService();
+                }
+            }  
         }
         return instance;
     }
