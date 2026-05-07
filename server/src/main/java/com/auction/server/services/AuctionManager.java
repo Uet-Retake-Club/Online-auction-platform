@@ -176,4 +176,17 @@ public Response registerAutoBid(AutoBidSettings settings) {
             }
         } while (bidChanged);
     }
+    // Ham tat Thread neu ban dot ngot tat chuong trinh
+    public void shutdown() {
+        System.out.println("[AuctionManager] Đang dừng hệ thống Auto-Bid...");
+        autoBidThreadPool.shutdown(); // Ngừng nhận lệnh đánh giá mới
+        try {
+            // Cho phép các trận "Ping-Pong" đang đánh dở có 3 giây để kết thúc
+            if (!autoBidThreadPool.awaitTermination(3, java.util.concurrent.TimeUnit.SECONDS)) {
+                autoBidThreadPool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            autoBidThreadPool.shutdownNow();
+        }
+    }
 }
