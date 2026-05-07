@@ -37,7 +37,11 @@ public class BidService implements NetworkClientService.ServerMessageListener {
 
     public static BidService getInstance() {
         if (instance == null) {
-            instance = new BidService();
+        synchronized(BidService.class) {
+            if (instance == null) {
+                 instance = new BidService();
+            }
+        }
         }
         return instance;
     }
