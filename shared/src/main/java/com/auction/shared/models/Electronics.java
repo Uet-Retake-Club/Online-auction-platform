@@ -4,10 +4,10 @@ public class Electronics extends Item {
     private int warrantyMonths;
 
     public Electronics() {
-        super(0, "", "", ItemCategory.ELECTRONICS, 0.0, 0L, 0L);
+        super("", "", "", ItemCategory.ELECTRONICS, 0.0, 0L, 0L);
     }
 
-    public Electronics(int id, String name, String description, double startingPrice, long startTime, long endTime, int warrantyMonths) {
+    public Electronics(String id, String name, String description, double startingPrice, long startTime, long endTime, int warrantyMonths) {
         super(id, name, description, ItemCategory.ELECTRONICS, startingPrice, startTime, endTime);
         this.warrantyMonths = warrantyMonths;
     }

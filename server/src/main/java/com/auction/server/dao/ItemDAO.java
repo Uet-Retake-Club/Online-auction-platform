@@ -4,9 +4,9 @@ import com.auction.shared.models.Item;
 
 public interface ItemDAO {
     
-    Item getItemById(int id);
+    Item getItemById(String id);
     
     boolean addItem(Item item);
     
-    boolean updateCurrentPrice(int itemId, double newPrice);
+    boolean updateCurrentPrice(String itemId, double newPrice);
 }

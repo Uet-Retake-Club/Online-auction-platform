@@ -5,7 +5,7 @@ public abstract class User extends Entity {
     protected String email;
     protected String role;
 
-    public User(int id, String username, String email, String role) {
+    public User(String id, String username, String email, String role) {
         super(id);
         this.username = username;
         this.email = email;

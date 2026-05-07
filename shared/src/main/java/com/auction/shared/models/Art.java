@@ -4,10 +4,10 @@ public class Art extends Item {
     private String artistName;
 
     public Art() {
-        super(0, "", "", ItemCategory.ART, 0.0, 0L, 0L);
+        super("", "", "", ItemCategory.ART, 0.0, 0L, 0L);
     }
 
-    public Art(int id, String name, String description, double startingPrice, long startTime, long endTime, String artistName) {
+    public Art(String id, String name, String description, double startingPrice, long startTime, long endTime, String artistName) {
         super(id, name, description, ItemCategory.ART, startingPrice, startTime, endTime);
         this.artistName = artistName;
     }

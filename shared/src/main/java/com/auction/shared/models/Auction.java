@@ -8,7 +8,7 @@ public class Auction extends Entity {
     private final Seller seller;
     private final List<BidTransaction> bidHistory;
 
-    public Auction(int id, Item item, Seller seller) {
+    public Auction(String id, Item item, Seller seller) {
         super(id);
         this.item = item;
         this.seller = seller;

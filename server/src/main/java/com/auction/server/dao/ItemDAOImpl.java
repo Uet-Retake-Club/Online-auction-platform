@@ -1,21 +1,20 @@
 package com.auction.server.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.format.DateTimeParseException;
+
 import com.auction.server.database.DatabaseConnection;
 import com.auction.shared.models.Item;
 import com.auction.shared.models.ItemCategory;
 import com.auction.shared.models.ItemFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
-
 public class ItemDAOImpl implements ItemDAO {
 
     @Override
-    public boolean updateCurrentPrice(int itemId, double newPrice) {
+    public boolean updateCurrentPrice(String itemId, double newPrice) {
         // Lệnh SQL này chứa bí quyết chống Race Condition (Lost Update)
         // Chỉ cập nhật nếu newPrice THỰC SỰ LỚN HƠN current_price hiện tại trong DB
         String sql = "UPDATE items SET current_price = ? WHERE id = ? AND current_price < ?";
@@ -24,7 +23,7 @@ public class ItemDAOImpl implements ItemDAO {
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setDouble(1, newPrice);
-            pstmt.setInt(2, itemId);
+            pstmt.setString(2, itemId);
             pstmt.setDouble(3, newPrice); // Điều kiện chặn
             
             // executeUpdate() trả về số dòng bị ảnh hưởng. 
@@ -48,10 +47,10 @@ public class ItemDAOImpl implements ItemDAO {
             psmt.setString(3, item.getCategory().name());
             psmt.setDouble(4, item.getStartingPrice());
             psmt.setDouble(5, item.getCurrentHighestBid());
-            psmt.setInt(6, item.getHighestBidderId());
+            psmt.setString(6, item.getHighestBidderId());
             psmt.setLong(7, item.getStartTime());
             psmt.setLong(8, item.getEndTime());
-            psmt.setInt(9, item.getSellerId());
+            psmt.setString(9, item.getSellerId());
             psmt.setString(10, item.getStatus());
 
             int rowsAffected = psmt.executeUpdate();
@@ -63,14 +62,14 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public Item getItemById(int id) {
+    public Item getItemById(String id) {
         String sql = "SELECT * FROM items WHERE id = ?";
         
         
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setInt(1, id);
+            pstmt.setString(1, id);
             
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -86,14 +85,14 @@ public class ItemDAOImpl implements ItemDAO {
                     Item item = ItemFactory.createItem(category);
                     
                     // 4. Mapping dữ liệu cơ bản
-                    item.setId(rs.getInt("id"));
+                    item.setId(rs.getString("id"));
                     item.setName(rs.getString("name"));
                     item.setDescription(rs.getString("description"));
                     item.setCategory(category);
                     item.setStartingPrice(rs.getDouble("start_price"));
                     item.setCurrentHighestBid(rs.getDouble("current_price"));
-                    item.setHighestBidderId(rs.getInt("highest_bidder_id")); // <-- fix
-                    item.setSellerId(rs.getInt("seller_id"));
+                    item.setHighestBidderId(rs.getString("highest_bidder_id")); // <-- fix
+                    item.setSellerId(rs.getString("seller_id"));
                     
                     // 5. Chuyển đổi dữ liệu phức tạp (Ngày tháng và Trạng thái)
                     item.setStartTime(rs.getLong("start_time"));
