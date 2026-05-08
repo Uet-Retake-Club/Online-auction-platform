@@ -174,8 +174,17 @@ public class AuctionManager {
                     System.out.println("[AUTO-BID] Tự động nâng giá lên: $" + currentHighestBid + " cho "
                             + currentHighestBidder);
 
+                    // Tạo BidTransaction payload để client có thể hiển thị thông tin
+                    BidTransaction autoBidTx = new BidTransaction(
+                            "AUTO-" + System.currentTimeMillis(),
+                            bestCandidate.getAuctionId(),
+                            currentHighestBidder,
+                            currentHighestBid,
+                            System.currentTimeMillis());
+                    String autoBidPayload = new Gson().toJson(autoBidTx);
+
                     Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS",
-                            "Hệ thống tự động trả giá", null);
+                            "Auto-bid placed", autoBidPayload);
                     broadcast(broadcastResp);
                     bidChanged = true; // Tiếp tục vòng lặp xem có ai bật Auto-bid đè lại không
                 }

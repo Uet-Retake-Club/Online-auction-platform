@@ -1,10 +1,10 @@
 package com.auction.shared.models;
 
 public class BidTransaction extends Entity {
-    private final String itemId;
-    private final String bidderId;
-    private final double bidAmount;
-    private final long timestamp;
+    private String itemId;
+    private String bidderId;
+    private double bidAmount;
+    private long timestamp;
 
     public BidTransaction(String id, String itemId, String bidderId, double bidAmount, long timestamp) {
         super(id);
