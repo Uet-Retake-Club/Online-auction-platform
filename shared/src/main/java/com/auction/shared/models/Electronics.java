@@ -3,8 +3,12 @@ package com.auction.shared.models;
 public class Electronics extends Item {
     private int warrantyMonths;
 
+    public Electronics() {
+        super("", "", "", ItemCategory.ELECTRONICS, 0.0, 0L, 0L);
+    }
+
     public Electronics(String id, String name, String description, double startingPrice, long startTime, long endTime, int warrantyMonths) {
-        super(id, name, description, startingPrice, startTime, endTime);
+        super(id, name, description, ItemCategory.ELECTRONICS, startingPrice, startTime, endTime);
         this.warrantyMonths = warrantyMonths;
     }
 

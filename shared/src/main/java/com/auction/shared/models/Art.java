@@ -3,8 +3,12 @@ package com.auction.shared.models;
 public class Art extends Item {
     private String artistName;
 
+    public Art() {
+        super("", "", "", ItemCategory.ART, 0.0, 0L, 0L);
+    }
+
     public Art(String id, String name, String description, double startingPrice, long startTime, long endTime, String artistName) {
-        super(id, name, description, startingPrice, startTime, endTime);
+        super(id, name, description, ItemCategory.ART, startingPrice, startTime, endTime);
         this.artistName = artistName;
     }
 

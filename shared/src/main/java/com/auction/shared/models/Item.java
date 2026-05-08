@@ -3,17 +3,21 @@ package com.auction.shared.models;
 public abstract class Item extends Entity {
     protected String name;
     protected String description;
+    protected ItemCategory category;
     protected double startingPrice;
     protected double currentHighestBid;
     protected String highestBidderId;
     protected long startTime;
     protected long endTime;
+    protected String sellerId;
     protected String status; 
 
-    public Item(String id, String name, String description, double startingPrice, long startTime, long endTime) {
+
+    public Item(String id, String name, String description, ItemCategory category, double startingPrice, long startTime, long endTime) {
         super(id);
         this.name = name;
         this.description = description;
+        this.category = category;
         this.startingPrice = startingPrice;
         this.currentHighestBid = startingPrice;
         this.startTime = startTime;
@@ -28,6 +32,7 @@ public abstract class Item extends Entity {
     public void setDescription(String description) { this.description = description; }
 
     public double getStartingPrice() { return startingPrice; }
+    public void setStartingPrice(double startingPrice) { this.startingPrice = startingPrice; }
 
     public double getCurrentHighestBid() { return currentHighestBid; }
     public void setCurrentHighestBid(double currentHighestBid) { this.currentHighestBid = currentHighestBid; }
@@ -43,6 +48,12 @@ public abstract class Item extends Entity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public ItemCategory getCategory() { return category; }
+    public void setCategory(ItemCategory category) { this.category = category; }
+
+    public String getSellerId() {return sellerId;}
+    public void setSellerId(String sellerId) {this.sellerId = sellerId;}
 
     public abstract void printInfo();
 }
