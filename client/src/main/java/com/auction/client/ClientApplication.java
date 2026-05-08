@@ -1,32 +1,31 @@
-package com.auction.client;
+package com.auction.client; 
 
-import com.auction.client.utils.SceneNavigator;
-
+import com.auction.client.services.NetworkClientService;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import com.auction.client.utils.SceneNavigator;
 
-/**
- * ClientApplication.java
- * ─────────────────────────────────────────────
- * JavaFX entry point.
- * Initialises SceneNavigator then opens the Login screen.
- */
 public class ClientApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // 1. Hand the stage to SceneNavigator — do this FIRST
-        SceneNavigator.init(primaryStage);
+        // MỞ KẾT NỐI TỚI SERVER NGAY KHI BẬT APP
+        NetworkClientService.getInstance().connect("localhost", 8080); // Cổng 8080
 
-        // 2. Window settings
+        // CẤU HÌNH GIAO DIỆN JAVAFX
+        SceneNavigator.init(primaryStage);
         primaryStage.setTitle("AuctionHub");
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(500);
-
-        // 3. Open the login screen — CSS is loaded inside SceneNavigator
         SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
-
         primaryStage.show();
+    }
+
+    // NGẮT KẾT NỐI AN TOÀN KHI TẮT APP (Tránh kẹt Port)
+    @Override
+    public void stop() throws Exception {
+        NetworkClientService.getInstance().disconnect();
+        super.stop();
     }
 
     public static void main(String[] args) {

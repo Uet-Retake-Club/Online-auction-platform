@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    AdminView.fxml
+    Controller : com.auction.client.controllers.AdminController
+    Màn hình quản trị hệ thống — thống kê tổng quan, quản lý user,
+    quản lý phiên đấu giá.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.auction.client.controllers.AdminController"
+            fx:id="rootPane"
+            prefWidth="1100" prefHeight="700"
+            style="-fx-background-color: #F4F4F4;">
+
+    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12"
+              style="-fx-background-color:white;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:10px 20px;">
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
+                <Label text="Hub"     style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
+            </HBox>
+            <!-- Admin badge -->
+            <Label text="ADMIN"
+                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:4px 10px;-fx-background-radius:10px;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="adminLabel" text="Admin"
+                   style="-fx-font-size:13px;-fx-text-fill:#555;-fx-font-family:'Segoe UI';"/>
+            <Button text="Sign out" onAction="#onLogout"
+                    style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:7px 14px;-fx-cursor:hand;-fx-effect:null;"/>
+        </HBox>
+    </top>
+
+    <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
+    <left>
+        <VBox prefWidth="190" spacing="3"
+              style="-fx-background-color:white;-fx-border-color:transparent #EBEBEB transparent transparent;-fx-border-width:0 1px 0 0;-fx-padding:18px 10px;">
+            <Label text="ADMIN PANEL"
+                   style="-fx-font-size:10px;-fx-font-weight:bold;-fx-text-fill:#AAAAAA;-fx-padding:0 8px 8px 8px;"/>
+            <Button fx:id="navDashboard"  text="Dashboard"  maxWidth="Infinity" onAction="#onTabDashboard"
+                    styleClass="nav-item-active" style="-fx-effect:null;"/>
+            <Button fx:id="navUsers"      text="Users"      maxWidth="Infinity" onAction="#onTabUsers"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="navAuctions"   text="Auctions"   maxWidth="Infinity" onAction="#onTabAuctions"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="navBids"       text="Bids"       maxWidth="Infinity" onAction="#onTabBids"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+        </VBox>
+    </left>
+
+    <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="20" style="-fx-padding:24px;">
+
+                <!-- ── DASHBOARD TAB ──────────────────────── -->
+                <VBox fx:id="dashboardTab" spacing="16">
+
+                    <!-- Stat cards row -->
+                    <HBox spacing="12">
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
+                            <Label fx:id="statTotalUsers" text="1,284"
+                                   style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                            <Label text="Total users"
+                                   style="-fx-font-size:11px;-fx-text-fill:#888;-fx-padding:2px 0 0 0;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
+                            <Label fx:id="statActiveAuctions" text="342"
+                                   style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                            <Label text="Active auctions"
+                                   style="-fx-font-size:11px;-fx-text-fill:#888;-fx-padding:2px 0 0 0;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
+                            <Label fx:id="statTotalBids" text="8,741"
+                                   style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                            <Label text="Total bids today"
+                                   style="-fx-font-size:11px;-fx-text-fill:#888;-fx-padding:2px 0 0 0;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
+                            <Label fx:id="statRevenue" text="\$94,200"
+                                   style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#5BA55B;"/>
+                            <Label text="Revenue this month"
+                                   style="-fx-font-size:11px;-fx-text-fill:#888;-fx-padding:2px 0 0 0;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Recent users table -->
+                    <VBox spacing="0"
+                          style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;">
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding:14px 16px 10px 16px;">
+                            <Label text="Recent users"
+                                   style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#111;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Button text="View all users" onAction="#onTabUsers"
+                                    style="-fx-background-color:white;-fx-border-color:#E0E0E0;-fx-border-width:1px;-fx-border-radius:5px;-fx-background-radius:5px;-fx-font-size:12px;-fx-padding:5px 12px;-fx-cursor:hand;-fx-effect:null;"/>
+                        </HBox>
+                        <!-- Table header -->
+                        <HBox style="-fx-background-color:#F7F7F7;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:8px 16px;">
+                            <Label text="Username" HBox.hgrow="ALWAYS" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Email"    prefWidth="200" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Role"     prefWidth="90"  style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Status"   prefWidth="90"  style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Actions"  prefWidth="120" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                        </HBox>
+                        <!-- User rows — populated by controller -->
+                        <VBox fx:id="usersTableContainer"/>
+                    </VBox>
+
+                    <!-- Recent auctions table -->
+                    <VBox spacing="0"
+                          style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;">
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding:14px 16px 10px 16px;">
+                            <Label text="Recent auctions"
+                                   style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#111;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Button text="View all auctions" onAction="#onTabAuctions"
+                                    style="-fx-background-color:white;-fx-border-color:#E0E0E0;-fx-border-width:1px;-fx-border-radius:5px;-fx-background-radius:5px;-fx-font-size:12px;-fx-padding:5px 12px;-fx-cursor:hand;-fx-effect:null;"/>
+                        </HBox>
+                        <HBox style="-fx-background-color:#F7F7F7;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:8px 16px;">
+                            <Label text="Item title"    HBox.hgrow="ALWAYS" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Seller"        prefWidth="130" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Current price" prefWidth="110" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Status"        prefWidth="90"  style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Actions"       prefWidth="100" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                        </HBox>
+                        <VBox fx:id="auctionsTableContainer"/>
+                    </VBox>
+
+                </VBox>
+
+                <!-- ── Empty state when other tabs active ── -->
+                <VBox fx:id="tabPlaceholder" alignment="CENTER" spacing="10"
+                      style="-fx-padding:60px;" visible="false" managed="false">
+                    <Label text="Loading..."
+                           style="-fx-font-size:16px;-fx-text-fill:#AAAAAA;-fx-font-family:'Segoe UI';"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

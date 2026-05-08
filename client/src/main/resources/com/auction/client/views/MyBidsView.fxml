@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    MyBidsView.fxml
+    Controller : com.auction.client.controllers.MyBidsController
+    Màn hình lịch sử đặt giá của Bidder — hiển thị tất cả các phiên
+    đấu giá đã tham gia với trạng thái: Winning / Outbid / Won / Lost.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.auction.client.controllers.MyBidsController"
+            fx:id="rootPane"
+            prefWidth="1100" prefHeight="700"
+            style="-fx-background-color: #F4F4F4;">
+
+    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12"
+              style="-fx-background-color:white;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:10px 20px;">
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
+                <Label text="Hub"     style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Browse" onAction="#onHome"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+            <Button text="+ Sell" onAction="#onSell"
+                    style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:7px 14px;-fx-cursor:hand;-fx-effect:null;"/>
+            <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
+                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;-fx-cursor:hand;"/>
+        </HBox>
+    </top>
+
+    <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
+    <left>
+        <VBox prefWidth="190" spacing="3"
+              style="-fx-background-color:white;-fx-border-color:transparent #EBEBEB transparent transparent;-fx-border-width:0 1px 0 0;-fx-padding:18px 10px;">
+            <Label text="MY BIDS"
+                   style="-fx-font-size:10px;-fx-font-weight:bold;-fx-text-fill:#AAAAAA;-fx-padding:0 8px 8px 8px;"/>
+            <Button fx:id="filterAll"      text="All bids"   maxWidth="Infinity" onAction="#onFilterAll"
+                    styleClass="nav-item-active" style="-fx-effect:null;"/>
+            <Button fx:id="filterWinning"  text="Winning"    maxWidth="Infinity" onAction="#onFilterWinning"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="filterOutbid"   text="Outbid"     maxWidth="Infinity" onAction="#onFilterOutbid"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="filterWon"      text="Won"        maxWidth="Infinity" onAction="#onFilterWon"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="filterWatchlist" text="Watchlist" maxWidth="Infinity" onAction="#onFilterWatchlist"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-opacity:0.5;"/>
+            <Button text="Home"     maxWidth="Infinity" onAction="#onHome"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button text="Sign out" maxWidth="Infinity" onAction="#onLogout"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+        </VBox>
+    </left>
+
+    <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+    <center>
+        <VBox style="-fx-padding:24px;" spacing="16">
+
+            <!-- Header row -->
+            <HBox alignment="CENTER_LEFT">
+                <Label text="My bids"
+                       style="-fx-font-size:18px;-fx-font-weight:bold;-fx-text-fill:#111;-fx-font-family:'Segoe UI';"
+                       HBox.hgrow="ALWAYS"/>
+                <Label fx:id="bidCountLabel" text="5 bids total"
+                       style="-fx-font-size:13px;-fx-text-fill:#888;-fx-font-family:'Segoe UI';"/>
+            </HBox>
+
+            <!-- Bids table -->
+            <VBox style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;" VBox.vgrow="ALWAYS">
+
+                <!-- Table header -->
+                <HBox style="-fx-background-color:#F7F7F7;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-border-radius:8px 8px 0 0;-fx-background-radius:8px 8px 0 0;-fx-padding:9px 14px;">
+                    <Label text="Item" HBox.hgrow="ALWAYS"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="My bid" prefWidth="100"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Current price" prefWidth="120"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Time left" prefWidth="100"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Status" prefWidth="90"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="" prefWidth="100"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                </HBox>
+
+                <!-- Rows — populated by MyBidsController -->
+                <VBox fx:id="bidsListContainer" VBox.vgrow="ALWAYS"/>
+
+                <!-- Empty state -->
+                <VBox fx:id="emptyState" alignment="CENTER" spacing="10"
+                      style="-fx-padding:50px;" visible="false" managed="false">
+                    <Label text="No bids found"
+                           style="-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#767676;-fx-font-family:'Segoe UI';"/>
+                    <Label text="You haven't placed any bids yet."
+                           style="-fx-font-size:13px;-fx-text-fill:#AAAAAA;-fx-font-family:'Segoe UI';"/>
+                    <Button text="Browse auctions" onAction="#onHome"
+                            style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:9px 20px;-fx-cursor:hand;-fx-effect:null;"/>
+                </VBox>
+
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>

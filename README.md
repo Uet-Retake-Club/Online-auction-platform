@@ -1,99 +1,85 @@
-# 🔨 Online Auction Platform
+# Nền tảng Đấu giá Trực tuyến (Online Auction Platform)
 
-![Project Hero](file:///c:/Users/pzont/.gemini/antigravity/brain/a3869110-6488-49a6-bc89-c77fbf7aa63a/auction_platform_hero_1778084790517.png)
+[![CI - Build & Test](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml)
 
-A high-performance, real-time online auction platform built with a robust multi-module Java architecture. This project features a modern JavaFX client with a premium aesthetic and a high-concurrency server backend.
+Một ứng dụng đấu giá trực tuyến thời gian thực được xây dựng bằng Java, Maven và JavaFX. Dự án sử dụng kiến trúc đa mô-đun (multi-module) để tách biệt logic giữa Client, Server và các thành phần dùng chung.
 
----
+## Các tính năng chính
 
-## Key Features
+*   **Đấu giá thời gian thực**: Cập nhật giá thầu tức thì giữa tất cả các client thông qua Socket.
+*   **Hệ thống Auto-Bid (Đấu giá tự động)**: Người dùng có thể thiết lập mức giá tối đa và bước nhảy để hệ thống tự động nâng giá khi có người khác đặt giá cao hơn.
+*   **Chế độ Aggressive**: Chiến thuật đấu giá linh hoạt (nâng giá theo bước nhảy của người dùng hoặc bước nhảy tối thiểu của hệ thống).
+*   **Giao diện hiện đại**: Sử dụng JavaFX kết hợp với AtlantaFX (phong cách GitHub/Primer) và Ikonli cho icon.
+*   **Đồng bộ trạng thái**: Tự động lấy trạng thái phiên đấu giá hiện tại ngay khi đăng nhập.
+*   **CI/CD**: Tích hợp GitHub Actions để tự động kiểm tra code trên Windows, Ubuntu và macOS.
 
-- **Real-time Bidding**: Instant bid updates and auction synchronization.
-- **Auto-Bidding Engine**: Intelligent automated bidding based on user-defined limits.
-- **Premium UI**: Modern desktop experience using **AtlantaFX** and **Ikonli**.
-- **Secure Auth**: Integrated user registration and login session management.
-- **Multi-module Architecture**: Clean separation of concerns between Client, Server, and Shared modules.
-- **Local Persistence**: Reliable data storage using SQLite.
-
----
-
-## Tech Stack
-
-### Core
-- **Language**: Java 21
-- **Build System**: Maven 3.x
-- **Framework**: JavaFX 17 (UI Framework)
-
-### Libraries & Tools
-- **UI Styling**: [AtlantaFX](https://github.com/mkpaz/atlantafx) (Modern CSS theme)
-- **Icons**: [Ikonli](https://github.com/kordamp/ikonli) (FontAwesome integration)
-- **Database**: SQLite JDBC (Local storage)
-- **Data Handling**: Google Gson (JSON serialization)
-- **Logging**: SLF4J with Simple Logger
-
----
-
-## Project Structure
+## Cấu trúc thư mục
 
 ```text
 Online-auction-platform/
-├── pom.xml                       # Root Maven configuration
-├── shared/                       # Shared models and utilities
-│   └── src/main/java/com/auction/shared/
-│       ├── models/               # Core entities (User, Item, Bid)
-│       └── utils/                # Enums and Constants
-├── server/                       # Backend logic and API
-│   └── src/main/java/com/auction/server/
-│       ├── controllers/          # Request handlers
-│       ├── services/             # Business logic (Anti-sniping, Logic)
-│       └── dao/                  # Database Access Objects
-└── client/                       # JavaFX Desktop Application
-    ├── src/main/java/com/auction/client/
-    │   ├── controllers/          # FXML Controller logic
-    │   ├── services/             # Service layer (AuthService, AuctionService)
-    │   └── utils/                # Navigation and Session management
-    └── src/main/resources/
-        ├── views/                # FXML Layouts
-        └── styles/               # Custom CSS Design
+├── pom.xml                       # Cấu hình Maven tổng
+├── .github/workflows/ci.yml      # Pipeline CI/CD (GitHub Actions)
+├── shared/                       # Các Class dùng chung cho cả Client và Server
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/auction/shared/
+│       │   ├── models/           # Các đối tượng: User, Item, Auction, BidTransaction...
+│       │   └── dto/              # Đối tượng truyền tin (Request, Response, MessageType)
+│       └── test/java/com/auction/shared/
+│           └── ...               # Unit tests cho models và DTOs
+├── server/                       # Xử lý Logic nghiệp vụ và Kết nối Socket
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/auction/server/
+│       │   ├── ServerApplication.java # Điểm khởi đầu của Server
+│       │   ├── services/         # AuctionManager (Xử lý logic đấu giá & Auto-bid)
+│       │   └── network/          # ClientHandler (Quản lý kết nối socket)
+│       └── test/java/com/auction/server/
+│           └── services/         # Unit tests cho logic phía Server
+└── client/                       # Ứng dụng giao diện JavaFX
+    ├── pom.xml
+    └── src/
+        ├── main/java/com/auction/client/
+        │   ├── Launcher.java     # Khởi chạy ứng dụng Client
+        │   ├── controllers/      # Điều khiển giao diện (Login, Home, Detail)
+        │   └── network/          # NetworkClientService (Giao tiếp với Server)
+        └── main/resources/       # Giao diện FXML và CSS
 ```
 
----
+## Hướng dẫn cài đặt và chạy
 
-## Getting Started
+### Yêu cầu hệ thống
+*   Java JDK 17 trở lên.
+*   Maven 3.8+.
 
-### Prerequisites
-- **JDK 21** or higher
-- **Maven 3.8+**
+### 1. Build dự án
+Mở terminal tại thư mục gốc và chạy lệnh sau để biên dịch toàn bộ các mô-đun:
 
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Uet-Retake-Club/Online-auction-platform.git
-   cd Online-auction-platform
-   ```
-
-2. **Build the project:**
-   ```bash
-   mvn clean install
-   ```
-
-### Running the Application
-
-#### Launch the Client
-The client is the primary user interface. Launch it using:
 ```bash
-mvn -pl client javafx:run
+mvn clean install
 ```
 
-#### Launch the Server
-Ensure the backend is running to handle data and concurrency:
+### 2. Chạy Server
+Server cần được khởi chạy trước để lắng nghe kết nối từ các Client (mặc định cổng 8080):
+
 ```bash
 mvn -pl server exec:java
 ```
 
----
+### 3. Chạy Client (JavaFX)
+Mở một terminal mới để chạy ứng dụng giao diện:
 
-## Design Philosophy
+```bash
+mvn -pl client javafx:run
+```
 
-This application prioritizes **Visual Excellence**. By utilizing the **AtlantaFX** library, we provide a premium, system-native feel with glassmorphism elements, subtle micro-animations, and a responsive layout that adapts to various window sizes.
+## Kiểm thử (Testing)
+
+Dự án có hệ thống unit test đầy đủ cho các thành phần logic. Để chạy tất cả các bài kiểm tra:
+
+```bash
+mvn clean verify -pl shared,server -am
+```
+
+## CI/CD
+Mọi thay đổi khi push hoặc tạo Pull Request lên nhánh main hoặc dev sẽ được tự động build và chạy test trên cả 3 nền tảng: Windows, Ubuntu, macOS để đảm bảo tính ổn định và tương thích.

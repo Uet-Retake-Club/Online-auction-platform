@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    AuctionDetailView.fxml
+    Controller : com.auction.client.controllers.AuctionDetailController
+    Màn hình chi tiết sản phẩm đấu giá — hiển thị giá, đồng hồ đếm ngược,
+    lịch sử đặt giá và form đặt giá trực tiếp.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.auction.client.controllers.AuctionDetailController"
+            fx:id="rootPane"
+            prefWidth="1100" prefHeight="700"
+            style="-fx-background-color: #F4F4F4;">
+
+    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12"
+              style="-fx-background-color: white;
+                     -fx-border-color: transparent transparent #EBEBEB transparent;
+                     -fx-border-width: 0 0 1px 0; -fx-padding: 10px 20px;">
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
+                <Label text="Hub"     style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Watchlist" onAction="#onWatchlist"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+            <Button text="My bids"  onAction="#onMyBids"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+            <Button text="+ Sell"   onAction="#onSell"
+                    style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:7px 14px;-fx-cursor:hand;-fx-effect:null;"/>
+            <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
+                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;-fx-cursor:hand;"/>
+        </HBox>
+    </top>
+
+    <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="16" style="-fx-padding: 20px;">
+
+                <!-- Back link -->
+                <Label fx:id="backLabel" text="← Back to listings"
+                       onMouseClicked="#onBack"
+                       style="-fx-text-fill:#1A73E8;-fx-font-size:13px;-fx-cursor:hand;-fx-font-family:'Segoe UI';"/>
+
+                <!-- ── Top section: image + bid panel ──────── -->
+                <HBox spacing="16" alignment="TOP_LEFT">
+
+                    <!-- Item image placeholder -->
+                    <VBox prefWidth="420" prefHeight="280"
+                          alignment="CENTER"
+                          style="-fx-background-color:#EBEBEB;-fx-border-radius:8px;-fx-background-radius:8px;">
+                        <Label text="No image"
+                               style="-fx-text-fill:#CCCCCC;-fx-font-size:14px;-fx-font-family:'Segoe UI';"/>
+                    </VBox>
+
+                    <!-- Bid panel -->
+                    <VBox HBox.hgrow="ALWAYS" spacing="0"
+                          style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:18px;">
+
+                        <!-- Title & category -->
+                        <Label fx:id="itemTitle" text="Vintage Rolex Submariner 1969"
+                               style="-fx-font-size:18px;-fx-font-weight:bold;-fx-text-fill:#111;-fx-font-family:'Segoe UI';-fx-wrap-text:true;"/>
+                        <Label fx:id="itemMeta" text="Electronics  ·  Seller: watch_king99"
+                               style="-fx-font-size:12px;-fx-text-fill:#888;-fx-font-family:'Segoe UI';-fx-padding:4px 0 14px 0;"/>
+
+                        <!-- Current price -->
+                        <Label text="Current highest bid"
+                               style="-fx-font-size:11px;-fx-text-fill:#888;-fx-font-family:'Segoe UI';"/>
+                        <Label fx:id="currentPrice" text="\$1,240.00"
+                               style="-fx-font-size:28px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';-fx-padding:2px 0 12px 0;"/>
+
+                        <!-- Stats row -->
+                        <HBox spacing="10" style="-fx-padding:0 0 14px 0;">
+                            <VBox alignment="CENTER" style="-fx-background-color:#F7F7F7;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:8px 16px;">
+                                <Label fx:id="totalBids" text="14"
+                                       style="-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                                <Label text="Total bids" style="-fx-font-size:10px;-fx-text-fill:#888;"/>
+                            </VBox>
+                            <VBox alignment="CENTER" style="-fx-background-color:#F7F7F7;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:8px 16px;">
+                                <Label fx:id="totalBidders" text="7"
+                                       style="-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                                <Label text="Bidders" style="-fx-font-size:10px;-fx-text-fill:#888;"/>
+                            </VBox>
+                            <VBox alignment="CENTER" style="-fx-background-color:#F7F7F7;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:8px 16px;">
+                                <Label fx:id="auctionStatus" text="OPEN"
+                                       style="-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#5BA55B;"/>
+                                <Label text="Status" style="-fx-font-size:10px;-fx-text-fill:#888;"/>
+                            </VBox>
+                        </HBox>
+
+                        <!-- Countdown timer -->
+                        <HBox alignment="CENTER_LEFT" spacing="10"
+                              style="-fx-background-color:#FEF6E6;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:10px 14px;-fx-margin:0 0 14px 0;">
+                            <VBox>
+                                <Label fx:id="countdownTimer" text="01:47:32"
+                                       style="-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';"/>
+                                <Label text="Time remaining"
+                                       style="-fx-font-size:10px;-fx-text-fill:#888;"/>
+                            </VBox>
+                        </HBox>
+
+                        <Region style="-fx-min-height:14px;"/>
+
+                        <!-- Bid input -->
+                        <Label fx:id="minBidHint" text="Minimum bid: $1,260.00"
+                               style="-fx-font-size:12px;-fx-text-fill:#888;-fx-padding:0 0 5px 0;"/>
+                        <TextField fx:id="bidAmountField"
+                                   promptText="Enter your bid amount"
+                                   styleClass="text-field-base"
+                                   maxWidth="Infinity"/>
+                        <Label fx:id="bidError" text=""
+                               styleClass="field-error"
+                               style="-fx-min-height:16px;-fx-padding:3px 0 8px 0;"/>
+
+                        <!-- Place bid button -->
+                        <Button fx:id="placeBidBtn" text="Place bid"
+                                maxWidth="Infinity"
+                                onAction="#onPlaceBid"
+                                style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:14px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:11px;-fx-cursor:hand;-fx-effect:null;-fx-pref-height:42px;"/>
+
+                        <Region style="-fx-min-height:8px;"/>
+
+                        <!-- Watchlist button -->
+                        <Button fx:id="watchlistBtn" text="Add to watchlist"
+                                maxWidth="Infinity"
+                                onAction="#onAddWatchlist"
+                                style="-fx-background-color:white;-fx-text-fill:#333;-fx-border-color:#E0E0E0;-fx-border-width:1.5px;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:10px;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;"/>
+                        
+                        <Region style="-fx-min-height:16px;"/>
+                        
+                        <!-- Auto-Bid panel -->
+                        <VBox style="-fx-background-color:#F9F9F9;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:12px;">
+                            <Label text="Auto-Bidding" style="-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;-fx-padding:0 0 8px 0;"/>
+                            
+                            <Label text="Max Price:" style="-fx-font-size:11px;-fx-text-fill:#555;"/>
+                            <TextField fx:id="maxPriceField" promptText="e.g. 2000.00" styleClass="text-field-base" style="-fx-margin:0 0 8px 0;"/>
+                            
+                            <Label text="Bid Increment:" style="-fx-font-size:11px;-fx-text-fill:#555;-fx-padding:8px 0 0 0;"/>
+                            <TextField fx:id="autoBidIncrementField" promptText="e.g. 50.00" styleClass="text-field-base"/>
+                            
+                            <Label fx:id="autoBidError" text="" styleClass="field-error" style="-fx-min-height:16px;-fx-padding:3px 0 8px 0;"/>
+                            
+                            <CheckBox fx:id="aggressiveModeCheckBox" text="Aggressive Mode (bid with custom increment)"
+                                      style="-fx-font-size:11px;-fx-text-fill:#555;-fx-padding:0 0 8px 0;"/>
+
+                            <Button fx:id="setupAutoBidBtn" text="Set Auto-Bid" maxWidth="Infinity" onAction="#onSetupAutoBid"
+                                    style="-fx-background-color:#333;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;"/>
+                        </VBox>
+                    </VBox>
+                </HBox>
+
+                <!-- ── Item description ──────────────────── -->
+                <VBox style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
+                    <Label text="Description"
+                           style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#111;-fx-padding:0 0 8px 0;"/>
+                    <Label fx:id="itemDescription"
+                           text="No description provided."
+                           style="-fx-font-size:13px;-fx-text-fill:#555;-fx-wrap-text:true;-fx-font-family:'Segoe UI';"/>
+                </VBox>
+
+                <!-- ── Bid history ───────────────────────── -->
+                <VBox style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
+                    <HBox alignment="CENTER_LEFT" style="-fx-padding:0 0 12px 0;">
+                        <Label text="Bid history"
+                               style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#111;"
+                               HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <!-- Rows added by controller -->
+                    <VBox fx:id="bidHistoryList" spacing="0"/>
+
+                    <Label fx:id="noBidsLabel" text="No bids placed yet. Be the first!"
+                           style="-fx-font-size:13px;-fx-text-fill:#AAAAAA;-fx-padding:12px 0;-fx-font-family:'Segoe UI';"
+                           visible="true"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
