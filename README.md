@@ -1,75 +1,84 @@
 # Online-auction-platform
 
-An auction platform using Java, Gradle, JavaFx, Firebase.
+[![CI - Build & Test](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml)
+
+An auction platform using Java, Maven, JavaFx.
 
 ## Folder structure
 
 ```text
 Online-auction-platform/
-├── build.gradle
-├── settings.gradle
-├── gradlew
-├── gradlew.bat
+├── pom.xml
+├── .github/workflows/ci.yml     // CI/CD pipeline (GitHub Actions)
 ├── shared/                       // Chứa các class dùng chung cho cả Client và Server
-│   ├── build.gradle
-│   └── src/main/java/com/auction/shared/
-│       ├── models/               // Entity cơ bản: User, Item, BidTransaction...
-│       └── utils/                // Constants, Enums (Trạng thái phiên: OPEN, RUNNING...)
-├── server/                       // Xử lý Database, Core Logic, Socket/API
-│   ├── build.gradle
-│   └── src/main/java/com/auction/server/
-│       ├── ServerApplication.java
-│       ├── controllers/          // Lắng nghe và xử lý request từ Client
-│       ├── services/             // Xử lý logic nghiệp vụ (Auction logic, Anti-sniping)
-│       ├── dao/                  // Data Access Object giao tiếp với SQLite
-│       ├── database/             // Chứa logic khởi tạo kết nối SQLite
-│       └── network/              // Quản lý Socket connections / Event broadcasting
-├── client/                       // Ứng dụng JavaFX cho người dùng
-│   ├── build.gradle
-│   ├── src/main/java/com/auction/client/
-│   │   ├── ClientApplication.java
-│   │   ├── controllers/          // JavaFX Controllers (điều khiển View)
-│   │   ├── network/              // Gửi/nhận dữ liệu từ Server, Firebase Auth
-│   │   └── services/             // Client logic (Validate giá, Auto-bidding)
-│   └── src/main/resources/com/auction/client/
-│       ├── views/                // Các file FXML giao diện
-│       │   ├── LoginView.fxml
-│       │   ├── AuctionListView.fxml
-│       │   ├── ItemDetailView.fxml
-│       │   └── RealtimeBiddingView.fxml
-│       └── styles/               // Các file CSS thiết kế giao diện
-│           ├── main.css
-│           └── components.css
-└── database/
-    └── auction.db                // File database SQLite cục bộ
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/auction/shared/
+│       │   ├── models/           // Entity cơ bản: User, Item, BidTransaction...
+│       │   └── dto/              // Request, Response, MessageType
+│       └── test/java/com/auction/shared/
+│           ├── models/           // Unit tests cho models
+│           └── dto/              // Unit tests cho DTOs
+├── server/                       // Xử lý Core Logic, Socket
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/auction/server/
+│       │   ├── ServerApplication.java
+│       │   ├── services/         // Xử lý logic nghiệp vụ (AuctionManager)
+│       │   └── network/          // Quản lý Socket connections (ClientHandler)
+│       └── test/java/com/auction/server/
+│           └── services/         // Unit tests cho AuctionManager
+└── client/                       // Ứng dụng JavaFX cho người dùng
+    ├── pom.xml
+    └── src/main/java/com/auction/client/
+        ├── Launcher.java
+        ├── controllers/          // JavaFX Controllers
+        └── network/              // Gửi/nhận dữ liệu từ Server
 ```
+
+## CI/CD
+
+Dự án sử dụng **GitHub Actions** để tự động build và test mỗi khi:
+- Push lên branch `main` hoặc `dev`
+- Tạo Pull Request vào `main` hoặc `dev`
+
+Pipeline chạy trên **3 hệ điều hành** (Ubuntu, Windows, macOS) để đảm bảo tính tương thích đa nền tảng.
+
+> **Lưu ý:** Module `client` (JavaFX) không chạy test trên CI vì cần display server. Chỉ `shared` và `server` được test tự động.
 
 ## Building the Maven Project
 
-First, build the entire project to compile and package all modules:
+Build toàn bộ project:
 
-``` text
-mvn clean install
+```bash
+mvn clean install
 ```
 
-This will:
+## Running Tests
 
-- Compile all source code
-- Run tests (if any)
-- Package JARs for each module
-- Running the Client (JavaFX Application)
-- The client is a JavaFX app. Run it with:
+Chạy test cho modules `shared` và `server`:
 
-``` text
-mvn -pl client javafx:run
+```bash
+mvn clean verify -pl shared,server -am
 ```
 
-This uses the javafx-maven-plugin configured in pom.xml.
-Running the Server
-The server is a console app. Run it with:
+Chạy test cho một module cụ thể:
 
-``` text
-mvn -pl server exec:java
+```bash
+mvn test -pl shared
+mvn test -pl server
 ```
 
-This uses the exec-maven-plugin configured in pom.xml.
+## Running the Application
+
+### Server
+
+```bash
+mvn -pl server exec:java
+```
+
+### Client (JavaFX)
+
+```bash
+mvn -pl client javafx:run
+```
