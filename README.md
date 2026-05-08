@@ -1,75 +1,85 @@
-# Online-auction-platform
+# Nền tảng Đấu giá Trực tuyến (Online Auction Platform)
 
-An auction platform using Java, Gradle, JavaFx, Firebase.
+[![CI - Build & Test](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml)
 
-## Folder structure
+Một ứng dụng đấu giá trực tuyến thời gian thực được xây dựng bằng Java, Maven và JavaFX. Dự án sử dụng kiến trúc đa mô-đun (multi-module) để tách biệt logic giữa Client, Server và các thành phần dùng chung.
+
+## Các tính năng chính
+
+*   **Đấu giá thời gian thực**: Cập nhật giá thầu tức thì giữa tất cả các client thông qua Socket.
+*   **Hệ thống Auto-Bid (Đấu giá tự động)**: Người dùng có thể thiết lập mức giá tối đa và bước nhảy để hệ thống tự động nâng giá khi có người khác đặt giá cao hơn.
+*   **Chế độ Aggressive**: Chiến thuật đấu giá linh hoạt (nâng giá theo bước nhảy của người dùng hoặc bước nhảy tối thiểu của hệ thống).
+*   **Giao diện hiện đại**: Sử dụng JavaFX kết hợp với AtlantaFX (phong cách GitHub/Primer) và Ikonli cho icon.
+*   **Đồng bộ trạng thái**: Tự động lấy trạng thái phiên đấu giá hiện tại ngay khi đăng nhập.
+*   **CI/CD**: Tích hợp GitHub Actions để tự động kiểm tra code trên Windows, Ubuntu và macOS.
+
+## Cấu trúc thư mục
 
 ```text
 Online-auction-platform/
-├── build.gradle
-├── settings.gradle
-├── gradlew
-├── gradlew.bat
-├── shared/                       // Chứa các class dùng chung cho cả Client và Server
-│   ├── build.gradle
-│   └── src/main/java/com/auction/shared/
-│       ├── models/               // Entity cơ bản: User, Item, BidTransaction...
-│       └── utils/                // Constants, Enums (Trạng thái phiên: OPEN, RUNNING...)
-├── server/                       // Xử lý Database, Core Logic, Socket/API
-│   ├── build.gradle
-│   └── src/main/java/com/auction/server/
-│       ├── ServerApplication.java
-│       ├── controllers/          // Lắng nghe và xử lý request từ Client
-│       ├── services/             // Xử lý logic nghiệp vụ (Auction logic, Anti-sniping)
-│       ├── dao/                  // Data Access Object giao tiếp với SQLite
-│       ├── database/             // Chứa logic khởi tạo kết nối SQLite
-│       └── network/              // Quản lý Socket connections / Event broadcasting
-├── client/                       // Ứng dụng JavaFX cho người dùng
-│   ├── build.gradle
-│   ├── src/main/java/com/auction/client/
-│   │   ├── ClientApplication.java
-│   │   ├── controllers/          // JavaFX Controllers (điều khiển View)
-│   │   ├── network/              // Gửi/nhận dữ liệu từ Server, Firebase Auth
-│   │   └── services/             // Client logic (Validate giá, Auto-bidding)
-│   └── src/main/resources/com/auction/client/
-│       ├── views/                // Các file FXML giao diện
-│       │   ├── LoginView.fxml
-│       │   ├── AuctionListView.fxml
-│       │   ├── ItemDetailView.fxml
-│       │   └── RealtimeBiddingView.fxml
-│       └── styles/               // Các file CSS thiết kế giao diện
-│           ├── main.css
-│           └── components.css
-└── database/
-    └── auction.db                // File database SQLite cục bộ
+├── pom.xml                       # Cấu hình Maven tổng
+├── .github/workflows/ci.yml      # Pipeline CI/CD (GitHub Actions)
+├── shared/                       # Các Class dùng chung cho cả Client và Server
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/auction/shared/
+│       │   ├── models/           # Các đối tượng: User, Item, Auction, BidTransaction...
+│       │   └── dto/              # Đối tượng truyền tin (Request, Response, MessageType)
+│       └── test/java/com/auction/shared/
+│           └── ...               # Unit tests cho models và DTOs
+├── server/                       # Xử lý Logic nghiệp vụ và Kết nối Socket
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/auction/server/
+│       │   ├── ServerApplication.java # Điểm khởi đầu của Server
+│       │   ├── services/         # AuctionManager (Xử lý logic đấu giá & Auto-bid)
+│       │   └── network/          # ClientHandler (Quản lý kết nối socket)
+│       └── test/java/com/auction/server/
+│           └── services/         # Unit tests cho logic phía Server
+└── client/                       # Ứng dụng giao diện JavaFX
+    ├── pom.xml
+    └── src/
+        ├── main/java/com/auction/client/
+        │   ├── Launcher.java     # Khởi chạy ứng dụng Client
+        │   ├── controllers/      # Điều khiển giao diện (Login, Home, Detail)
+        │   └── network/          # NetworkClientService (Giao tiếp với Server)
+        └── main/resources/       # Giao diện FXML và CSS
 ```
 
-## Building the Maven Project
+## Hướng dẫn cài đặt và chạy
 
-First, build the entire project to compile and package all modules:
+### Yêu cầu hệ thống
+*   Java JDK 17 trở lên.
+*   Maven 3.8+.
 
-``` text
-mvn clean install
+### 1. Build dự án
+Mở terminal tại thư mục gốc và chạy lệnh sau để biên dịch toàn bộ các mô-đun:
+
+```bash
+mvn clean install
 ```
 
-This will:
+### 2. Chạy Server
+Server cần được khởi chạy trước để lắng nghe kết nối từ các Client (mặc định cổng 8080):
 
-- Compile all source code
-- Run tests (if any)
-- Package JARs for each module
-- Running the Client (JavaFX Application)
-- The client is a JavaFX app. Run it with:
-
-``` text
-mvn -pl client javafx:run
+```bash
+mvn -pl server exec:java
 ```
 
-This uses the javafx-maven-plugin configured in pom.xml.
-Running the Server
-The server is a console app. Run it with:
+### 3. Chạy Client (JavaFX)
+Mở một terminal mới để chạy ứng dụng giao diện:
 
-``` text
-mvn -pl server exec:java
+```bash
+mvn -pl client javafx:run
 ```
 
-This uses the exec-maven-plugin configured in pom.xml.
+## Kiểm thử (Testing)
+
+Dự án có hệ thống unit test đầy đủ cho các thành phần logic. Để chạy tất cả các bài kiểm tra:
+
+```bash
+mvn clean verify -pl shared,server -am
+```
+
+## CI/CD
+Mọi thay đổi khi push hoặc tạo Pull Request lên nhánh main hoặc dev sẽ được tự động build và chạy test trên cả 3 nền tảng: Windows, Ubuntu, macOS để đảm bảo tính ổn định và tương thích.
