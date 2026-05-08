@@ -1,4 +1,4 @@
-package com.auction.client; // Lưu ý sửa lại tên package này nếu thư mục gốc của bạn khác
+package com.auction.client; 
 
 import com.auction.client.services.NetworkClientService;
 import javafx.application.Application;

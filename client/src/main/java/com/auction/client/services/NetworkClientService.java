@@ -57,10 +57,10 @@ public class NetworkClientService {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             isRunning = true;
             
-            System.out.println("✅ Đã kết nối đến Server Đấu giá: " + host + ":" + port);
+            System.out.println(" Đã kết nối đến Server Đấu giá: " + host + ":" + port);
             startListeningThread();
         } catch (Exception e) {
-            System.err.println("❌ Lỗi kết nối Server: " + e.getMessage());
+            System.err.println(" Lỗi kết nối Server: " + e.getMessage());
         }
     }
 
@@ -78,7 +78,7 @@ public class NetworkClientService {
                 }
             } catch (Exception e) {
                 if (isRunning) {
-                    System.err.println("❌ Mất kết nối tới Server.");
+                    System.err.println("SMất kết nối tới Server.");
                 }
             }
         }, "Client-Listen-Thread").start();
