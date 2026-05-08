@@ -7,6 +7,7 @@ import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.models.BidTransaction;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -112,6 +113,7 @@ public class AuctionDetailController implements Initializable {
                         "Original bracelet, box, and papers included. Serviced in 2022. " +
                         "Running perfectly with minor surface scratches consistent with age.");
         updatePrice(com.auction.client.services.BidService.getInstance().getCurrentBidAmount());
+        com.auction.client.services.BidService.getInstance().requestStatus();
         totalBids.setText("14");
         totalBidders.setText("7");
         auctionStatus.setText("OPEN");
@@ -157,6 +159,11 @@ public class AuctionDetailController implements Initializable {
                 (obs, old, val) -> autoBidError.setText(""));
         autoBidIncrementField.textProperty().addListener(
                 (obs, old, val) -> autoBidError.setText(""));
+
+        // Đăng ký hiển thị Toast khi giá thay đổi
+        com.auction.client.services.BidService.getInstance().setOnPriceChangeNotification(msg -> {
+            ToastNotification.show(userLabel, msg, ToastNotification.Type.INFO);
+        });
     }
 
     // ── Countdown timer ──────────────────────────────────────

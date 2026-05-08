@@ -29,6 +29,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     
     private Consumer<Double> onPriceUpdated;
     private Consumer<BidTransaction> onNewBid;
+    private Consumer<String> onPriceChangeNotification; // Toast thông báo thay đổi giá
 
     private BidService() {
         // Đăng ký làm Observer để nhận thông báo từ Socket
@@ -49,6 +50,10 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     public void setCallbacks(Consumer<Double> onPriceUpdated, Consumer<BidTransaction> onNewBid) {
         this.onPriceUpdated = onPriceUpdated;
         this.onNewBid = onNewBid;
+    }
+
+    public void setOnPriceChangeNotification(Consumer<String> callback) {
+        this.onPriceChangeNotification = callback;
     }
 
     public double getCurrentBidAmount() { return currentBidAmount; }
@@ -85,6 +90,14 @@ public class BidService implements NetworkClientService.ServerMessageListener {
         return null;
     }
 
+    /**
+     * Gửi yêu cầu lấy trạng thái giá hiện tại từ Server.
+     */
+    public void requestStatus() {
+        Request req = new Request(MessageType.GET_STATUS, UserSession.getInstance().getUsername(), "");
+        NetworkClientService.getInstance().sendRequest(req);
+    }
+
     // ĐÂY LÀ NƠI NHẬN DỮ LIỆU TỪ SOCKET VÀ BƠM LÊN GIAO DIỆN
     @Override
     public void onMessageReceived(Response response) {
@@ -100,6 +113,13 @@ public class BidService implements NetworkClientService.ServerMessageListener {
             Platform.runLater(() -> {
                 if (onPriceUpdated != null) onPriceUpdated.accept(currentBidAmount);
                 if (onNewBid != null) onNewBid.accept(newBid);
+
+                // Hiển thị thông báo thay đổi giá
+                if (onPriceChangeNotification != null) {
+                    String msg = String.format("Price updated: $%.2f by %s",
+                            newBid.getBidAmount(), newBid.getBidderId());
+                    onPriceChangeNotification.accept(msg);
+                }
             });
             
         } else if (response.getType() == MessageType.AUCTION_ENDED) {

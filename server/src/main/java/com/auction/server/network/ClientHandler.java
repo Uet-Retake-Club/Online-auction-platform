@@ -34,7 +34,7 @@ public class ClientHandler implements Runnable {
                 processRequest(request);
             }
         } catch (IOException e) {
-            System.out.println("🔌 [NETWORK] Client " + clientId + " mất kết nối.");
+            System.out.println("[NETWORK] Client " + clientId + " mất kết nối.");
         } finally {
             if (!clientId.equals("Unknown")) {
                 AuctionManager.getInstance().removeClient(clientId);
@@ -50,6 +50,13 @@ public class ClientHandler implements Runnable {
                 this.clientId = request.getSenderId();
                 AuctionManager.getInstance().registerClient(this.clientId, this);
                 sendResponse(new Response(MessageType.LOGIN, "SUCCESS", "Đăng nhập Socket thành công", null));
+                
+                // TỰ ĐỘNG GỬI TRẠNG THÁI HIỆN TẠI NGAY SAU KHI LOGIN
+                sendResponse(AuctionManager.getInstance().getCurrentStatusResponse());
+                break;
+
+            case GET_STATUS:
+                sendResponse(AuctionManager.getInstance().getCurrentStatusResponse());
                 break;
 
             case PLACE_BID:
@@ -72,11 +79,16 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendResponse(Response response) {
-        if (out != null) out.println(gson.toJson(response));
+        if (out != null)
+            out.println(gson.toJson(response));
     }
 
     private void closeConnection() {
-        try { if (socket != null) socket.close(); } 
-        catch (IOException e) { e.printStackTrace(); }
+        try {
+            if (socket != null)
+                socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

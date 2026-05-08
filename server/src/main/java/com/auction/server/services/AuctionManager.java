@@ -3,7 +3,9 @@ package com.auction.server.services;
 import com.auction.server.network.ClientHandler;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
-import com.auction.shared.models.AutoBidSettings; // Nhớ import model này
+import com.auction.shared.models.AutoBidSettings;
+import com.auction.shared.models.BidTransaction;
+import com.google.gson.Gson;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -179,6 +181,17 @@ public class AuctionManager {
                 }
             }
         } while (bidChanged);
+    }
+
+    public Response getCurrentStatusResponse() {
+        double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
+        String bidder = (currentHighestBidder != null) ? currentHighestBidder : "None";
+
+        // Reuse BidTransaction to represent the current state
+        BidTransaction statusTx = new BidTransaction("STATUS", "ITEM-123", bidder, displayPrice, System.currentTimeMillis());
+        String payload = new Gson().toJson(statusTx);
+
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Auction Status", payload);
     }
 
     // Ham tat Thread neu ban dot ngot tat chuong trinh

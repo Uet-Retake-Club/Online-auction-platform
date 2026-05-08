@@ -3,7 +3,11 @@ package com.auction.client.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Request;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -60,13 +64,24 @@ public class LoginController implements Initializable {
     private void onLogin() {
         if (!validateFields()) return;
 
-        // TODO: thay bằng AuthService.login(email, password) khi backend sẵn sàng
-        // AuthService.login(email, password)
-        //   .onSuccess(user -> {
-        //       UserSession.getInstance().setUser(user);
-        //       SceneNavigator.navigateAfterLogin();
-        //   })
-        //   .onFailure(err -> showGeneralError("Email hoặc mật khẩu không đúng"));
+        String email = emailField.getText().trim();
+        // THIẾT LẬP SESSION (Giả lập user ID từ email)
+        String username = email.split("@")[0];
+        UserSession.getInstance().setUsername(username);
+
+        // ĐẢM BẢO KẾT NỐI SOCKET ĐÃ SẴN SÀNG (retry nếu cần)
+        NetworkClientService.getInstance().ensureConnected();
+
+        // Khởi tạo BidService sớm để đăng ký listener trước khi nhận message
+        com.auction.client.services.BidService.getInstance();
+
+        // GỬI LỆNH LOGIN QUA SOCKET ĐỂ SERVER BIẾT AI ĐANG ONLINE
+        // Chờ 500ms cho kết nối ổn định nếu vừa mới retry
+        new Thread(() -> {
+            try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+            Request loginReq = new Request(MessageType.LOGIN, username, "");
+            NetworkClientService.getInstance().sendRequest(loginReq);
+        }).start();
 
         SceneNavigator.navigateTo(SceneNavigator.View.HOME);
     }
