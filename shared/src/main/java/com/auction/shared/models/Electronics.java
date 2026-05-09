@@ -1,5 +1,6 @@
 package com.auction.shared.models;
 
+/** Represents an electronics item in the auction. */
 public class Electronics extends Item {
     private int brand;
     private int warranty_period;

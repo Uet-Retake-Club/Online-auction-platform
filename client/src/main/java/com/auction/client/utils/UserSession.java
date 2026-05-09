@@ -19,6 +19,10 @@ public final class UserSession {
         return instance;
     }
 
+    public void setUsername(String username) {
+        this.username = username == null ? "" : username.trim();
+    }
+
     public void signIn(String firstName, String lastName, String username, String email, String role) {
         this.firstName = firstName == null ? "" : firstName.trim();
         this.lastName = lastName == null ? "" : lastName.trim();

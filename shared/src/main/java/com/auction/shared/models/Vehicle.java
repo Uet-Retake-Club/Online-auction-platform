@@ -1,5 +1,6 @@
 package com.auction.shared.models;
 
+/** Represents a vehicle item in the auction. */
 public class Vehicle extends Item {
     private String brand;
     private String model;

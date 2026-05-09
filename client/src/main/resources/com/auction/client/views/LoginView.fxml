@@ -9,7 +9,11 @@
     LoginView.fxml
     Controller : com.auction.client.controllers.LoginController
     CSS        : main.css loaded in ClientApplication.java
-    Size       : 900 x 560 — split left/right layout
+    Size       : 900 x 560
+
+    THAY ĐỔI:
+    - EmailField: onAction="#onFocusPassword" → nhấn Enter chuyển focus xuống password
+    - PasswordField: onAction="#onLogin"      → nhấn Enter = nhấn Sign in
 -->
 <HBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -42,41 +46,36 @@
 
         <!-- Feature bullets -->
         <VBox spacing="14">
-
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Circle radius="4" fill="#E53238"/>
                 <Label text="Thousands of live auctions"
                        style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
                               -fx-font-family: 'Segoe UI';"/>
             </HBox>
-
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Circle radius="4" fill="#E53238"/>
                 <Label text="Real-time bidding engine"
                        style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
                               -fx-font-family: 'Segoe UI';"/>
             </HBox>
-
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Circle radius="4" fill="#E53238"/>
                 <Label text="Secure buyer protection"
                        style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
                               -fx-font-family: 'Segoe UI';"/>
             </HBox>
-
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Circle radius="4" fill="#E53238"/>
                 <Label text="Sell your items in minutes"
                        style="-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.75);
                               -fx-font-family: 'Segoe UI';"/>
             </HBox>
-
         </VBox>
 
     </VBox>
 
     <!-- ════════════════════════════════════════════════════
-         RIGHT PANEL — login form on light grey background
+         RIGHT PANEL — login form
          ════════════════════════════════════════════════════ -->
     <VBox HBox.hgrow="ALWAYS"
           alignment="CENTER"
@@ -105,10 +104,15 @@
                    style="-fx-font-size: 12px; -fx-font-weight: bold;
                           -fx-text-fill: #333333; -fx-font-family: 'Segoe UI';
                           -fx-padding: 0 0 6px 0;"/>
+            <!--
+                onAction="#onFocusPassword"
+                Khi nhấn Enter ở ô email → focus tự động chuyển xuống ô password
+            -->
             <TextField fx:id="emailField"
                        promptText="you@example.com"
                        styleClass="text-field-base"
-                       maxWidth="Infinity"/>
+                       maxWidth="Infinity"
+                       onAction="#onFocusPassword"/>
             <Label fx:id="emailError" text=""
                    styleClass="field-error"
                    style="-fx-min-height: 16px; -fx-padding: 3px 0 10px 0;"/>
@@ -118,15 +122,20 @@
                    style="-fx-font-size: 12px; -fx-font-weight: bold;
                           -fx-text-fill: #333333; -fx-font-family: 'Segoe UI';
                           -fx-padding: 0 0 6px 0;"/>
+            <!--
+                onAction="#onLogin"
+                Khi nhấn Enter ở ô password → tự động submit, giống nhấn nút Sign in
+            -->
             <PasswordField fx:id="passwordField"
                            promptText="Your password"
                            styleClass="text-field-base"
-                           maxWidth="Infinity"/>
+                           maxWidth="Infinity"
+                           onAction="#onLogin"/>
             <Label fx:id="passwordError" text=""
                    styleClass="field-error"
                    style="-fx-min-height: 16px; -fx-padding: 3px 0 4px 0;"/>
 
-            <!-- Forgot password (right-aligned) -->
+            <!-- Forgot password -->
             <HBox alignment="CENTER_RIGHT" style="-fx-padding: 0 0 20px 0;">
                 <Label fx:id="forgotPasswordLabel"
                        text="Forgot password?"

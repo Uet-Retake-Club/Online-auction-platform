@@ -147,6 +147,9 @@
                             
                             <Label fx:id="autoBidError" text="" styleClass="field-error" style="-fx-min-height:16px;-fx-padding:3px 0 8px 0;"/>
                             
+                            <CheckBox fx:id="aggressiveModeCheckBox" text="Aggressive Mode (bid with custom increment)"
+                                      style="-fx-font-size:11px;-fx-text-fill:#555;-fx-padding:0 0 8px 0;"/>
+
                             <Button fx:id="setupAutoBidBtn" text="Set Auto-Bid" maxWidth="Infinity" onAction="#onSetupAutoBid"
                                     style="-fx-background-color:#333;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;"/>
                         </VBox>

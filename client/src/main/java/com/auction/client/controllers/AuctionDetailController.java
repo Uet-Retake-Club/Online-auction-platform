@@ -7,6 +7,7 @@ import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.models.BidTransaction;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -112,6 +113,7 @@ public class AuctionDetailController implements Initializable {
                         "Original bracelet, box, and papers included. Serviced in 2022. " +
                         "Running perfectly with minor surface scratches consistent with age.");
         updatePrice(com.auction.client.services.BidService.getInstance().getCurrentBidAmount());
+        com.auction.client.services.BidService.getInstance().requestStatus();
         totalBids.setText("14");
         totalBidders.setText("7");
         auctionStatus.setText("OPEN");
@@ -157,6 +159,30 @@ public class AuctionDetailController implements Initializable {
                 (obs, old, val) -> autoBidError.setText(""));
         autoBidIncrementField.textProperty().addListener(
                 (obs, old, val) -> autoBidError.setText(""));
+
+        // Đăng ký hiển thị Toast khi giá thay đổi
+        com.auction.client.services.BidService.getInstance().setOnPriceChangeNotification(msg -> {
+            ToastNotification.show(userLabel, msg, ToastNotification.Type.INFO);
+        });
+
+        // Đăng ký callback khi Auto-bid được server phản hồi
+        com.auction.client.services.BidService.getInstance().setOnAutoBidResult(response -> {
+            if ("SUCCESS".equals(response.getStatus())) {
+                setupAutoBidBtn.setText("Auto-Bid Active ✓");
+                setupAutoBidBtn.setStyle(
+                        "-fx-background-color:#5BA55B;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;");
+                ToastNotification.show(userLabel, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
+            } else {
+                autoBidError.setText(response.getMessage());
+                ToastNotification.show(userLabel, response.getMessage(), ToastNotification.Type.DANGER);
+            }
+        });
+
+        // Đăng ký callback khi đặt giá thất bại
+        com.auction.client.services.BidService.getInstance().setOnBidError(msg -> {
+            bidError.setText(msg);
+            ToastNotification.show(userLabel, msg, ToastNotification.Type.DANGER);
+        });
     }
 
     // ── Countdown timer ──────────────────────────────────────
@@ -273,22 +299,18 @@ public class AuctionDetailController implements Initializable {
             autoBidError.setText("Invalid numbers");
             return;
         }
-        //  ĐỌC TRẠNG THÁI CỦA CHECKBOX 
-        // Nếu checkbox được tích -> true (Hổ báo), nếu không -> false (Tiết kiệm)
-        boolean isAggressive = false; 
-        if (aggressiveModeCheckBox != null) {
-            isAggressive = aggressiveModeCheckBox.isSelected();
-        }
+
+        // Đọc trạng thái checkbox: tích = Aggressive, không tích = Standard
+        boolean isAggressive = aggressiveModeCheckBox.isSelected();
 
         String errorMsg = com.auction.client.services.BidService.getInstance()
-                .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment,isAggressive);
+                .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment, isAggressive);
 
         if (errorMsg != null) {
             autoBidError.setText(errorMsg);
         } else {
-            setupAutoBidBtn.setText("Auto-Bid Active");
-            setupAutoBidBtn.setStyle(
-                    "-fx-background-color:#5BA55B;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;");
+            // Đợi server phản hồi thông qua callback (đã đăng ký ở initialize)
+            setupAutoBidBtn.setText("Sending...");
             autoBidError.setText("");
         }
     }

@@ -3,7 +3,9 @@ package com.auction.server.services;
 import com.auction.server.network.ClientHandler;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
-import com.auction.shared.models.AutoBidSettings; // Nhớ import model này
+import com.auction.shared.models.AutoBidSettings;
+import com.auction.shared.models.BidTransaction;
+import com.google.gson.Gson;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -172,13 +174,33 @@ public class AuctionManager {
                     System.out.println("[AUTO-BID] Tự động nâng giá lên: $" + currentHighestBid + " cho "
                             + currentHighestBidder);
 
+                    // Tạo BidTransaction payload để client có thể hiển thị thông tin
+                    BidTransaction autoBidTx = new BidTransaction(
+                            "AUTO-" + System.currentTimeMillis(),
+                            bestCandidate.getAuctionId(),
+                            currentHighestBidder,
+                            currentHighestBid,
+                            System.currentTimeMillis());
+                    String autoBidPayload = new Gson().toJson(autoBidTx);
+
                     Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS",
-                            "Hệ thống tự động trả giá", null);
+                            "Auto-bid placed", autoBidPayload);
                     broadcast(broadcastResp);
                     bidChanged = true; // Tiếp tục vòng lặp xem có ai bật Auto-bid đè lại không
                 }
             }
         } while (bidChanged);
+    }
+
+    public Response getCurrentStatusResponse() {
+        double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
+        String bidder = (currentHighestBidder != null) ? currentHighestBidder : "None";
+
+        // Reuse BidTransaction to represent the current state
+        BidTransaction statusTx = new BidTransaction("STATUS", "ITEM-123", bidder, displayPrice, System.currentTimeMillis());
+        String payload = new Gson().toJson(statusTx);
+
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Auction Status", payload);
     }
 
     // Ham tat Thread neu ban dot ngot tat chuong trinh
