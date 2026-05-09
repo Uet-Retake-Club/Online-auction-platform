@@ -97,3 +97,14 @@ Maven sẽ biên dịch code và đóng gói tất cả các dependencies (thư 
 java -jar build/auction-server.jar
 java -jar build/auction-client.jar
 ```
+
+### Checkstyle
+```bash
+mvn clean install
+
+# checkstyle
+mvn checkstyle:check -pl shared
+
+# fixstyle
+mvn checkstyle:check -pl shared -Dcheckstyle.fixHarmlessViolations
+```
