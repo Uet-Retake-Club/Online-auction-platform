@@ -2,84 +2,98 @@
 
 [![CI - Build & Test](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml)
 
-Một ứng dụng đấu giá trực tuyến thời gian thực được xây dựng bằng Java, Maven và JavaFX. Dự án sử dụng kiến trúc đa mô-đun (multi-module) để tách biệt logic giữa Client, Server và các thành phần dùng chung.
+## 1. Mô tả bài toán và Phạm vi hệ thống
+Dự án xây dựng một hệ thống đấu giá trực tuyến thời gian thực, cho phép nhiều người dùng tham gia đấu giá cùng một lúc. Hệ thống tập trung vào việc đảm bảo tính đồng bộ, hiệu năng cao và trải nghiệm người dùng mượt mà.
 
-## Các tính năng chính
+**Phạm vi hệ thống:**
+- Quản lý các phiên đấu giá với giá hiện tại và thời gian đếm ngược.
+- Xử lý đặt giá thầu (Bid) và tự động nâng giá (Auto-bid) thông minh.
+- Giao tiếp thời gian thực giữa Server và hàng loạt Client qua Socket.
+- Giao diện đồ họa (GUI) trực quan cho người dùng cuối.
 
-*   **Đấu giá thời gian thực**: Cập nhật giá thầu tức thì giữa tất cả các client thông qua Socket.
-*   **Hệ thống Auto-Bid (Đấu giá tự động)**: Người dùng có thể thiết lập mức giá tối đa và bước nhảy để hệ thống tự động nâng giá khi có người khác đặt giá cao hơn.
-*   **Chế độ Aggressive**: Chiến thuật đấu giá linh hoạt (nâng giá theo bước nhảy của người dùng hoặc bước nhảy tối thiểu của hệ thống).
-*   **Giao diện hiện đại**: Sử dụng JavaFX kết hợp với AtlantaFX (phong cách GitHub/Primer) và Ikonli cho icon.
-*   **Đồng bộ trạng thái**: Tự động lấy trạng thái phiên đấu giá hiện tại ngay khi đăng nhập.
-*   **CI/CD**: Tích hợp GitHub Actions để tự động kiểm tra code trên Windows, Ubuntu và macOS.
+## 2. Công nghệ và Yêu cầu cài đặt
 
-## Cấu trúc thư mục
+### Công nghệ sử dụng:
+- **Ngôn ngữ:** Java 17+.
+- **Quản lý dự án:** Maven.
+- **Giao diện (Client):** JavaFX, AtlantaFX (UI Theme), Ikonli (Icons).
+- **Truyền tin:** Socket (TCP), Gson (JSON Serialization).
+- **Kiểm thử:** JUnit 5.
+
+### Yêu cầu môi trường:
+- **JDK:** Java Development Kit 17 hoặc mới hơn.
+- **Maven:** Phiên bản 3.8.0 trở lên.
+- **Hệ điều hành:** Hỗ trợ Windows, Linux, macOS.
+
+## 3. Cấu trúc thư mục và Module chính
+Dự án được tổ chức theo mô hình Multi-module để dễ dàng quản lý và tái sử dụng code:
 
 ```text
 Online-auction-platform/
-├── pom.xml                       # Cấu hình Maven tổng
-├── .github/workflows/ci.yml      # Pipeline CI/CD (GitHub Actions)
-├── shared/                       # Các Class dùng chung cho cả Client và Server
-│   ├── pom.xml
-│   └── src/
-│       ├── main/java/com/auction/shared/
-│       │   ├── models/           # Các đối tượng: User, Item, Auction, BidTransaction...
-│       │   └── dto/              # Đối tượng truyền tin (Request, Response, MessageType)
-│       └── test/java/com/auction/shared/
-│           └── ...               # Unit tests cho models và DTOs
-├── server/                       # Xử lý Logic nghiệp vụ và Kết nối Socket
-│   ├── pom.xml
-│   └── src/
-│       ├── main/java/com/auction/server/
-│       │   ├── ServerApplication.java # Điểm khởi đầu của Server
-│       │   ├── services/         # AuctionManager (Xử lý logic đấu giá & Auto-bid)
-│       │   └── network/          # ClientHandler (Quản lý kết nối socket)
-│       └── test/java/com/auction/server/
-│           └── services/         # Unit tests cho logic phía Server
-└── client/                       # Ứng dụng giao diện JavaFX
-    ├── pom.xml
-    └── src/
-        ├── main/java/com/auction/client/
-        │   ├── Launcher.java     # Khởi chạy ứng dụng Client
-        │   ├── controllers/      # Điều khiển giao diện (Login, Home, Detail)
-        │   └── network/          # NetworkClientService (Giao tiếp với Server)
-        └── main/resources/       # Giao diện FXML và CSS
+├── shared/           # Chứa các model, DTO và logic dùng chung cho cả Client & Server.
+├── server/           # Xử lý logic nghiệp vụ đấu giá, quản lý kết nối và Auto-bid.
+├── client/           # Ứng dụng GUI JavaFX cho người dùng tham gia đấu giá.
+├── build/            # Nơi lưu trữ các file .jar sau khi build (Fat JAR).
+└── pom.xml           # File cấu hình Maven tổng.
 ```
 
-## Hướng dẫn cài đặt và chạy
+## 4. Vị trí các file .jar
+Sau khi thực hiện lệnh build, các file executable JAR (đã bao gồm đầy đủ thư viện - Fat JAR) sẽ được xuất hiện tại thư mục:
+- **Server:** `build/auction-server.jar`
+- **Client:** `build/auction-client.jar`
 
-### Yêu cầu hệ thống
-*   Java JDK 17 trở lên.
-*   Maven 3.8+.
+## 5. Hướng dẫn chạy chương trình
 
-### 1. Build dự án
-Mở terminal tại thư mục gốc và chạy lệnh sau để biên dịch toàn bộ các mô-đun:
+### Thứ tự thực hiện:
+**Lưu ý:** Luôn phải khởi chạy **Server** trước khi chạy **Client**.
 
+#### Bước 1: Khởi chạy Server
+Server sẽ lắng nghe các kết nối từ Client tại cổng mặc định (8080).
 ```bash
-mvn clean install
-```
-
-### 2. Chạy Server
-Server cần được khởi chạy trước để lắng nghe kết nối từ các Client (mặc định cổng 8080):
-
-```bash
+# Cách 1: Dùng Maven
 mvn -pl server exec:java
+
+# Cách 2: Dùng file JAR (sau khi build)
+java -jar build/auction-server.jar
 ```
 
-### 3. Chạy Client (JavaFX)
-Mở một terminal mới để chạy ứng dụng giao diện:
-
+#### Bước 2: Khởi chạy Client
+Bạn có thể mở nhiều terminal để chạy nhiều Client cùng lúc nhằm thử nghiệm tính năng đấu giá.
 ```bash
+# Cách 1: Dùng Maven
 mvn -pl client javafx:run
+
+# Cách 2: Dùng file JAR (sau khi build)
+java -jar build/auction-client.jar
 ```
 
-## Kiểm thử (Testing)
+## 6. Danh sách chức năng đã hoàn thành
+- [x] **Đăng nhập:** Xác thực người dùng và tham gia phiên đấu giá.
+- [x] **Đấu giá thời gian thực:** Cập nhật giá và lịch sử thầu tức thì.
+- [x] **Đặt giá thủ công:** Người dùng tự nhập giá thầu mới.
+- [x] **Auto-Bid (Tự động nâng giá):** Thiết lập mức tối đa và bước nhảy.
+- [x] **Chiến thuật Aggressive:** Tự động nâng giá dựa trên giá đối thủ + bước nhảy.
+- [x] **Đồng bộ trạng thái:** Tự động lấy giá hiện tại khi Client mới tham gia.
+- [x] **Giao diện hiện đại:** Tích hợp CSS theme AtlantaFX cực đẹp.
+- [x] **CI/CD:** Tự động build và test trên Windows/Linux/macOS qua GitHub Actions.
 
-Dự án có hệ thống unit test đầy đủ cho các thành phần logic. Để chạy tất cả các bài kiểm tra:
+---
 
+## 7. Hướng dẫn build file Executable JAR (Fat JAR)
+Để đóng gói ứng dụng thành các file `.jar` độc lập có thể chạy ở bất cứ đâu (có cài JRE 17), chúng tôi sử dụng `maven-shade-plugin`.
+
+### Lệnh thực hiện:
+Mở terminal tại thư mục gốc của dự án và chạy:
 ```bash
-mvn clean verify -pl shared,server -am
+mvn clean package
 ```
 
-## CI/CD
-Mọi thay đổi khi push hoặc tạo Pull Request lên nhánh main hoặc dev sẽ được tự động build và chạy test trên cả 3 nền tảng: Windows, Ubuntu, macOS để đảm bảo tính ổn định và tương thích.
+### Kết quả:
+Maven sẽ biên dịch code và đóng gói tất cả các dependencies (thư viện đi kèm như Gson, JavaFX, AtlantaFX...) vào một file duy nhất.
+- Kiểm tra thư mục `build/` để thấy các file `auction-server.jar` và `auction-client.jar`.
+
+### Cách chạy file đã build:
+```bash
+java -jar build/auction-server.jar
+java -jar build/auction-client.jar
+```
