@@ -1,5 +1,5 @@
 package com.auction.shared.models;
 
 public enum ItemCategory {
-    ELECTRONICS, ART, GENERAL, VEHICLE
+    ELECTRONICS, VEHICLE, HOME_AND_GARDEN, SPORTS, OTHER, FASHION, COLLECTIBLES
 }
