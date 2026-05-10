@@ -5,11 +5,11 @@ public class Sports extends Item {
     private String color;
 
     public Sports() {
-        super("", "", "", ItemCategory.SPORTS, 0.0, 0L, 0L);
+        super("", "", "", ItemCategory.SPORTS, 0.0, 0L, 0L, "");
     }
 
-    public Sports(String id, String name, String description, double startingPrice, long startTime, long endTime, String sportType, String color) {
-        super(id, name, description, ItemCategory.SPORTS, startingPrice, startTime, endTime);
+    public Sports(String id, String name, String description, double startingPrice, long startTime, long endTime, String sportType, String color, String sellerId) {
+        super(id, name, description, ItemCategory.SPORTS, startingPrice, startTime, endTime, sellerId);
         this.sportType = sportType;
         this.color = color;
     }

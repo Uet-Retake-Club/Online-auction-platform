@@ -14,7 +14,7 @@ public abstract class Item extends Entity {
     protected String status; 
 
 
-    public Item(String id, String name, String description, ItemCategory category, double startingPrice, long startTime, long endTime) {
+    public Item(String id, String name, String description, ItemCategory category, double startingPrice, long startTime, long endTime, String sellerId) {
         super(id);
         this.name = name;
         this.description = description;
@@ -23,47 +23,34 @@ public abstract class Item extends Entity {
         this.currentHighestBid = startingPrice;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.sellerId = sellerId;
         this.status = "OPEN";
     }
 
-  public String getName() {
-    return name;
-  }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-  public void setName(String name) {
-    this.name = name;
-  }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-<<<<<<< HEAD
     public double getStartingPrice() { return startingPrice; }
     public void setStartingPrice(double startingPrice) { this.startingPrice = startingPrice; }
-=======
-  public String getDescription() {
-    return description;
-  }
->>>>>>> 550407a625752cc11c7dce67e6e75152fca49ea3
 
-  public void setDescription(String description) {
-    this.description = description;
-  }
+    public double getCurrentHighestBid() { return currentHighestBid; }
+    public void setCurrentHighestBid(double currentHighestBid) { this.currentHighestBid = currentHighestBid; }
 
-  public double getStartingPrice() {
-    return startingPrice;
-  }
+    public String getHighestBidderId() { return highestBidderId; }
+    public void setHighestBidderId(String highestBidderId) { this.highestBidderId = highestBidderId; }
 
-  public double getCurrentHighestBid() {
-    return currentHighestBid;
-  }
+    public long getStartTime() { return startTime; }
+    public void setStartTime(long startTime) { this.startTime = startTime; }
 
-  public void setCurrentHighestBid(double currentHighestBid) {
-    this.currentHighestBid = currentHighestBid;
-  }
+    public long getEndTime() { return endTime; }
+    public void setEndTime(long endTime) { this.endTime = endTime; }
 
-  public String getHighestBidderId() {
-    return highestBidderId;
-  }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-<<<<<<< HEAD
     public ItemCategory getCategory() { return category; }
     public void setCategory(ItemCategory category) { this.category = category; }
 
@@ -71,35 +58,4 @@ public abstract class Item extends Entity {
     public void setSellerId(String sellerId) {this.sellerId = sellerId;}
 
     public abstract void printInfo();
-=======
-  public void setHighestBidderId(String highestBidderId) {
-    this.highestBidderId = highestBidderId;
-  }
-
-  public long getStartTime() {
-    return startTime;
-  }
-
-  public void setStartTime(long startTime) {
-    this.startTime = startTime;
-  }
-
-  public long getEndTime() {
-    return endTime;
-  }
-
-  public void setEndTime(long endTime) {
-    this.endTime = endTime;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  public abstract void printInfo();
->>>>>>> 550407a625752cc11c7dce67e6e75152fca49ea3
 }

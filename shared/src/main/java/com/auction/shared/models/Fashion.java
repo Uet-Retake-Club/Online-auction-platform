@@ -7,12 +7,12 @@ public class Fashion extends Item {
     private String material;
 
     public Fashion() {
-        super("", "", "", ItemCategory.FASHION, 0.0, 0L, 0L);
+        super("", "", "", ItemCategory.FASHION, 0.0, 0L, 0L, "");
     }
     
     public Fashion(String id, String name, String description, double startingPrice, long startTime, long endTime,
-            String brand, String size, String color, String material) {
-        super(id, name, description, ItemCategory.FASHION, startingPrice, startTime, endTime);
+            String brand, String size, String color, String material, String sellerId) {
+        super(id, name, description, ItemCategory.FASHION, startingPrice, startTime, endTime, sellerId);
         this.brand = brand;
         this.size = size;
         this.color = color;

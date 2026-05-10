@@ -4,15 +4,15 @@ package com.auction.shared.models;
 public class Vehicle extends Item {
     private String brand;
     private String model;
-    private int color;
+    private String color;
 
     public Vehicle() {
-        super("", "", "", ItemCategory.VEHICLE, 0.0, 0L, 0L);
+        super("", "", "", ItemCategory.VEHICLE, 0.0, 0L, 0L, "");
     }
 
     public Vehicle(String id, String name, String description, double startingPrice,
-         long startTime, long endTime, String brand, String model, int color) {
-        super(id, name, description, ItemCategory.VEHICLE, startingPrice, startTime, endTime);
+         long startTime, long endTime, String brand, String model, String color, String sellerId) {
+        super(id, name, description, ItemCategory.VEHICLE, startingPrice, startTime, endTime, sellerId);
         this.brand = brand;
         this.model = model;
         this.color = color;
@@ -24,8 +24,8 @@ public class Vehicle extends Item {
     public String getModel() { return model; }
     public void setModel(String model) { this.model = model; }
 
-    public int getColor() { return color; }
-    public void setColor(int color) { this.color = color; }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
 
     @Override
     public void printInfo() {

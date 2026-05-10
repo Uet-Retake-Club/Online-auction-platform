@@ -1,40 +1,30 @@
 package com.auction.server.database;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class DatabaseConnection {
-    private static Connection connection = null; // Singleton
+    private static final String URL = "jdbc:sqlite:database/auction.db";
 
-    private DatabaseConnection() {};
-    
-    public static Connection getConnection() {
-        try {
-            //Singleton to check if the connection is created or closed yet
-            if (connection == null || connection.isClosed()) {
-                String url = "jdbc:sqlite:database/auction.db";
-                connection = DriverManager.getConnection(url);
-                
-                // Activate Foreign keys
-                try (Statement stmt = connection.createStatement()) {
-                    stmt.execute("PRAGMA foreign_keys = ON;");
-                }
-                
-                System.out.println("Succecssfully connected to SQL!");
-            }
-        } catch (SQLException e) {
-            System.err.println("An Error happended when trying to connect to Database: " + e.getMessage());
-        }
-        return connection;
-    }
+    private DatabaseConnection() {}
 
-    public static void closeConnection() {
+    public static Connection getConnection() throws SQLException {
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("Connection to Database is closed.");
+            Connection connection = DriverManager.getConnection(URL);
+            
+            // Activate Foreign keys (Bắt buộc cho mỗi connection mới)
+            try (Statement stmt = connection.createStatement()) {
+                stmt.execute("PRAGMA foreign_keys = ON;");
             }
+            
+            System.out.println("Successfully connected to SQL!");
+            return connection; // Trả về một kết nối tươi mới cho mỗi luồng
+            
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Database connection failed: " + e.getMessage());
+            throw e; // Ném ngoại lệ SQL để tầng DAO tự xử lý
         }
     }
 }

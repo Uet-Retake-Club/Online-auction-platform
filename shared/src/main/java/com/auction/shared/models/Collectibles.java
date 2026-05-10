@@ -6,12 +6,12 @@ public class Collectibles extends Item {
     private String condition;
 
     public Collectibles() {
-        super("", "", "", ItemCategory.COLLECTIBLES, 0.0, 0L, 0L);
+        super("", "", "", ItemCategory.COLLECTIBLES, 0.0, 0L, 0L, "");
     }
 
     public Collectibles(String id, String name, String description, double startingPrice, long startTime, long endTime,
-            String type, String rarity, String condition) {
-        super(id, name, description, ItemCategory.COLLECTIBLES, startingPrice, startTime, endTime);
+            String type, String rarity, String condition, String sellerId) {
+        super(id, name, description, ItemCategory.COLLECTIBLES, startingPrice, startTime, endTime, sellerId);
         this.type = type;
         this.rarity = rarity;
         this.condition = condition;

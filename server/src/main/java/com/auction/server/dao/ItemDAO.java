@@ -8,5 +8,5 @@ public interface ItemDAO {
     
     boolean addItem(Item item);
     
-    boolean updateCurrentPrice(String itemId, double newPrice);
+    boolean updateCurrentPrice(String itemId, double newPrice, String bidderId);
 }
