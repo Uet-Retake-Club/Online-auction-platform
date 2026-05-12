@@ -130,16 +130,28 @@ public class AuctionService {
     }
 
     public synchronized void endAuction() {
-        if (this.auctionStatus.equals("FINISHED")) return;
+    if (this.auctionStatus.equals("FINISHED")) return;
+    
+    // 1. Cập nhật trạng thái xuống SQLite trước
+    boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
+    
+    if (success) {
         this.auctionStatus = "FINISHED";
         System.out.println(" [MANAGER] KẾT THÚC PHIÊN ĐẤU GIÁ!");
         
+        // 2. Tắt hệ thống Robot
         autoBidEngine.shutdown();
 
-        String winnerMsg = (currentHighestBidder != null) ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" : "Không có ai đặt giá.";
-        System.out.println(winnerMsg);
+        // 3. Xác định người thắng và thông báo
+        String winnerMsg = (currentHighestBidder != null) 
+            ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
+            : "Phiên kết thúc mà không có ai đặt giá.";
+            
         broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
+    } else {
+        System.err.println(" [LỖI] Database không cho phép chốt phiên!");
     }
+}
 
     public Response getCurrentStatusResponse() {
         double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
@@ -157,3 +169,5 @@ public class AuctionService {
         System.out.println(" [AuctionService] Đã dọn dẹp xong. Server tắt hoàn toàn!");
     }
 }
+
+// Waiting Database InvoiceDao va logic thanh toan de hoan thanh PAID/CANCELED

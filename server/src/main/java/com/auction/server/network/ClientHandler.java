@@ -1,7 +1,7 @@
 package com.auction.server.network;
 
 import com.auction.server.controllers.RequestDispatcher;
-import com.auction.server.services.AuctionManager;
+import com.auction.server.services.AuctionService;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
 import com.google.gson.Gson;
@@ -42,7 +42,7 @@ public class ClientHandler implements Runnable {
             System.out.println("[NETWORK] Client " + clientId + " mất kết nối.");
         } finally {
             if (!clientId.equals("Unknown")) {
-                AuctionManager.getInstance().removeClient(clientId);
+                AuctionService.getInstance().removeClient(clientId);
             }
             closeConnection();
         }
