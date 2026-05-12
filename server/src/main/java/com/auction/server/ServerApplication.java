@@ -1,8 +1,7 @@
 package com.auction.server;
 
 import com.auction.server.network.ClientHandler;
-import com.auction.server.services.AuctionManager;
-
+import com.auction.server.services.AuctionService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -23,7 +22,7 @@ public class ServerApplication {
             System.out.println("\n[SERVER] Nhận lệnh tắt máy. Đang dọn dẹp...");
             threadPool.shutdown();
             // goi lenh tat AutoBidThread
-            AuctionManager.getInstance().shutdown();
+            AuctionService.getInstance().shutdown();
 
             try {
                 if (!threadPool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
