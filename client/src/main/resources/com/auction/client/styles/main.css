@@ -222,3 +222,19 @@
 .toast-success { -fx-background-color: success; }
 .toast-warning { -fx-background-color: warning; }
 .toast-danger  { -fx-background-color: danger;  }
+
+/* ── RESPONSIVE — added for fullscreen scaling ─────────────
+   Ensures every root node fills the Stage completely.
+   Works together with maxWidth/maxHeight="Infinity" in FXML. */
+.root {
+    -fx-min-width:  800px;
+    -fx-min-height: 560px;
+}
+
+/* Auth screens (Login + SignUp): card stays centred,
+   white/grey halves each scale proportionally          */
+.auth-card-wrapper {
+    -fx-alignment: center;
+    -fx-max-width: Infinity;
+    -fx-max-height: Infinity;
+}
