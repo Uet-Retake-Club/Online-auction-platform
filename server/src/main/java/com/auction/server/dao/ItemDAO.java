@@ -9,4 +9,7 @@ public interface ItemDAO {
     boolean addItem(Item item);
     
     boolean updateCurrentPrice(String itemId, double newPrice, String bidderId);
+
+    //Cập nhật trạng thái (OPEN, RUNNING, FINISHED, PAID, CANCELED)
+    boolean updateStatus(String itemId, String status);
 }

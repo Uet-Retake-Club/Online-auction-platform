@@ -283,6 +283,27 @@ public class ItemDAOImpl implements ItemDAO {
         c.setRarity(rs.getString("rarity"));
         c.setCondition(rs.getString("condition"));
     }
+    
+    @Override
+    public boolean updateStatus(String itemId, String status) {
+        String sql = "UPDATE items SET status = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, status);
+            pstmt.setString(2, itemId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println(" [DATABASE] Item " + itemId + " chuyển sang trạng thái: " + status);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println(" [SQL Error] Không thể cập nhật trạng thái: " + e.getMessage());
+        }
+        return false;
+    }
 
 
 }

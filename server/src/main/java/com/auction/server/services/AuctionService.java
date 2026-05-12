@@ -1,0 +1,173 @@
+package com.auction.server.services;
+
+import com.auction.server.dao.ItemDAO;
+import com.auction.server.dao.ItemDAOImpl;
+import com.auction.server.network.ClientHandler;
+import com.auction.server.services.core.AuctionTimer;
+import com.auction.server.services.core.AutoBidEngine;
+import com.auction.server.services.core.SessionManager;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Response;
+import com.auction.shared.models.AutoBidSettings;
+import com.auction.shared.models.BidTransaction;
+import com.auction.shared.models.Item;
+import com.google.gson.Gson;
+
+public class AuctionService {
+    private static volatile AuctionService instance;
+
+    // 3 Kẻ giúp việc
+    private final SessionManager sessionManager;
+    private final AutoBidEngine autoBidEngine;
+    private final AuctionTimer auctionTimer;
+    
+    // Tương tác Database
+    private final ItemDAO itemDAO = new ItemDAOImpl();
+    
+    private String currentAuctionItemId = "ITEM-123";
+    private double startingPrice = 1240.00;
+    private double currentHighestBid = 0.0;
+    private final double minIncrement = 20.00;
+    private String currentHighestBidder = null;
+    private String auctionStatus = "OPEN"; 
+
+    private AuctionService() {
+        this.sessionManager = new SessionManager();
+        this.autoBidEngine = new AutoBidEngine(this); // Truyền 'this' để Engine đọc biến
+        this.auctionTimer = new AuctionTimer(this);
+        loadAuctionState();
+    }
+
+    public static AuctionService getInstance() {
+        if (instance == null) {
+            synchronized (AuctionService.class) {
+                if (instance == null) instance = new AuctionService();
+            }
+        }
+        return instance;
+    }
+
+    // --- GETTERS CHO AUTO-BID ENGINE ---
+    public double getCurrentHighestBid() { return currentHighestBid; }
+    public String getCurrentHighestBidder() { return currentHighestBidder; }
+    public double getMinIncrement() { return minIncrement; }
+
+    private void loadAuctionState() {
+        Item item = itemDAO.getItemById(currentAuctionItemId);
+        if (item != null) {
+            this.startingPrice = item.getStartingPrice();
+            this.currentHighestBid = item.getCurrentHighestBid();
+            this.currentHighestBidder = item.getHighestBidderId();
+            System.out.println(" [DATABASE] Đã khôi phục trạng thái: $" + currentHighestBid + " từ SQLite.");
+            
+            // Nếu có dữ liệu endTime, kích hoạt đồng hồ luôn:
+            // auctionTimer.scheduleAuctionEnd(item.getEndTime());
+        }
+    }
+
+    // --- GIAO TIẾP MẠNG ---
+    public void registerClient(String clientId, ClientHandler handler) {
+        sessionManager.registerClient(clientId, handler);
+    }
+    public void removeClient(String clientId) {
+        sessionManager.removeClient(clientId);
+        autoBidEngine.removeAutoBidder(clientId);
+    }
+    public void broadcast(Response response) {
+        sessionManager.broadcast(response);
+    }
+
+    // --- LOGIC LUẬT CHƠI ---
+    public Response registerAutoBid(AutoBidSettings settings) {
+        double requiredMinBid = (currentHighestBidder == null) ? startingPrice : currentHighestBid + minIncrement;
+        if (settings.getMaxPrice() < requiredMinBid) return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Giá tối đa không đủ", null);
+        if (settings.getBidIncrement() < minIncrement) return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Bước giá quá thấp", null);
+
+        autoBidEngine.addAutoBidder(settings);
+        autoBidEngine.triggerEvaluation();
+        return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid kích hoạt!", null);
+    }
+
+    public synchronized Response processBid(String bidderId, double amount, String payload) {
+        if (this.auctionStatus.equals("FINISHED")) {
+            return new Response(MessageType.BID_ERROR, "FAIL", "Phiên đấu giá đã kết thúc!", null);
+        }
+
+        double requiredMinBid = (currentHighestBidder == null) ? startingPrice : currentHighestBid + minIncrement;
+
+        if (amount >= requiredMinBid) {
+            boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, amount, bidderId);
+            if (dbUpdated) {
+                currentHighestBid = amount;
+                currentHighestBidder = bidderId;
+                System.out.println("[MANAGER] Giá mới: $" + amount + " từ " + bidderId);
+
+                broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có giá mới", payload));
+                autoBidEngine.triggerEvaluation();
+                return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
+            }
+            return new Response(MessageType.BID_ERROR, "FAIL", "Lỗi đồng bộ Database", null);
+        }
+        return new Response(MessageType.BID_ERROR, "FAIL", "Giá tối thiểu là $" + requiredMinBid, null);
+    }
+
+    // Callback riêng cho luồng Robot
+    public synchronized boolean processAutoBid(String bidderId, double nextBid) {
+        if (this.auctionStatus.equals("FINISHED")) return false;
+
+        boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, nextBid, bidderId);
+        if (dbUpdated) {
+            currentHighestBid = nextBid;
+            currentHighestBidder = bidderId;
+            System.out.println("[AUTO-BID] Tự nâng giá: $" + currentHighestBid + " cho " + bidderId);
+
+            BidTransaction autoBidTx = new BidTransaction("AUTO-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
+            String autoBidPayload = new Gson().toJson(autoBidTx);
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Auto-bid placed", autoBidPayload));
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized void endAuction() {
+    if (this.auctionStatus.equals("FINISHED")) return;
+    
+    // 1. Cập nhật trạng thái xuống SQLite trước
+    boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
+    
+    if (success) {
+        this.auctionStatus = "FINISHED";
+        System.out.println(" [MANAGER] KẾT THÚC PHIÊN ĐẤU GIÁ!");
+        
+        // 2. Tắt hệ thống Robot
+        autoBidEngine.shutdown();
+
+        // 3. Xác định người thắng và thông báo
+        String winnerMsg = (currentHighestBidder != null) 
+            ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
+            : "Phiên kết thúc mà không có ai đặt giá.";
+            
+        broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
+    } else {
+        System.err.println(" [LỖI] Database không cho phép chốt phiên!");
+    }
+}
+
+    public Response getCurrentStatusResponse() {
+        double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
+        String bidder = (currentHighestBidder != null) ? currentHighestBidder : "None";
+        String payload = new Gson().toJson(new BidTransaction("STATUS", currentAuctionItemId, bidder, displayPrice, System.currentTimeMillis()));
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Status", payload);
+    }
+
+    // Nhạc trưởng gọi một tiếng, đàn em tự động dọn dẹp (Facade Pattern)
+    public void shutdown() {
+        System.out.println(" [AuctionService] Bắt đầu tắt Server an toàn...");
+        sessionManager.shutdown();
+        auctionTimer.shutdown();
+        autoBidEngine.shutdown();
+        System.out.println(" [AuctionService] Đã dọn dẹp xong. Server tắt hoàn toàn!");
+    }
+}
+
+// Waiting Database InvoiceDao va logic thanh toan de hoan thanh PAID/CANCELED

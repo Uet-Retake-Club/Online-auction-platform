@@ -1,11 +1,9 @@
 package com.auction.server.network;
 
-import com.auction.server.services.AuctionManager;
-import com.auction.shared.dto.MessageType;
+import com.auction.server.controllers.RequestDispatcher;
+import com.auction.server.services.AuctionService;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
-import com.auction.shared.models.AutoBidSettings;
-import com.auction.shared.models.BidTransaction;
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -13,13 +11,20 @@ import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
-    private String clientId = "Unknown"; // Không dùng UUID nữa, sẽ cập nhật khi có lệnh LOGIN
+    private String clientId = "Unknown";
     private PrintWriter out;
     private BufferedReader in;
     private static final Gson gson = new Gson();
+    
+    // Nạp sẵn một bộ Tổng đài viên (Dùng chung)
+    private static final RequestDispatcher dispatcher = new RequestDispatcher();
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     @Override
@@ -37,50 +42,26 @@ public class ClientHandler implements Runnable {
             System.out.println("[NETWORK] Client " + clientId + " mất kết nối.");
         } finally {
             if (!clientId.equals("Unknown")) {
-                AuctionManager.getInstance().removeClient(clientId);
+                AuctionService.getInstance().removeClient(clientId);
             }
             closeConnection();
         }
     }
 
     private void processRequest(Request request) {
-        switch (request.getType()) {
-            case LOGIN:
-                // Nhận ID thật từ giao diện đăng nhập (ví dụ "Hoang", "Tuan",...)
-                this.clientId = request.getSenderId();
-                AuctionManager.getInstance().registerClient(this.clientId, this);
-                sendResponse(new Response(MessageType.LOGIN, "SUCCESS", "Đăng nhập Socket thành công", null));
-                
-                // TỰ ĐỘNG GỬI TRẠNG THÁI HIỆN TẠI NGAY SAU KHI LOGIN
-                sendResponse(AuctionManager.getInstance().getCurrentStatusResponse());
-                break;
-
-            case GET_STATUS:
-                sendResponse(AuctionManager.getInstance().getCurrentStatusResponse());
-                break;
-
-            case PLACE_BID:
-                BidTransaction bidTx = gson.fromJson(request.getPayload(), BidTransaction.class);
-                Response result = AuctionManager.getInstance().processBid(
-                        request.getSenderId(), bidTx.getBidAmount(), request.getPayload());
-                sendResponse(result);
-                break;
-
-            case SETUP_AUTO_BID:
-                AutoBidSettings settings = gson.fromJson(request.getPayload(), AutoBidSettings.class);
-                // Hứng kết quả từ Manager thay vì tự tạo Response mới
-                Response autoBidResult = AuctionManager.getInstance().registerAutoBid(settings);
-                sendResponse(autoBidResult);
-                break;
-
-            default:
-                break;
+        // Quăng Request cho Dispatcher xử lý
+        Response response = dispatcher.dispatch(request, this);
+        
+        // Nếu lệnh có trả về kết quả ngay (như LOGIN, PLACE_BID), gửi về Client
+        if (response != null) {
+            sendResponse(response);
         }
     }
 
     public void sendResponse(Response response) {
-        if (out != null)
+        if (out != null) {
             out.println(gson.toJson(response));
+        }
     }
 
     private void closeConnection() {
