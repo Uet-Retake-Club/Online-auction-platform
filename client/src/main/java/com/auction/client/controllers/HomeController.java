@@ -1,12 +1,10 @@
 package com.auction.client.controllers;
 
+import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.UserSession;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ResourceBundle;
-
-import com.auction.client.utils.SceneNavigator;
-import com.auction.client.utils.UserSession;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -141,14 +139,45 @@ public class HomeController implements Initializable {
     applyFilters();
   }
 
-  @FXML private void onCategoryAll() { switchCategory(allCategoriesBtn, null); }
-  @FXML private void onCategoryElectronics() { switchCategory(electronicsBtn, "Electronics"); }
-  @FXML private void onCategoryFashion() { switchCategory(fashionBtn, "Fashion"); }
-  @FXML private void onCategoryHome() { switchCategory(homeGardenBtn, "Home & Garden"); }
-  @FXML private void onCategorySports() { switchCategory(sportsBtn, "Sports"); }
-  @FXML private void onCategoryCollectibles() { switchCategory(collectiblesBtn, "Collectibles"); }
-  @FXML private void onCategoryVehicles() { switchCategory(vehiclesBtn, "Vehicles"); }
-  @FXML private void onCategoryOther() { switchCategory(otherBtn, "Other"); }
+  @FXML
+  private void onCategoryAll() {
+    switchCategory(allCategoriesBtn, null);
+  }
+
+  @FXML
+  private void onCategoryElectronics() {
+    switchCategory(electronicsBtn, "Electronics");
+  }
+
+  @FXML
+  private void onCategoryFashion() {
+    switchCategory(fashionBtn, "Fashion");
+  }
+
+  @FXML
+  private void onCategoryHome() {
+    switchCategory(homeGardenBtn, "Home & Garden");
+  }
+
+  @FXML
+  private void onCategorySports() {
+    switchCategory(sportsBtn, "Sports");
+  }
+
+  @FXML
+  private void onCategoryCollectibles() {
+    switchCategory(collectiblesBtn, "Collectibles");
+  }
+
+  @FXML
+  private void onCategoryVehicles() {
+    switchCategory(vehiclesBtn, "Vehicles");
+  }
+
+  @FXML
+  private void onCategoryOther() {
+    switchCategory(otherBtn, "Other");
+  }
 
   private void switchCategory(final Button btn, final String category) {
     if (activeCategory != null) {
@@ -189,10 +218,25 @@ public class HomeController implements Initializable {
     }
   }
 
-  @FXML private void onSell() { SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING); }
-  @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-  @FXML private void onMyBids() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-  @FXML private void onProfile() { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
+  @FXML
+  private void onSell() {
+    SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+  }
+
+  @FXML
+  private void onWatchlist() {
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
+
+  @FXML
+  private void onMyBids() {
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
+
+  @FXML
+  private void onProfile() {
+    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
+  }
 
   @FXML
   private void onLogout() {
@@ -200,8 +244,15 @@ public class HomeController implements Initializable {
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
   }
 
-  @FXML private void onSeeAllEndingSoon() { System.out.println("See all ending soon"); }
-  @FXML private void onSeeAllRecent() { System.out.println("See all recent"); }
+  @FXML
+  private void onSeeAllEndingSoon() {
+    System.out.println("See all ending soon");
+  }
+
+  @FXML
+  private void onSeeAllRecent() {
+    System.out.println("See all recent");
+  }
 
   private void populateGrid(final FlowPane grid, final String[][] data) {
     grid.getChildren().clear();

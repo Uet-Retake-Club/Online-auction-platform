@@ -236,7 +236,6 @@ public final class UserSession {
    * Returns 1-2 uppercase initials for the avatar pill in the top nav.
    *
    * <p>Examples: "John" + "Doe" returns "JD", "Nguyen" + "Anh" returns "NA",
-   * 
    * "Alice" + "" returns "AL".
    *
    * @return initials string, or "?" if not logged in

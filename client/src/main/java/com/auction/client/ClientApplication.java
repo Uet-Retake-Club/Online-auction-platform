@@ -1,7 +1,6 @@
 package com.auction.client;
 
 import com.auction.client.utils.SceneNavigator;
-
 import javafx.application.Application;
 import javafx.stage.Stage;
 

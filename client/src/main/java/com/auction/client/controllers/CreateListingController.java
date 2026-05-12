@@ -1,11 +1,9 @@
 package com.auction.client.controllers;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
-
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -96,13 +94,40 @@ public class CreateListingController implements Initializable {
     imageLabel.setText("image_selected.jpg");
   }
 
-  @FXML private void onCancel() { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-  @FXML private void onHome() { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-  @FXML private void onMyListings() { System.out.println("TODO: MyListingsView"); }
-  @FXML private void onActiveAuctions() { System.out.println("TODO: ActiveAuctionsView"); }
-  @FXML private void onDrafts() { System.out.println("TODO: DraftsView"); }
-  @FXML private void onCompleted() { System.out.println("TODO: CompletedView"); }
-  @FXML private void onProfile() { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
+  @FXML
+  private void onCancel() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
+
+  @FXML
+  private void onHome() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
+
+  @FXML
+  private void onMyListings() {
+    System.out.println("TODO: MyListingsView");
+  }
+
+  @FXML
+  private void onActiveAuctions() {
+    System.out.println("TODO: ActiveAuctionsView");
+  }
+
+  @FXML
+  private void onDrafts() {
+    System.out.println("TODO: DraftsView");
+  }
+
+  @FXML
+  private void onCompleted() {
+    System.out.println("TODO: CompletedView");
+  }
+
+  @FXML
+  private void onProfile() {
+    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
+  }
 
   @FXML
   private void onLogout() {

@@ -1,11 +1,9 @@
 package com.auction.client.controllers;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
-
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -16,6 +14,7 @@ import javafx.scene.layout.VBox;
 
 /**
  * AdminController handles the admin dashboard view.
+ *
  * <p>Features: Dashboard stats, Users table, Auctions table, and Tab navigation.
  */
 public class AdminController implements Initializable {

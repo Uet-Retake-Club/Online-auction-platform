@@ -1,14 +1,12 @@
 package com.auction.client.controllers;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import com.auction.client.services.BidService;
 import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
-
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -24,6 +22,7 @@ import javafx.util.Duration;
 
 /**
  * AuctionDetailController handles the auction detail view.
+ *
  * <p>Features: Countdown timer, bidding, and dynamic history updates.
  */
 public class AuctionDetailController implements Initializable {
@@ -241,12 +240,35 @@ public class AuctionDetailController implements Initializable {
     ToastNotification.show(userLabel, "Added to watchlist.", ToastNotification.Type.INFO);
   }
 
-  @FXML private void onBack() { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-  @FXML private void onHome() { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-  @FXML private void onMyBids() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-  @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-  @FXML private void onSell() { SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING); }
-  @FXML private void onProfile() { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
+  @FXML
+  private void onBack() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
+
+  @FXML
+  private void onHome() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
+
+  @FXML
+  private void onMyBids() {
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
+
+  @FXML
+  private void onWatchlist() {
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
+
+  @FXML
+  private void onSell() {
+    SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+  }
+
+  @FXML
+  private void onProfile() {
+    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
+  }
 
   private void updatePrice(final double amount) {
     currentPrice.setText(String.format("$%.2f", amount));

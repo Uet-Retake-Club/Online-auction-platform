@@ -1,10 +1,8 @@
 package com.auction.client.controllers;
 
+import com.auction.client.utils.SceneNavigator;
 import java.net.URL;
 import java.util.ResourceBundle;
-
-import com.auction.client.utils.SceneNavigator;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -60,8 +58,10 @@ public class LoginController implements Initializable {
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    emailField.textProperty().addListener((obs, old, val) -> clearFieldError(emailError, emailField));
-    passwordField.textProperty().addListener((obs, old, val) -> clearFieldError(passwordError, passwordField));
+    emailField.textProperty().addListener(
+        (obs, old, val) -> clearFieldError(emailError, emailField));
+    passwordField.textProperty().addListener(
+        (obs, old, val) -> clearFieldError(passwordError, passwordField));
   }
 
   /**
