@@ -1,10 +1,13 @@
 package com.auction.server.services;
 
+import com.auction.server.dao.ItemDAO;
+import com.auction.server.dao.ItemDAOImpl;
 import com.auction.server.network.ClientHandler;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
+import com.auction.shared.models.Item;
 import com.google.gson.Gson;
 
 import java.util.Map;
@@ -17,15 +20,21 @@ public class AuctionManager {
     private final ExecutorService autoBidThreadPool = Executors.newFixedThreadPool(10);
     private final Map<String, ClientHandler> activeClients = new ConcurrentHashMap<>();
 
-    // THÊM MỚI: Nơi lưu trữ cấu hình Auto-Bid của các Client
+    // Nơi lưu trữ cấu hình Auto-Bid của các Client
     private final Map<String, AutoBidSettings> autoBidders = new ConcurrentHashMap<>();
 
-    private final double startingPrice = 1240.00; // Giá khởi điểm cố định
+    // NÂNG CẤP: Thêm ItemDAO để làm việc với Database
+    private final ItemDAO itemDAO = new ItemDAOImpl();
+    private String currentAuctionItemId = "ITEM-123"; // ID mặc định hoặc lấy từ config
+
+    private double startingPrice = 1240.00; // Giá khởi điểm cố định
     private double currentHighestBid = 0.0; // Chưa ai đặt thì bằng 0
     private final double minIncrement = 20.00;
     private String currentHighestBidder = null; // null nghĩa là chưa có ai
 
     private AuctionManager() {
+        // NÂNG CẤP: Khi vừa tạo Manager, load ngay giá từ Database lên RAM
+        loadAuctionState();
     }
 
     public static AuctionManager getInstance() {
@@ -36,6 +45,17 @@ public class AuctionManager {
             }
         }
         return instance;
+    }
+
+    // NÂNG CẤP: Hàm khôi phục "hiện trường" từ Database
+    private void loadAuctionState() {
+        Item item = itemDAO.getItemById(currentAuctionItemId);
+        if (item != null) {
+            this.startingPrice = item.getStartingPrice();
+            this.currentHighestBid = item.getCurrentHighestBid();
+            this.currentHighestBidder = item.getHighestBidderId();
+            System.out.println("💾 [DATABASE] Đã khôi phục trạng thái phiên: $" + currentHighestBid + " (Người dẫn đầu: " + currentHighestBidder + ")");
+        }
     }
 
     // Hàm gọi khi người dùng Login thành công
@@ -56,20 +76,15 @@ public class AuctionManager {
         }
     }
 
-    // THÊM MỚI: Đăng ký Auto-bid
-    // NÂNG CẤP: Chuyển sang trả về Response để ClientHandler có thể báo lỗi
-    // THÊM MỚI: Đăng ký Auto-bid
-    // NÂNG CẤP: Phân biệt Giá khởi điểm và Giá hiện tại để Robot không bị oan
+    // Đăng ký Auto-bid
+    // Phân biệt Giá khởi điểm và Giá hiện tại để Robot không bị oan
     public Response registerAutoBid(AutoBidSettings settings) {
         double requiredMinBid;
 
         // Logic "Vé vào cửa" mới: Kiểm tra xem đã có ai mở bát chưa?
         if (currentHighestBidder == null) {
-            // Nếu Server vừa bật, chưa ai đặt giá -> Vé vào cửa chỉ là Giá khởi điểm
-            // (1240.00)
             requiredMinBid = startingPrice;
         } else {
-            // Nếu đã có người dẫn đầu -> Vé vào cửa là Giá hiện tại + Bước giá (20.00)
             requiredMinBid = currentHighestBid + minIncrement;
         }
 
@@ -107,33 +122,38 @@ public class AuctionManager {
 
         // ĐỒNG BỘ LUẬT CHƠI: Kiểm tra xem phiên đấu giá đã có ai "mở bát" chưa?
         if (currentHighestBidder == null) {
-            // Nếu là người đầu tiên đặt giá, vé vào cửa chỉ là Giá khởi điểm (1240.00)
             requiredMinBid = startingPrice;
         } else {
-            // Nếu từ người thứ 2 trở đi, vé vào cửa = Giá hiện tại + Bước giá tối thiểu
             requiredMinBid = currentHighestBid + minIncrement;
         }
 
         // Trạm kiểm duyệt vé vào cửa
         if (amount >= requiredMinBid) {
-            currentHighestBid = amount;
-            currentHighestBidder = bidderId;
-            System.out.println("[MANAGER] Giá mới: $" + amount + " từ " + bidderId);
+            // NÂNG CẤP: Lưu vào Database trước khi cập nhật RAM để đảm bảo tính bền vững
+            boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, amount, bidderId);
 
-            Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có người đặt giá mới",
-                    payload);
-            broadcast(broadcastResp);
+            if (dbUpdated) {
+                currentHighestBid = amount;
+                currentHighestBidder = bidderId;
+                System.out.println("[MANAGER] Giá mới: $" + amount + " từ " + bidderId);
 
-            // Kích hoạt luồng kiểm tra Auto-Bid ngầm
-            autoBidThreadPool.submit(this::evaluateAutoBids);
+                Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có người đặt giá mới",
+                        payload);
+                broadcast(broadcastResp);
 
-            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
+                // Kích hoạt luồng kiểm tra Auto-Bid ngầm
+                autoBidThreadPool.submit(this::evaluateAutoBids);
+
+                return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
+            } else {
+                return new Response(MessageType.BID_ERROR, "FAIL", "Lỗi đồng bộ Database (có thể giá đã bị người khác đẩy lên cao hơn)", null);
+            }
         } else {
             return new Response(MessageType.BID_ERROR, "FAIL", "Giá tối thiểu là $" + requiredMinBid, null);
         }
     }
 
-    // THÊM MỚI: Logic Đấu giá tự động (Giải quyết bài toán 2 người cùng Auto-bid)
+    // Logic Đấu giá tự động (Giải quyết bài toán 2 người cùng Auto-bid)
     private synchronized void evaluateAutoBids() {
         boolean bidChanged;
         do {
@@ -169,24 +189,30 @@ public class AuctionManager {
 
                 // BƯỚC 4: KIỂM TRA ĐIỀU KIỆN ĐẶT GIÁ (Giữ nguyên logic cũ)
                 if (nextBid >= currentHighestBid + minIncrement) {
-                    currentHighestBid = nextBid;
-                    currentHighestBidder = bestCandidate.getBidderId();
-                    System.out.println("[AUTO-BID] Tự động nâng giá lên: $" + currentHighestBid + " cho "
-                            + currentHighestBidder);
+                    
+                    // NÂNG CẤP: Robot cũng phải lưu giá vào Database
+                    boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, nextBid, bestCandidate.getBidderId());
+                    
+                    if (dbUpdated) {
+                        currentHighestBid = nextBid;
+                        currentHighestBidder = bestCandidate.getBidderId();
+                        System.out.println("[AUTO-BID] Tự động nâng giá lên: $" + currentHighestBid + " cho "
+                                + currentHighestBidder);
 
-                    // Tạo BidTransaction payload để client có thể hiển thị thông tin
-                    BidTransaction autoBidTx = new BidTransaction(
-                            "AUTO-" + System.currentTimeMillis(),
-                            bestCandidate.getAuctionId(),
-                            currentHighestBidder,
-                            currentHighestBid,
-                            System.currentTimeMillis());
-                    String autoBidPayload = new Gson().toJson(autoBidTx);
+                        // Tạo BidTransaction payload để client có thể hiển thị thông tin
+                        BidTransaction autoBidTx = new BidTransaction(
+                                "AUTO-" + System.currentTimeMillis(),
+                                currentAuctionItemId,
+                                currentHighestBidder,
+                                currentHighestBid,
+                                System.currentTimeMillis());
+                        String autoBidPayload = new Gson().toJson(autoBidTx);
 
-                    Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS",
-                            "Auto-bid placed", autoBidPayload);
-                    broadcast(broadcastResp);
-                    bidChanged = true; // Tiếp tục vòng lặp xem có ai bật Auto-bid đè lại không
+                        Response broadcastResp = new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS",
+                                "Auto-bid placed", autoBidPayload);
+                        broadcast(broadcastResp);
+                        bidChanged = true; // Tiếp tục vòng lặp xem có ai bật Auto-bid đè lại không
+                    }
                 }
             }
         } while (bidChanged);
@@ -197,7 +223,7 @@ public class AuctionManager {
         String bidder = (currentHighestBidder != null) ? currentHighestBidder : "None";
 
         // Reuse BidTransaction to represent the current state
-        BidTransaction statusTx = new BidTransaction("STATUS", "ITEM-123", bidder, displayPrice, System.currentTimeMillis());
+        BidTransaction statusTx = new BidTransaction("STATUS", currentAuctionItemId, bidder, displayPrice, System.currentTimeMillis());
         String payload = new Gson().toJson(statusTx);
 
         return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Auction Status", payload);
