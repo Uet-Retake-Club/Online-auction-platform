@@ -15,12 +15,12 @@
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.auction.client.controllers.SignupController"
       fx:id="rootPane"
-      prefWidth="900" prefHeight="620">
+      maxWidth="Infinity" maxHeight="Infinity">
 
     <!-- ════════════════════════════════════════════════════
          LEFT PANEL  — black brand panel
          ════════════════════════════════════════════════════ -->
-    <VBox prefWidth="300"
+    <VBox minWidth="280" maxWidth="360"
           alignment="CENTER_LEFT"
           spacing="0"
           style="-fx-background-color: #111111; -fx-padding: 52px 40px;">
@@ -80,6 +80,7 @@
          RIGHT PANEL — sign-up form
          ════════════════════════════════════════════════════ -->
     <VBox HBox.hgrow="ALWAYS"
+          maxWidth="Infinity"
           alignment="CENTER"
           style="-fx-background-color: #F7F7F7; -fx-padding: 36px;">
 

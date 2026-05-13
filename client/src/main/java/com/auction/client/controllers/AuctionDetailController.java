@@ -1,14 +1,12 @@
 package com.auction.client.controllers;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
+import com.auction.client.services.BidService;
 import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
-import com.auction.shared.models.BidTransaction;
-
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -23,391 +21,298 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 /**
- * AuctionDetailController.java
- * ─────────────────────────────────────────
- * Xử lý màn hình chi tiết đấu giá (AuctionDetailView.fxml).
+ * AuctionDetailController handles the auction detail view.
  *
- * Chức năng:
- * - Hiển thị thông tin sản phẩm, giá hiện tại, số lượt đặt giá
- * - Đồng hồ đếm ngược cập nhật mỗi giây bằng JavaFX Timeline
- * - Validate và đặt giá (placeBid)
- * - Hiển thị lịch sử đặt giá (bidHistoryList)
- * - Đổi màu timer theo thời gian còn lại
+ * <p>Features: Countdown timer, bidding, and dynamic history updates.
  */
-
 public class AuctionDetailController implements Initializable {
 
-    // ── FXML nodes ───────────────────────────────────────────
-    @FXML
-    private Label userLabel;
-    @FXML
-    private Label backLabel;
-    @FXML
-    private Label itemTitle;
-    @FXML
-    private Label itemMeta;
-    @FXML
-    private Label itemDescription;
-    @FXML
-    private Label currentPrice;
-    @FXML
-    private Label totalBids;
-    @FXML
-    private Label totalBidders;
-    @FXML
-    private Label auctionStatus;
-    @FXML
-    private Label countdownTimer;
-    @FXML
-    private Label minBidHint;
-    @FXML
-    private TextField bidAmountField;
-    @FXML
-    private Label bidError;
-    @FXML
-    private Button placeBidBtn;
-    @FXML
-    private Button watchlistBtn;
-    @FXML
-    private VBox bidHistoryList;
-    @FXML
-    private Label noBidsLabel;
+  @FXML private Label userLabel;
+  @FXML private Label backLabel;
+  @FXML private Label itemTitle;
+  @FXML private Label itemMeta;
+  @FXML private Label itemDescription;
+  @FXML private Label currentPrice;
+  @FXML private Label totalBids;
+  @FXML private Label totalBidders;
+  @FXML private Label auctionStatus;
+  @FXML private Label countdownTimer;
+  @FXML private Label minBidHint;
+  @FXML private TextField bidAmountField;
+  @FXML private Label bidError;
+  @FXML private Button placeBidBtn;
+  @FXML private Button watchlistBtn;
+  @FXML private VBox bidHistoryList;
+  @FXML private Label noBidsLabel;
+  @FXML private TextField maxPriceField;
+  @FXML private TextField autoBidIncrementField;
+  @FXML private Label autoBidError;
+  @FXML private Button setupAutoBidBtn;
+  @FXML private CheckBox aggressiveModeCheckBox;
 
-    // ── Auto-Bidding FXML nodes ──────────────────────────────
-    @FXML
-    private TextField maxPriceField;
-    @FXML
-    private TextField autoBidIncrementField;
-    @FXML
-    private Label autoBidError;
-    @FXML
-    private Button setupAutoBidBtn;
-    @FXML
-    private CheckBox aggressiveModeCheckBox; // Vuong nho keo tha cai checkbox nay vao file.fxml nhee
+  private final String currentAuctionId = "auction_123";
+  private String currentUserId;
+  private String currentHighestBidder = "";
+  private int secondsRemaining = 6452;
+  private Timeline countdownTimeline;
 
-    // ── Current Auction Context ──────────────────────────────
-    private String currentAuctionId = "auction_123";
-    private String currentUserId;
-    private String currentHighestBidder = "";
-    private int secondsRemaining = 6452; // ~1h 47m 32s
-    private Timeline countdownTimeline;
+  private static final String[][] DUMMY_BIDS = {
+    {"user_alpha", "$1,240.00", "2 min ago", "winning"},
+    {"buyer_99", "$1,180.00", "8 min ago", ""},
+    {"collector_vn", "$1,050.00", "22 min ago", ""}
+  };
 
-    // ── Dummy bid history ─────────────────────────────────────
-    private static final String[][] DUMMY_BIDS = {
-            { "user_alpha", "$1,240.00", "2 min ago", "winning" },
-            { "buyer_99", "$1,180.00", "8 min ago", "" },
-            { "collector_vn", "$1,050.00", "22 min ago", "" }
-    };
+  @Override
+  public void initialize(final URL url, final ResourceBundle rb) {
+    currentUserId = UserSession.getInstance().getUsername();
+    userLabel.setText(UserSession.getInstance().getInitials());
 
-    // ── Lifecycle ────────────────────────────────────────────
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        currentUserId = UserSession.getInstance().getUsername();
-        userLabel.setText(UserSession.getInstance().getInitials());
+    itemTitle.setText("Vintage Rolex Submariner 1969");
+    itemMeta.setText("Collectibles  ·  Seller: watch_king99");
+    itemDescription.setText("Original 1969 Rolex Submariner in excellent condition. "
+        + "Original bracelet, box, and papers included. Serviced in 2022. "
+        + "Running perfectly with minor surface scratches.");
+    
+    updatePrice(BidService.getInstance().getCurrentBidAmount());
+    BidService.getInstance().requestStatus();
+    totalBids.setText("14");
+    totalBidders.setText("7");
+    auctionStatus.setText("OPEN");
 
-        // Populate dummy data — replace with real Auction object later
-        itemTitle.setText("Vintage Rolex Submariner 1969");
-        itemMeta.setText("Collectibles  ·  Seller: watch_king99");
-        itemDescription.setText(
-                "Original 1969 Rolex Submariner in excellent condition. " +
-                        "Original bracelet, box, and papers included. Serviced in 2022. " +
-                        "Running perfectly with minor surface scratches consistent with age.");
-        updatePrice(com.auction.client.services.BidService.getInstance().getCurrentBidAmount());
-        com.auction.client.services.BidService.getInstance().requestStatus();
-        totalBids.setText("14");
-        totalBidders.setText("7");
-        auctionStatus.setText("OPEN");
+    startCountdown();
+    loadBidHistory();
+    currentHighestBidder = DUMMY_BIDS.length > 0 ? DUMMY_BIDS[0][0] : "";
 
-        // Start countdown timer
-        startCountdown();
-
-        // Populate bid history
-        loadBidHistory();
-        currentHighestBidder = DUMMY_BIDS.length > 0 ? DUMMY_BIDS[0][0] : "";
-
-        // Register to BidService callbacks
-        com.auction.client.services.BidService.getInstance().setCallbacks(
-                amount -> updatePrice(amount),
-                transaction -> {
-                    String priceStr = String.format("$%.2f", transaction.getBidAmount());
-                    boolean isWinning = transaction.getBidderId().equals(currentUserId);
-                    if (isWinning) {
-                        ToastNotification.show(userLabel, "Your bid was placed successfully.",
-                                ToastNotification.Type.SUCCESS);
-                    } else if (currentHighestBidder.equals(currentUserId)) {
-                        ToastNotification.show(userLabel, "You were outbid by " + transaction.getBidderId() + ".",
-                                ToastNotification.Type.WARNING);
-                    }
-                    currentHighestBidder = transaction.getBidderId();
-                    String badge = isWinning ? "winning" : "";
-                    addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
-                    noBidsLabel.setVisible(false);
-                    noBidsLabel.setManaged(false);
-                    int currentTotal = Integer.parseInt(totalBids.getText());
-                    totalBids.setText(String.valueOf(currentTotal + 1));
-                });
-
-        // Clear error on typing
-        bidAmountField.textProperty().addListener(
-                (obs, old, val) -> bidError.setText(""));
-
-        // Setup Auto-Bid Increment to default minimum increment
-        autoBidIncrementField
-                .setText(String.valueOf(com.auction.client.services.BidService.getInstance().getMinimumIncrement()));
-
-        maxPriceField.textProperty().addListener(
-                (obs, old, val) -> autoBidError.setText(""));
-        autoBidIncrementField.textProperty().addListener(
-                (obs, old, val) -> autoBidError.setText(""));
-
-        // Đăng ký hiển thị Toast khi giá thay đổi
-        com.auction.client.services.BidService.getInstance().setOnPriceChangeNotification(msg -> {
-            ToastNotification.show(userLabel, msg, ToastNotification.Type.INFO);
+    BidService.getInstance().setCallbacks(
+        this::updatePrice,
+        transaction -> {
+          final String priceStr = String.format("$%.2f", transaction.getBidAmount());
+          final boolean isWinning = transaction.getBidderId().equals(currentUserId);
+          
+          if (isWinning) {
+            ToastNotification.show(userLabel, "Your bid was placed successfully.", 
+                ToastNotification.Type.SUCCESS);
+          } else if (currentHighestBidder.equals(currentUserId)) {
+            ToastNotification.show(userLabel, 
+                "You were outbid by " + transaction.getBidderId() + ".",
+                ToastNotification.Type.WARNING);
+          }
+          currentHighestBidder = transaction.getBidderId();
+          final String badge = isWinning ? "winning" : "";
+          addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
+          noBidsLabel.setVisible(false);
+          noBidsLabel.setManaged(false);
+          final int currentTotal = Integer.parseInt(totalBids.getText());
+          totalBids.setText(String.valueOf(currentTotal + 1));
         });
 
-        // Đăng ký callback khi Auto-bid được server phản hồi
-        com.auction.client.services.BidService.getInstance().setOnAutoBidResult(response -> {
-            if ("SUCCESS".equals(response.getStatus())) {
-                setupAutoBidBtn.setText("Auto-Bid Active ✓");
-                setupAutoBidBtn.setStyle(
-                        "-fx-background-color:#5BA55B;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:12px;-fx-border-radius:4px;-fx-background-radius:4px;-fx-padding:8px;-fx-cursor:hand;-fx-effect:null;");
-                ToastNotification.show(userLabel, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
-            } else {
-                autoBidError.setText(response.getMessage());
-                ToastNotification.show(userLabel, response.getMessage(), ToastNotification.Type.DANGER);
-            }
-        });
+    bidAmountField.textProperty().addListener((obs, old, val) -> bidError.setText(""));
+    autoBidIncrementField.setText(
+        String.valueOf(BidService.getInstance().getMinimumIncrement()));
+    maxPriceField.textProperty().addListener((obs, old, val) -> autoBidError.setText(""));
+    autoBidIncrementField.textProperty().addListener((o, old, val) -> autoBidError.setText(""));
 
-        // Đăng ký callback khi đặt giá thất bại
-        com.auction.client.services.BidService.getInstance().setOnBidError(msg -> {
-            bidError.setText(msg);
-            ToastNotification.show(userLabel, msg, ToastNotification.Type.DANGER);
-        });
+    BidService.getInstance().setOnPriceChangeNotification(msg -> 
+        ToastNotification.show(userLabel, msg, ToastNotification.Type.INFO));
+
+    BidService.getInstance().setOnAutoBidResult(response -> {
+      if ("SUCCESS".equals(response.getStatus())) {
+        setupAutoBidBtn.setText("Auto-Bid Active ✓");
+        setupAutoBidBtn.setStyle("-fx-background-color:#5BA55B;-fx-text-fill:white;"
+            + "-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:8px;");
+        ToastNotification.show(userLabel, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
+      } else {
+        autoBidError.setText(response.getMessage());
+        ToastNotification.show(userLabel, response.getMessage(), ToastNotification.Type.DANGER);
+      }
+    });
+
+    BidService.getInstance().setOnBidError(msg -> {
+      bidError.setText(msg);
+      ToastNotification.show(userLabel, msg, ToastNotification.Type.DANGER);
+    });
+  }
+
+  private void startCountdown() {
+    countdownTimeline = new Timeline(
+        new KeyFrame(Duration.seconds(1), e -> {
+          if (secondsRemaining > 0) {
+            secondsRemaining--;
+            updateTimerDisplay();
+          } else {
+            countdownTimer.setText("ENDED");
+            countdownTimeline.stop();
+            onAuctionEnded();
+          }
+        }));
+    countdownTimeline.setCycleCount(Timeline.INDEFINITE);
+    countdownTimeline.play();
+    updateTimerDisplay();
+  }
+
+  private void updateTimerDisplay() {
+    final int h = secondsRemaining / 3600;
+    final int m = (secondsRemaining % 3600) / 60;
+    final int s = secondsRemaining % 60;
+    countdownTimer.setText(String.format("%02d:%02d:%02d", h, m, s));
+
+    if (secondsRemaining < 60) {
+      countdownTimer.setStyle("-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+    } else {
+      countdownTimer.setStyle("-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;");
+    }
+  }
+
+  private void onAuctionEnded() {
+    placeBidBtn.setDisable(true);
+    bidAmountField.setDisable(true);
+    auctionStatus.setText("FINISHED");
+    auctionStatus.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+    BidService.getInstance().setAuctionClosed();
+    setupAutoBidBtn.setDisable(true);
+    maxPriceField.setDisable(true);
+    autoBidIncrementField.setDisable(true);
+  }
+
+  @FXML
+  private void onPlaceBid() {
+    final String input = bidAmountField.getText().trim();
+    if (input.isEmpty()) {
+      bidError.setText("Please enter a bid amount");
+      return;
+    }
+    double amount;
+    try {
+      amount = Double.parseDouble(input.replace(",", ""));
+    } catch (NumberFormatException ex) {
+      bidError.setText("Please enter a valid number");
+      return;
     }
 
-    // ── Countdown timer ──────────────────────────────────────
-
-    /**
-     * Khởi động Timeline cập nhật đồng hồ mỗi 1 giây.
-     * Đổi màu timer: xanh → vàng (< 10 phút) → đỏ (< 1 phút).
-     * TODO: kết nối với thời gian thực từ server.
-     */
-    private void startCountdown() {
-        countdownTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(1), e -> {
-                    if (secondsRemaining > 0) {
-                        secondsRemaining--;
-                        updateTimerDisplay();
-                    } else {
-                        countdownTimer.setText("ENDED");
-                        countdownTimeline.stop();
-                        onAuctionEnded();
-                    }
-                }));
-        countdownTimeline.setCycleCount(Timeline.INDEFINITE);
-        countdownTimeline.play();
-        updateTimerDisplay();
+    if (!ConfirmBidDialog.show("Confirm bid", String.format("Place bid of $%.2f?", amount))) {
+      return;
     }
 
-    private void updateTimerDisplay() {
-        int h = secondsRemaining / 3600;
-        int m = (secondsRemaining % 3600) / 60;
-        int s = secondsRemaining % 60;
-        countdownTimer.setText(String.format("%02d:%02d:%02d", h, m, s));
+    final String errorMsg = BidService.getInstance()
+        .placeBid(currentUserId, currentAuctionId, amount);
 
-        // Đổi màu theo mức độ khẩn cấp
-        if (secondsRemaining < 60) {
-            // Đỏ — dưới 1 phút
-            countdownTimer.setStyle(
-                    "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';");
-        } else if (secondsRemaining < 600) {
-            // Vàng — dưới 10 phút
-            countdownTimer.setStyle(
-                    "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';");
-        } else {
-            // Bình thường
-            countdownTimer.setStyle(
-                    "-fx-font-size:22px;-fx-font-weight:bold;-fx-text-fill:#F5A623;-fx-font-family:'Segoe UI';");
-        }
+    if (errorMsg != null) {
+      bidError.setText(errorMsg);
+    } else {
+      bidAmountField.clear();
+      bidError.setText("");
+    }
+  }
+
+  @FXML
+  private void onSetupAutoBid() {
+    final String maxStr = maxPriceField.getText().trim();
+    final String incStr = autoBidIncrementField.getText().trim();
+
+    if (maxStr.isEmpty() || incStr.isEmpty()) {
+      autoBidError.setText("Fill both fields");
+      return;
     }
 
-    private void onAuctionEnded() {
-        placeBidBtn.setDisable(true);
-        bidAmountField.setDisable(true);
-        auctionStatus.setText("FINISHED");
-        auctionStatus.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
-        com.auction.client.services.BidService.getInstance().setAuctionClosed();
-        setupAutoBidBtn.setDisable(true);
-        maxPriceField.setDisable(true);
-        autoBidIncrementField.setDisable(true);
+    try {
+      final double maxPrice = Double.parseDouble(maxStr.replace(",", ""));
+      final double increment = Double.parseDouble(incStr.replace(",", ""));
+      final boolean isAggressive = aggressiveModeCheckBox.isSelected();
+
+      final String errorMsg = BidService.getInstance()
+          .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment, isAggressive);
+
+      if (errorMsg != null) {
+        autoBidError.setText(errorMsg);
+      } else {
+        setupAutoBidBtn.setText("Sending...");
+        autoBidError.setText("");
+      }
+    } catch (NumberFormatException ex) {
+      autoBidError.setText("Invalid numbers");
     }
+  }
 
-    // ── Place bid ────────────────────────────────────────────
+  @FXML
+  private void onAddWatchlist() {
+    watchlistBtn.setText("Added to watchlist");
+    watchlistBtn.setDisable(true);
+    ToastNotification.show(userLabel, "Added to watchlist.", ToastNotification.Type.INFO);
+  }
 
-    @FXML
-    private void onPlaceBid() {
-        String input = bidAmountField.getText().trim();
+  @FXML
+  private void onBack() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
 
-        // Validate
-        if (input.isEmpty()) {
-            bidError.setText("Please enter a bid amount");
-            return;
-        }
-        double amount;
-        try {
-            amount = Double.parseDouble(input.replace(",", ""));
-        } catch (NumberFormatException ex) {
-            bidError.setText("Please enter a valid number");
-            return;
-        }
+  @FXML
+  private void onHome() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
 
-        if (!ConfirmBidDialog.show("Confirm bid", String.format("Place a bid of $%.2f?", amount))) {
-            return;
-        }
+  @FXML
+  private void onMyBids() {
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
 
-        // Use BidService to place the bid
-        String errorMsg = com.auction.client.services.BidService.getInstance()
-                .placeBid(currentUserId, currentAuctionId, amount);
+  @FXML
+  private void onWatchlist() {
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
 
-        if (errorMsg != null) {
-            bidError.setText(errorMsg);
-        } else {
-            bidAmountField.clear();
-            bidError.setText("");
-        }
+  @FXML
+  private void onSell() {
+    SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+  }
+
+  @FXML
+  private void onProfile() {
+    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
+  }
+
+  private void updatePrice(final double amount) {
+    currentPrice.setText(String.format("$%.2f", amount));
+    final double nextMin = amount + BidService.getInstance().getMinimumIncrement();
+    minBidHint.setText(String.format("Minimum bid: $%.2f", nextMin));
+  }
+
+  private void loadBidHistory() {
+    if (DUMMY_BIDS.length == 0) {
+      noBidsLabel.setVisible(true);
+      return;
     }
-
-    // ── Auto-Bidding ─────────────────────────────────────────
-
-    @FXML
-    private void onSetupAutoBid() {
-        String maxStr = maxPriceField.getText().trim();
-        String incStr = autoBidIncrementField.getText().trim();
-
-        if (maxStr.isEmpty() || incStr.isEmpty()) {
-            autoBidError.setText("Fill both fields");
-            return;
-        }
-
-        double maxPrice;
-        double increment;
-
-        try {
-            maxPrice = Double.parseDouble(maxStr.replace(",", ""));
-            increment = Double.parseDouble(incStr.replace(",", ""));
-        } catch (NumberFormatException ex) {
-            autoBidError.setText("Invalid numbers");
-            return;
-        }
-
-        // Đọc trạng thái checkbox: tích = Aggressive, không tích = Standard
-        boolean isAggressive = aggressiveModeCheckBox.isSelected();
-
-        String errorMsg = com.auction.client.services.BidService.getInstance()
-                .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment, isAggressive);
-
-        if (errorMsg != null) {
-            autoBidError.setText(errorMsg);
-        } else {
-            // Đợi server phản hồi thông qua callback (đã đăng ký ở initialize)
-            setupAutoBidBtn.setText("Sending...");
-            autoBidError.setText("");
-        }
+    noBidsLabel.setVisible(false);
+    noBidsLabel.setManaged(false);
+    for (String[] bid : DUMMY_BIDS) {
+      addBidRowToHistory(bid[0], bid[1], bid[2], bid[3]);
     }
+  }
 
-    // ── Watchlist ────────────────────────────────────────────
+  private void addBidRowToHistory(final String name, final String price,
+      final String time, final String badge) {
+    final HBox row = new HBox();
+    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
+        + "-fx-border-width:0 0 1px 0;-fx-padding:8px 0;-fx-alignment:CENTER_LEFT;");
+    row.setSpacing(8);
 
-    @FXML
-    private void onAddWatchlist() {
-        watchlistBtn.setText("Added to watchlist");
-        watchlistBtn.setDisable(true);
-        ToastNotification.show(userLabel, "Added to your watchlist.", ToastNotification.Type.INFO);
-        // TODO: WatchlistService.add(auctionId)
+    final Label nameLbl = new Label(name);
+    nameLbl.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;");
+    HBox.setHgrow(nameLbl, Priority.ALWAYS);
+
+    final Label priceLbl = new Label(price);
+    priceLbl.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+
+    final Label timeLbl = new Label(time);
+    timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;-fx-min-width:80px;");
+
+    row.getChildren().addAll(nameLbl, priceLbl, timeLbl);
+
+    if (!badge.isEmpty()) {
+      final Label bdg = new Label("Winning");
+      bdg.setStyle("-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;"
+          + "-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:2px 8px;");
+      row.getChildren().add(bdg);
     }
-
-    // ── Navigation ───────────────────────────────────────────
-
-    @FXML
-    private void onBack() {
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-    }
-
-    @FXML
-    private void onHome() {
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-    }
-
-    @FXML
-    private void onMyBids() {
-        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
-    }
-
-    @FXML
-    private void onWatchlist() {
-        SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
-    }
-
-    @FXML
-    private void onSell() {
-        SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
-    }
-
-    @FXML
-    private void onProfile() {
-        SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
-    }
-
-    // ── Helpers ──────────────────────────────────────────────
-
-    private void updatePrice(double amount) {
-        currentPrice.setText(String.format("$%.2f", amount));
-        double nextMin = amount + com.auction.client.services.BidService.getInstance().getMinimumIncrement();
-        minBidHint.setText(String.format("Minimum bid: $%.2f", nextMin));
-    }
-
-    private void loadBidHistory() {
-        if (DUMMY_BIDS.length == 0) {
-            noBidsLabel.setVisible(true);
-            return;
-        }
-        noBidsLabel.setVisible(false);
-        noBidsLabel.setManaged(false);
-        for (String[] bid : DUMMY_BIDS) {
-            addBidRowToHistory(bid[0], bid[1], bid[2], bid[3]);
-        }
-    }
-
-    /**
-     * Tạo một hàng lịch sử đặt giá dạng HBox và thêm vào danh sách.
-     * TODO: khi có dữ liệu thật, thay String[] bằng BidTransaction object.
-     */
-    private void addBidRowToHistory(String name, String price,
-            String time, String badge) {
-        HBox row = new HBox();
-        row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;" +
-                "-fx-border-width:0 0 1px 0;-fx-padding:8px 0;-fx-alignment:CENTER_LEFT;");
-        row.setSpacing(8);
-
-        Label nameLbl = new Label(name);
-        nameLbl.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;");
-        HBox.setHgrow(nameLbl, Priority.ALWAYS);
-
-        Label priceLbl = new Label(price);
-        priceLbl.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-min-width:90px;");
-
-        Label timeLbl = new Label(time);
-        timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;-fx-min-width:80px;");
-
-        row.getChildren().addAll(nameLbl, priceLbl, timeLbl);
-
-        if (!badge.isEmpty()) {
-            Label bdg = new Label("Winning");
-            bdg.setStyle("-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;" +
-                    "-fx-font-size:10px;-fx-font-weight:bold;" +
-                    "-fx-padding:2px 8px;-fx-background-radius:10px;");
-            row.getChildren().add(bdg);
-        }
-
-        bidHistoryList.getChildren().add(0, row); // newest on top
-    }
+    bidHistoryList.getChildren().add(0, row);
+  }
 }

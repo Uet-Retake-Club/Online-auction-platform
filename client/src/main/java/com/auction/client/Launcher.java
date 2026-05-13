@@ -8,8 +8,8 @@ package com.auction.client;
  */
 public class Launcher {
 
-    public static void main(String[] args) {
-        // Delegate to the real JavaFX Application class
-        ClientApplication.main(args);
-    }
+  public static void main(String[] args) {
+    // Delegate to the real JavaFX Application class
+    ClientApplication.main(args);
+  }
 }

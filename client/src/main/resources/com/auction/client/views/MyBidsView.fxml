@@ -14,7 +14,7 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.MyBidsController"
             fx:id="rootPane"
-            prefWidth="1100" prefHeight="700"
+            maxWidth="Infinity" maxHeight="Infinity"
             style="-fx-background-color: #F4F4F4;">
 
     <!-- ══ TOP NAV ══════════════════════════════════════════ -->
@@ -62,7 +62,7 @@
 
     <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
     <center>
-        <VBox style="-fx-padding:24px;" spacing="16">
+        <VBox style="-fx-padding:24px;" spacing="16" VBox.vgrow="ALWAYS">
 
             <!-- Header row -->
             <HBox alignment="CENTER_LEFT">
