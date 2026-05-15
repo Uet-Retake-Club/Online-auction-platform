@@ -1,9 +1,9 @@
 package com.auction.server.services;
-
-import com.auction.server.dao.BidTransaction;
+import com.auction.shared.models.BidTransaction;
+import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
-import com.auction.server.dao.BidTransaction;
+import com.auction.server.dao.BidTransactionDAOImpl;
 import com.auction.server.network.ClientHandler;
 import com.auction.server.services.core.AuctionTimer;
 import com.auction.server.services.core.AutoBidEngine;
@@ -11,7 +11,6 @@ import com.auction.server.services.core.SessionManager;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
-import com.auction.shared.models.BidTransaction;
 import com.auction.shared.models.Item;
 import com.google.gson.Gson;
 
@@ -25,7 +24,7 @@ public class AuctionService {
     
     // Tương tác Database
     private final ItemDAO itemDAO = new ItemDAOImpl();
-    private final BidTransaction bidDAO = new BidDAOImpl();
+    private final BidTransactionDAO bidDAO = new BidTransactionDAOImpl();
     
     private String currentAuctionItemId = "ITEM-123";
     private double startingPrice = 1240.00;
@@ -102,8 +101,8 @@ public class AuctionService {
             boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, amount, bidderId);
             if (dbUpdated) {
 
-                BidTransaction tx = new BidTransaction("TX-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
-                bidDAO.recordBid(tx);
+                BidTransaction tx = new BidTransaction("", currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
+                bidDAO.addTransaction(tx);
 
                 currentHighestBid = amount;
                 currentHighestBidder = bidderId;
