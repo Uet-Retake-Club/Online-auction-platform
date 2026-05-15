@@ -25,6 +25,9 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+
+
+    
     @Override
     public List<BidTransaction> getHistoryByItem(String itemId) {
         List<BidTransaction> history = new ArrayList<>();
