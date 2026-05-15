@@ -3,9 +3,11 @@ package com.auction.client.controllers;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -13,60 +15,67 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
- * MyBidsController handles the My Bids view.
+ * SellerController handles the Seller Dashboard view.
+ * Displays listings created by the seller and their status.
  */
-public class MyBidsController implements Initializable {
+public class SellerController implements Initializable {
 
   @FXML private Label userLabel;
-  @FXML private Label bidCountLabel;
-  @FXML private VBox bidsListContainer;
+  @FXML private Label listingCountLabel;
+  @FXML private VBox listingsContainer;
   @FXML private VBox emptyState;
   @FXML private Button filterAll;
-  @FXML private Button filterWinning;
-  @FXML private Button filterOutbid;
-  @FXML private Button filterWon;
-  @FXML private Button filterWatchlist;
+  @FXML private Button filterActive;
+  @FXML private Button filterSold;
+  @FXML private Button filterUnsold;
+  @FXML private Button filterDraft;
 
   private Button activeFilter;
 
-  private static final String[][] ALL_BIDS = {
-    {"Vintage Rolex Watch", "$1,240.00", "$1,240.00", "1h 47m", "winning"},
-    {"iPhone 15 Pro Max", "$720.00", "$780.00", "32m", "outbid"},
-    {"Nike Air Jordan 1", "$210.00", "$210.00", "Ended", "won"},
-    {"Sony WH-1000XM5", "$170.00", "$190.00", "Ended", "lost"},
-    {"MacBook Air M2", "$820.00", "$820.00", "4d 2h", "watching"}
+  // Mock data for listings
+  private static final String[][] ALL_LISTINGS = {
+    {"Vintage Rolex Watch", "$1,240.00", "$1,500.00", "1h 47m", "active"},
+    {"iPhone 15 Pro Max", "$780.00", "$900.00", "Ended", "sold"},
+    {"Nike Air Jordan 1", "$0.00", "$250.00", "Ended", "unsold"},
+    {"Sony WH-1000XM5", "-", "$200.00", "-", "draft"},
+    {"MacBook Air M2", "$820.00", "$1,000.00", "4d 2h", "active"}
   };
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
     activeFilter = filterAll;
-    populateRows(ALL_BIDS);
+    populateRows(ALL_LISTINGS);
   }
 
-  @FXML private void onFilterAll() {
+  @FXML
+  private void onFilterAll() {
     switchFilter(filterAll);
-    populateRows(ALL_BIDS);
+    populateRows(ALL_LISTINGS);
   }
 
-  @FXML private void onFilterWinning() {
-    switchFilter(filterWinning);
-    populateRows(filterBy("winning"));
+  @FXML
+  private void onFilterActive() {
+    switchFilter(filterActive);
+    populateRows(filterBy("active"));
   }
 
-  @FXML private void onFilterOutbid() {
-    switchFilter(filterOutbid);
-    populateRows(filterBy("outbid"));
+  @FXML
+  private void onFilterSold() {
+    switchFilter(filterSold);
+    populateRows(filterBy("sold"));
   }
 
-  @FXML private void onFilterWon() {
-    switchFilter(filterWon);
-    populateRows(filterBy("won"));
+  @FXML
+  private void onFilterUnsold() {
+    switchFilter(filterUnsold);
+    populateRows(filterBy("unsold"));
   }
 
-  @FXML private void onFilterWatchlist() {
-    switchFilter(filterWatchlist);
-    populateRows(filterBy("watching"));
+  @FXML
+  private void onFilterDraft() {
+    switchFilter(filterDraft);
+    populateRows(filterBy("draft"));
   }
 
   private void switchFilter(final Button btn) {
@@ -80,7 +89,7 @@ public class MyBidsController implements Initializable {
   }
 
   private String[][] filterBy(final String status) {
-    return java.util.Arrays.stream(ALL_BIDS)
+    return Arrays.stream(ALL_LISTINGS)
         .filter(b -> b[4].equals(status))
         .toArray(String[][]::new);
   }
@@ -91,8 +100,8 @@ public class MyBidsController implements Initializable {
   }
 
   @FXML
-  private void onSell() {
-    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
+  private void onCreateListing() {
+    SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
   }
 
   @FXML
@@ -107,26 +116,26 @@ public class MyBidsController implements Initializable {
   }
 
   private void populateRows(final String[][] data) {
-    bidsListContainer.getChildren().clear();
+    listingsContainer.getChildren().clear();
     if (data.length == 0) {
       emptyState.setVisible(true);
       emptyState.setManaged(true);
-      bidCountLabel.setText("0 bids");
+      listingCountLabel.setText("0 listings");
       return;
     }
     emptyState.setVisible(false);
     emptyState.setManaged(false);
-    bidCountLabel.setText(data.length + " bid" + (data.length == 1 ? "" : "s"));
-    for (String[] bid : data) {
-      bidsListContainer.getChildren().add(
-          buildRow(bid[0], bid[1], bid[2], bid[3], bid[4]));
+    listingCountLabel.setText(data.length + " listing" + (data.length == 1 ? "" : "s"));
+    for (final String[] listing : data) {
+      listingsContainer.getChildren().add(
+          buildRow(listing[0], listing[1], listing[2], listing[3], listing[4]));
     }
   }
 
-  private HBox buildRow(final String title, final String myBid, 
-      final String curPrice, final String timeLeft, final String status) {
+  private HBox buildRow(final String title, final String currentBid,
+      final String buyNowPrice, final String timeLeft, final String status) {
     final HBox row = new HBox();
-    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+    row.setAlignment(Pos.CENTER_LEFT);
     row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
         + "-fx-border-width:0 0 1px 0;-fx-padding:10px 14px;");
 
@@ -134,13 +143,13 @@ public class MyBidsController implements Initializable {
     titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
     HBox.setHgrow(titleLbl, Priority.ALWAYS);
 
-    final Label myBidLbl = new Label(myBid);
-    myBidLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
-    myBidLbl.setPrefWidth(100);
+    final Label currentBidLbl = new Label(currentBid);
+    currentBidLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+    currentBidLbl.setPrefWidth(100);
 
-    final Label curPriceLbl = new Label(curPrice);
-    curPriceLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
-    curPriceLbl.setPrefWidth(120);
+    final Label buyNowPriceLbl = new Label(buyNowPrice);
+    buyNowPriceLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
+    buyNowPriceLbl.setPrefWidth(120);
 
     final Label timeLbl = new Label(timeLeft);
     timeLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#888;");
@@ -151,32 +160,28 @@ public class MyBidsController implements Initializable {
     final Button action = buildActionButton(status);
     action.setPrefWidth(100);
 
-    row.getChildren().addAll(titleLbl, myBidLbl, curPriceLbl, timeLbl, badge, action);
+    row.getChildren().addAll(titleLbl, currentBidLbl, buyNowPriceLbl, timeLbl, badge, action);
     return row;
   }
 
   private Label buildBadge(final String status) {
     final Label b = new Label();
     switch (status) {
-      case "winning" -> {
-        b.setText("Winning");
+      case "active" -> {
+        b.setText("Active");
+        b.setStyle(badgeStyle("#E8F0FE", "#1A73E8"));
+      }
+      case "sold" -> {
+        b.setText("Sold");
         b.setStyle(badgeStyle("#EAF5EA", "#5BA55B"));
       }
-      case "outbid" -> {
-        b.setText("Outbid");
+      case "unsold" -> {
+        b.setText("Unsold");
         b.setStyle(badgeStyle("#FEF6E6", "#F5A623"));
       }
-      case "won" -> {
-        b.setText("Won");
-        b.setStyle(badgeStyle("#EAF5EA", "#5BA55B"));
-      }
-      case "lost" -> {
-        b.setText("Lost");
+      case "draft" -> {
+        b.setText("Draft");
         b.setStyle(badgeStyle("#F4F4F4", "#888888"));
-      }
-      case "watching" -> {
-        b.setText("Watching");
-        b.setStyle(badgeStyle("#E8F0FE", "#1A73E8"));
       }
       default -> b.setText(status);
     }
@@ -195,19 +200,19 @@ public class MyBidsController implements Initializable {
         + "-fx-border-width:1px;-fx-border-radius:5px;"
         + "-fx-background-radius:5px;-fx-font-size:11px;"
         + "-fx-padding:4px 12px;-fx-cursor:hand;-fx-effect:null;");
-    
+
     switch (status) {
-      case "outbid" -> {
-        btn.setText("Bid again");
-        btn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+      case "draft" -> {
+        btn.setText("Edit");
+        btn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING));
       }
-      case "won" -> {
-        btn.setText("Pay now");
+      case "sold" -> {
+        btn.setText("Ship Item");
         btn.setStyle("-fx-background-color:#E53238;-fx-text-fill:white;"
             + "-fx-font-weight:bold;-fx-border-color:transparent;"
             + "-fx-border-radius:5px;-fx-background-radius:5px;"
             + "-fx-font-size:11px;-fx-padding:4px 12px;-fx-cursor:hand;");
-        btn.setOnAction(e -> System.out.println("TODO: payment flow"));
+        btn.setOnAction(e -> System.out.println("TODO: shipping flow"));
       }
       default -> {
         btn.setText("View");

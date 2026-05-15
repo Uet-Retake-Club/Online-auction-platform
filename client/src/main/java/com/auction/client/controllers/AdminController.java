@@ -247,4 +247,14 @@ public class AdminController implements Initializable {
         + "-fx-border-radius:4px;-fx-background-radius:4px;"
         + "-fx-font-size:11px;-fx-padding:3px 10px;-fx-cursor:hand;-fx-effect:null;";
   }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
+
+  @FXML
+  private void onHome() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
 }

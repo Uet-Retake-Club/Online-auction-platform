@@ -13,7 +13,7 @@ public class LoginHandler implements CommandHandler {
         clientHandler.setClientId(request.getSenderId());
         AuctionService.getInstance().registerClient(request.getSenderId(), clientHandler);
         
-        // Tự động gửi trạng thái hiện tại (Giống code cũ của bạn)
+        // Tự động gửi trạng thái hiện tại 
         clientHandler.sendResponse(AuctionService.getInstance().getCurrentStatusResponse());
         
         return new Response(MessageType.LOGIN, "SUCCESS", "Đăng nhập Socket thành công", null);

@@ -220,7 +220,7 @@ public class HomeController implements Initializable {
 
   @FXML
   private void onSell() {
-    SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML
@@ -321,7 +321,11 @@ public class HomeController implements Initializable {
     card.setStyle(normalStyle);
     card.setOnMouseEntered(e -> card.setStyle(hoverStyle));
     card.setOnMouseExited(e -> card.setStyle(normalStyle));
-    card.setOnMouseClicked(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+    card.setOnMouseClicked(e -> {
+      UserSession.getInstance().setSelectedAuctionTitle(title);
+      UserSession.getInstance().setSelectedAuctionCategory(category);
+      SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
+    });
 
     return card;
   }
@@ -333,5 +337,15 @@ public class HomeController implements Initializable {
     endingSoonGrid.setManaged(!show);
     recentGrid.setVisible(!show);
     recentGrid.setManaged(!show);
+  }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
+
+  @FXML
+  private void onHome() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
 }

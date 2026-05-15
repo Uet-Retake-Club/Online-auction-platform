@@ -30,7 +30,7 @@
                      -fx-padding: 10px 20px;">
 
             <!-- Logo -->
-            <HBox alignment="CENTER_LEFT" spacing="0">
+            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
                 <Label text="Auction"
                        style="-fx-font-size: 20px; -fx-font-weight: bold;
                               -fx-text-fill: #E53238; -fx-font-family: 'Segoe UI';"/>
@@ -113,6 +113,8 @@
                            -fx-effect: null;"/>
 
             <!-- User avatar pill -->
+                        <Button text="☀/🌙" onAction="#onToggleTheme"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:16px;-fx-cursor:hand;-fx-effect:null;-fx-padding:0 8px;"/>
             <Label fx:id="userLabel"
                    text="JD"
                    onMouseClicked="#onProfile"

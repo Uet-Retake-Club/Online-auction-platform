@@ -21,13 +21,15 @@
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12"
               style="-fx-background-color:white;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:10px 20px;">
-            <HBox alignment="CENTER_LEFT" spacing="0">
+            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
                 <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
                 <Label text="Hub"     style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="My listings" onAction="#onMyListings"
                     style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+                        <Button text="☀/🌙" onAction="#onToggleTheme"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:16px;-fx-cursor:hand;-fx-effect:null;-fx-padding:0 8px;"/>
             <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
                    style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;-fx-cursor:hand;"/>
         </HBox>

@@ -14,7 +14,7 @@ import com.auction.shared.models.AutoBidSettings;
 import com.auction.server.dao.ItemDAO;
 import com.auction.shared.models.Item;
 
-public class AuctionManagerTest {
+public class AuctionServiceTest {
 
     private AuctionService manager;
 

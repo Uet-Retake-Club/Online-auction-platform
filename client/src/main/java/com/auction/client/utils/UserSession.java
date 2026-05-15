@@ -48,6 +48,28 @@ public final class UserSession {
    */
   private String role;
 
+  /** Title of the currently selected auction. */
+  private String selectedAuctionTitle = "Vintage Rolex Submariner 1969";
+
+  /** Category of the currently selected auction. */
+  private String selectedAuctionCategory = "Collectibles";
+
+  public String getSelectedAuctionTitle() {
+    return selectedAuctionTitle;
+  }
+
+  public void setSelectedAuctionTitle(final String title) {
+    this.selectedAuctionTitle = title;
+  }
+
+  public String getSelectedAuctionCategory() {
+    return selectedAuctionCategory;
+  }
+
+  public void setSelectedAuctionCategory(final String category) {
+    this.selectedAuctionCategory = category;
+  }
+
   /**
    * Private constructor — singleton.
    */

@@ -67,8 +67,12 @@ public class AuctionDetailController implements Initializable {
     currentUserId = UserSession.getInstance().getUsername();
     userLabel.setText(UserSession.getInstance().getInitials());
 
-    itemTitle.setText("Vintage Rolex Submariner 1969");
-    itemMeta.setText("Collectibles  ·  Seller: watch_king99");
+    final String clickedTitle = UserSession.getInstance().getSelectedAuctionTitle();
+    final String clickedCategory = UserSession.getInstance().getSelectedAuctionCategory();
+
+    itemTitle.setText(clickedTitle != null ? clickedTitle : "Unknown Item");
+    itemMeta.setText((clickedCategory != null ? clickedCategory : "Unknown")
+        + "  ·  Seller: auto_seller");  
     itemDescription.setText("Original 1969 Rolex Submariner in excellent condition. "
         + "Original bracelet, box, and papers included. Serviced in 2022. "
         + "Running perfectly with minor surface scratches.");
@@ -314,5 +318,10 @@ public class AuctionDetailController implements Initializable {
       row.getChildren().add(bdg);
     }
     bidHistoryList.getChildren().add(0, row);
+  }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
   }
 }
