@@ -83,31 +83,38 @@ public class SignupController implements Initializable {
 
     com.auction.client.services.NetworkClientService.getInstance().ensureConnected();
 
-    String firstName = firstNameField.getText().trim();
-    String lastName = lastNameField.getText().trim();
-    String username = usernameField.getText().trim();
-    String email = emailField.getText().trim();
-    String password = passwordField.getText();
+    final String firstName = firstNameField.getText().trim();
+    final String lastName = lastNameField.getText().trim();
+    final String username = usernameField.getText().trim();
+    final String email = emailField.getText().trim();
+    final String password = passwordField.getText();
 
-    com.auction.shared.dto.AuthPayload auth = new com.auction.shared.dto.AuthPayload(username, password, "BIDDER");
-    com.auction.shared.dto.Request registerReq = new com.auction.shared.dto.Request(
-        com.auction.shared.dto.MessageType.REGISTER, "Pending", new com.google.gson.Gson().toJson(auth)
-    );
+    final com.auction.shared.dto.AuthPayload auth =
+        new com.auction.shared.dto.AuthPayload(username, password, "BIDDER");
+    final com.auction.shared.dto.Request registerReq = new com.auction.shared.dto.Request(
+        com.auction.shared.dto.MessageType.REGISTER, "Pending",
+        new com.google.gson.Gson().toJson(auth));
 
-    com.auction.client.services.NetworkClientService.getInstance().addListener(response -> {
-        if (response.getType() == com.auction.shared.dto.MessageType.REGISTER_SUCCESS) {
-            String userId = response.getPayload(); // Returned from server
-            javafx.application.Platform.runLater(() -> {
-                UserSession.getInstance().signIn(userId, firstName, lastName, username, email, "BIDDER");
-                SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-            });
-        } else if (response.getType() == com.auction.shared.dto.MessageType.REGISTER_FAIL) {
-            javafx.application.Platform.runLater(() -> {
-                showGeneralError(response.getMessage());
-            });
+    // One-shot listener — removes itself after receiving auth response
+    final com.auction.client.services.NetworkClientService.ServerMessageListener[] ref =
+        new com.auction.client.services.NetworkClientService.ServerMessageListener[1];
+    ref[0] = response -> {
+      final com.auction.shared.dto.MessageType type = response.getType();
+      if (type == com.auction.shared.dto.MessageType.REGISTER_SUCCESS
+          || type == com.auction.shared.dto.MessageType.REGISTER_FAIL) {
+        com.auction.client.services.NetworkClientService.getInstance().removeListener(ref[0]);
+        if (type == com.auction.shared.dto.MessageType.REGISTER_SUCCESS) {
+          final String userId = response.getPayload();
+          javafx.application.Platform.runLater(() -> {
+            UserSession.getInstance().signIn(userId, firstName, lastName, username, email, "BIDDER");
+            SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+          });
+        } else {
+          javafx.application.Platform.runLater(() -> showGeneralError(response.getMessage()));
         }
-    });
-
+      }
+    };
+    com.auction.client.services.NetworkClientService.getInstance().addListener(ref[0]);
     com.auction.client.services.NetworkClientService.getInstance().sendRequest(registerReq);
   }
 

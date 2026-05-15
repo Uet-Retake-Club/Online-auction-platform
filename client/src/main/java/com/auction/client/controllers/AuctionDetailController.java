@@ -63,6 +63,9 @@ public class AuctionDetailController implements Initializable {
     currentAuctionId = UserSession.getInstance().getSelectedItemId();
     userLabel.setText(UserSession.getInstance().getInitials());
 
+    // ── 0. Reset stale state from any previously viewed item ──
+    BidService.getInstance().resetForItem();
+
     final String clickedTitle = UserSession.getInstance().getSelectedAuctionTitle();
     final String clickedCategory = UserSession.getInstance().getSelectedAuctionCategory();
     final String clickedDesc = UserSession.getInstance().getSelectedItemDescription();
@@ -81,16 +84,19 @@ public class AuctionDetailController implements Initializable {
           final boolean isWinning = transaction.getBidderId().equals(currentUserId);
 
           if (isWinning) {
-            ToastNotification.show(userLabel, "Your bid was placed successfully.",
+            ToastNotification.show(userLabel,
+                "🎉 Bid placed! You are now the highest bidder at " + priceStr,
                 ToastNotification.Type.SUCCESS);
           } else if (currentHighestBidder.equals(currentUserId)) {
             ToastNotification.show(userLabel,
-                "You were outbid by " + transaction.getBidderId() + ".",
+                "⚠️ You've been outbid! New price: " + priceStr,
                 ToastNotification.Type.WARNING);
           }
           currentHighestBidder = transaction.getBidderId();
+          final String displayName = transaction.getBidderId().equals(currentUserId)
+              ? UserSession.getInstance().getUsername() : transaction.getBidderId();
           final String badge = isWinning ? "winning" : "";
-          addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
+          addBidRowToHistory(displayName, priceStr, "just now", badge);
           noBidsLabel.setVisible(false);
           noBidsLabel.setManaged(false);
           final int currentTotal = Integer.parseInt(totalBids.getText());

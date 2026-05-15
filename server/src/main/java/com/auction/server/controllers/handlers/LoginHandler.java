@@ -26,15 +26,11 @@ public class LoginHandler implements CommandHandler {
         String userId = userDAO.authenticateUser(auth.getUsername(), auth.getPassword());
         
         if (userId != null) {
-            clientHandler.setClientId(userId); // Use DB userId instead of senderId directly if needed
+            clientHandler.setClientId(userId);
             AuctionService.getInstance().registerClient(userId, clientHandler);
-            
-            // Tự động gửi trạng thái hiện tại 
-            clientHandler.sendResponse(AuctionService.getInstance().getCurrentStatusResponse());
-            
-            return new Response(MessageType.LOGIN_SUCCESS, "SUCCESS", "Đăng nhập thành công", userId);
+            return new Response(MessageType.LOGIN_SUCCESS, "SUCCESS", "Login successful", userId);
         } else {
-            return new Response(MessageType.LOGIN_FAIL, "FAIL", "Sai tên đăng nhập hoặc mật khẩu", null);
+            return new Response(MessageType.LOGIN_FAIL, "FAIL", "Invalid username or password", null);
         }
     }
 }

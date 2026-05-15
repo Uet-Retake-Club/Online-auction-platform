@@ -95,27 +95,64 @@ public class AuctionService {
         if (currentAuctionItemId == null) {
             return new Response(MessageType.BID_ERROR, "FAIL", "No active auction session found!", null);
         }
-        if (this.auctionStatus.equals("FINISHED")) {
+
+        // Parse the target item ID from the bid transaction payload (guard against plain-string payloads)
+        BidTransaction bidTx = null;
+        try {
+            bidTx = new Gson().fromJson(payload, BidTransaction.class);
+        } catch (Exception ignored) { /* non-JSON payload: fall back to active item */ }
+        String targetItemId = (bidTx != null && bidTx.getItemId() != null)
+            ? bidTx.getItemId() : currentAuctionItemId;
+
+        if (this.auctionStatus.equals("FINISHED") && targetItemId.equals(currentAuctionItemId)) {
             return new Response(MessageType.BID_ERROR, "FAIL", "Auction has already ended!", null);
         }
 
-        double requiredMinBid = (currentHighestBidder == null) ? startingPrice : currentHighestBid + minIncrement;
-
-        if (amount >= requiredMinBid) {
-            boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, amount, bidderId);
-            if (dbUpdated) {
-                currentHighestBid = amount;
-                currentHighestBidder = bidderId;
-                System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId);
-
-                broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
-                autoBidEngine.triggerEvaluation();
-                return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", payload);
+        if (targetItemId.equals(currentAuctionItemId)) {
+            // ── Active auction item: use fast in-memory path ──
+            double requiredMinBid = (currentHighestBidder == null)
+                ? startingPrice : currentHighestBid + minIncrement;
+            if (amount < requiredMinBid) {
+                return new Response(MessageType.BID_ERROR, "FAIL",
+                    String.format("Minimum bid is $%.2f", requiredMinBid), null);
             }
-            return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
+            boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, amount, bidderId);
+            if (!dbUpdated) {
+                return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
+            }
+            currentHighestBid = amount;
+            currentHighestBidder = bidderId;
+            System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId
+                + " on item " + targetItemId);
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
+            autoBidEngine.triggerEvaluation();
+            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", payload);
+        } else {
+            // ── Non-active item: read current price from DB ──
+            Item item = itemDAO.getItemById(targetItemId);
+            if (item == null) {
+                return new Response(MessageType.BID_ERROR, "FAIL", "Item not found: " + targetItemId, null);
+            }
+            if ("FINISHED".equals(item.getStatus())) {
+                return new Response(MessageType.BID_ERROR, "FAIL", "Auction for this item has ended!", null);
+            }
+            double currentItemPrice = item.getCurrentHighestBid() > 0
+                ? item.getCurrentHighestBid() : item.getStartingPrice();
+            double requiredMinBid = item.getHighestBidderId() == null
+                ? item.getStartingPrice() : currentItemPrice + minIncrement;
+            if (amount < requiredMinBid) {
+                return new Response(MessageType.BID_ERROR, "FAIL",
+                    String.format("Minimum bid is $%.2f", requiredMinBid), null);
+            }
+            boolean dbUpdated = itemDAO.updateCurrentPrice(targetItemId, amount, bidderId);
+            if (!dbUpdated) {
+                return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
+            }
+            System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId
+                + " on item " + targetItemId);
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
+            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", payload);
         }
-        return new Response(MessageType.BID_ERROR, "FAIL",
-            String.format("Minimum bid is $%.2f", requiredMinBid), null);
     }
 
     // Callback riêng cho luồng Robot

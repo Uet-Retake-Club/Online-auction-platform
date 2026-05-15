@@ -7,8 +7,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * NetworkClientService manages the client's socket connection and message flow.
@@ -26,7 +26,7 @@ public class NetworkClientService {
   private String serverHost;
   private int serverPort;
 
-  private final List<ServerMessageListener> listeners = new ArrayList<>();
+  private final List<ServerMessageListener> listeners = new CopyOnWriteArrayList<>();
 
   /**
    * Listener interface for messages sent by the server.
@@ -66,9 +66,16 @@ public class NetworkClientService {
    * @param listener callback listener
    */
   public void addListener(final ServerMessageListener listener) {
-    if (!listeners.contains(listener)) {
-      listeners.add(listener);
-    }
+    listeners.add(listener);
+  }
+
+  /**
+   * Removes a previously registered listener.
+   *
+   * @param listener callback listener to remove
+   */
+  public void removeListener(final ServerMessageListener listener) {
+    listeners.remove(listener);
   }
 
   /**

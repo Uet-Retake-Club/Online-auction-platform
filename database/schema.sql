@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE,
     password TEXT NOT NULL,
     role TEXT CHECK(role IN ('BIDDER', 'SELLER', 'ADMIN')) NOT NULL
 );
@@ -89,9 +90,9 @@ CREATE TABLE IF NOT EXISTS bids (
 );
 
 -- Seed Data: Default Users
-INSERT OR IGNORE INTO users (id, username, password, role) VALUES ('ADMIN-1', 'admin', 'admin123', 'ADMIN');
-INSERT OR IGNORE INTO users (id, username, password, role) VALUES ('SELLER-1', 'seller1', 'seller123', 'SELLER');
-INSERT OR IGNORE INTO users (id, username, password, role) VALUES ('SELLER-2', 'seller2', 'seller123', 'SELLER');
+INSERT OR IGNORE INTO users (id, username, email, password, role) VALUES ('ADMIN-1', 'admin', 'admin@auction.com', 'admin123', 'ADMIN');
+INSERT OR IGNORE INTO users (id, username, email, password, role) VALUES ('SELLER-1', 'seller1', 'seller1@auction.com', 'seller123', 'SELLER');
+INSERT OR IGNORE INTO users (id, username, email, password, role) VALUES ('SELLER-2', 'seller2', 'seller2@auction.com', 'seller123', 'SELLER');
 
 -- Seed Data: ELECTRONICS
 INSERT OR IGNORE INTO items (id, name, description, category, start_price, current_price, start_time, end_time, seller_id, status)

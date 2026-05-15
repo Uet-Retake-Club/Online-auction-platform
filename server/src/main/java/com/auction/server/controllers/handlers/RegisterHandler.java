@@ -24,12 +24,15 @@ public class RegisterHandler implements CommandHandler {
         }
 
         String newUserId = "USER-" + UUID.randomUUID().toString().substring(0, 8);
-        boolean success = userDAO.registerUser(newUserId, auth.getUsername(), auth.getPassword(), auth.getRole());
-        
+        // Use username as email placeholder if no dedicated email field exists in AuthPayload
+        String email = auth.getUsername().contains("@") ? auth.getUsername() : null;
+        boolean success = userDAO.registerUser(newUserId, auth.getUsername(), email,
+            auth.getPassword(), auth.getRole());
+
         if (success) {
-            return new Response(MessageType.REGISTER_SUCCESS, "SUCCESS", "Đăng ký thành công", newUserId);
+            return new Response(MessageType.REGISTER_SUCCESS, "SUCCESS", "Registration successful", newUserId);
         } else {
-            return new Response(MessageType.REGISTER_FAIL, "FAIL", "Tên đăng nhập đã tồn tại hoặc lỗi DB", null);
+            return new Response(MessageType.REGISTER_FAIL, "FAIL", "Username already exists or DB error", null);
         }
     }
 }

@@ -109,6 +109,21 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   }
 
   /**
+   * Resets bid state when the user navigates to a new auction item.
+   * Clears the stale price so the next GET_STATUS response populates it fresh.
+   */
+  public void resetForItem() {
+    this.currentBidAmount = 0.0;
+    this.isAuctionOpen = true;
+    this.bidHistory.clear();
+    this.onPriceUpdated = null;
+    this.onNewBid = null;
+    this.onPriceChangeNotification = null;
+    this.onAutoBidResult = null;
+    this.onBidError = null;
+  }
+
+  /**
    * Marks the auction as closed and prevents further bidding.
    */
   public void setAuctionClosed() {

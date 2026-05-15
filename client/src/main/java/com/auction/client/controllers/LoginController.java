@@ -82,35 +82,39 @@ public class LoginController implements Initializable {
     if (!validateFields()) {
       return;
     }
-    
-    // Connect the socket to the server
+
     com.auction.client.services.NetworkClientService.getInstance().ensureConnected();
-    
-    final String email = emailField.getText().trim();
+
+    final String usernameInput = emailField.getText().trim();
     final String password = passwordField.getText();
-    // For demo purposes, we will treat the email handle as username since the current UI doesn't have a username field for login
-    final String username = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
 
-    com.auction.shared.dto.AuthPayload auth = new com.auction.shared.dto.AuthPayload(username, password, "BIDDER");
-    com.auction.shared.dto.Request loginReq = new com.auction.shared.dto.Request(
-        com.auction.shared.dto.MessageType.LOGIN, "Pending", new com.google.gson.Gson().toJson(auth)
-    );
+    final com.auction.shared.dto.AuthPayload auth =
+        new com.auction.shared.dto.AuthPayload(usernameInput, password, "BIDDER");
+    final com.auction.shared.dto.Request loginReq = new com.auction.shared.dto.Request(
+        com.auction.shared.dto.MessageType.LOGIN, "Pending",
+        new com.google.gson.Gson().toJson(auth));
 
-    com.auction.client.services.NetworkClientService.getInstance().addListener(response -> {
-        if (response.getType() == com.auction.shared.dto.MessageType.LOGIN_SUCCESS) {
-            String userId = response.getPayload(); // Returned from server
-            javafx.application.Platform.runLater(() -> {
-                com.auction.client.utils.UserSession.getInstance()
-                    .signIn(userId, "User", "", username, email, "BIDDER");
-                SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-            });
-        } else if (response.getType() == com.auction.shared.dto.MessageType.LOGIN_FAIL) {
-            javafx.application.Platform.runLater(() -> {
-                showGeneralError(response.getMessage());
-            });
+    // One-shot listener — removes itself after receiving auth response
+    final com.auction.client.services.NetworkClientService.ServerMessageListener[] ref =
+        new com.auction.client.services.NetworkClientService.ServerMessageListener[1];
+    ref[0] = response -> {
+      final com.auction.shared.dto.MessageType type = response.getType();
+      if (type == com.auction.shared.dto.MessageType.LOGIN_SUCCESS
+          || type == com.auction.shared.dto.MessageType.LOGIN_FAIL) {
+        com.auction.client.services.NetworkClientService.getInstance().removeListener(ref[0]);
+        if (type == com.auction.shared.dto.MessageType.LOGIN_SUCCESS) {
+          final String userId = response.getPayload();
+          javafx.application.Platform.runLater(() -> {
+            com.auction.client.utils.UserSession.getInstance()
+                .signIn(userId, "User", "", usernameInput, usernameInput, "BIDDER");
+            SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+          });
+        } else {
+          javafx.application.Platform.runLater(() -> showGeneralError(response.getMessage()));
         }
-    });
-
+      }
+    };
+    com.auction.client.services.NetworkClientService.getInstance().addListener(ref[0]);
     com.auction.client.services.NetworkClientService.getInstance().sendRequest(loginReq);
   }
 
@@ -135,20 +139,17 @@ public class LoginController implements Initializable {
    */
   private boolean validateFields() {
     boolean ok = true;
-    final String email = emailField.getText().trim();
-    if (email.isEmpty()) {
-      showFieldError(emailError, emailField, "Email là bắt buộc");
-      ok = false;
-    } else if (!email.contains("@")) {
-      showFieldError(emailError, emailField, "Email không hợp lệ");
+    final String username = emailField.getText().trim();
+    if (username.isEmpty()) {
+      showFieldError(emailError, emailField, "Username is required");
       ok = false;
     }
     final String password = passwordField.getText();
     if (password.isEmpty()) {
-      showFieldError(passwordError, passwordField, "Mật khẩu là bắt buộc");
+      showFieldError(passwordError, passwordField, "Password is required");
       ok = false;
     } else if (password.length() < 4) {
-      showFieldError(passwordError, passwordField, "Mật khẩu quá ngắn");
+      showFieldError(passwordError, passwordField, "Password too short");
       ok = false;
     }
     return ok;

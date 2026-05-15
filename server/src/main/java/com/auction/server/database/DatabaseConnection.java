@@ -26,6 +26,15 @@ public class DatabaseConnection {
                 stmt.execute(statement);
             }
             System.out.println("[DATABASE] Successfully initialized from schema.sql");
+
+            // Migration: add email column to users if it doesn't exist yet (SQLite doesn't
+            // support IF NOT EXISTS for ALTER TABLE, so we catch the error silently)
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE");
+                System.out.println("[DATABASE] Migration: added 'email' column to users.");
+            } catch (SQLException ignored) {
+                // Column already exists — safe to ignore
+            }
             
         } catch (SQLException | IOException e) {
             System.err.println("[DATABASE ERROR] Failed to initialize database: " + e.getMessage());
