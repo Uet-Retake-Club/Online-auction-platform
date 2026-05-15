@@ -17,6 +17,7 @@ public class RequestDispatcher {
 
     public RequestDispatcher() {
         handlerRegistry.put(MessageType.LOGIN, new LoginHandler());
+        handlerRegistry.put(MessageType.REGISTER, new RegisterHandler());
         handlerRegistry.put(MessageType.PLACE_BID, new PlaceBidHandler());
         handlerRegistry.put(MessageType.SETUP_AUTO_BID, new SetupAutoBidHandler());
         handlerRegistry.put(MessageType.GET_STATUS, new GetStatusHandler());

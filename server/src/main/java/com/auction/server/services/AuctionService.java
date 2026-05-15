@@ -24,7 +24,7 @@ public class AuctionService {
     // Tương tác Database
     private final ItemDAO itemDAO = new ItemDAOImpl();
     
-    private String currentAuctionItemId = "ITEM-123";
+    private String currentAuctionItemId = null;
     private double startingPrice = 1240.00;
     private double currentHighestBid = 0.0;
     private final double minIncrement = 20.00;
@@ -53,15 +53,18 @@ public class AuctionService {
     public double getMinIncrement() { return minIncrement; }
 
     private void loadAuctionState() {
-        Item item = itemDAO.getItemById(currentAuctionItemId);
+        Item item = itemDAO.getFirstOpenItem();
         if (item != null) {
+            this.currentAuctionItemId = item.getId();
             this.startingPrice = item.getStartingPrice();
             this.currentHighestBid = item.getCurrentHighestBid();
             this.currentHighestBidder = item.getHighestBidderId();
-            System.out.println(" [DATABASE] State restored: $" + currentHighestBid + " from SQLite.");
+            System.out.println(" [DATABASE] State restored for item " + currentAuctionItemId + " : $" + currentHighestBid + " from SQLite.");
             
             // Nếu có dữ liệu endTime, kích hoạt đồng hồ luôn:
             // auctionTimer.scheduleAuctionEnd(item.getEndTime());
+        } else {
+            System.out.println(" [DATABASE] No OPEN items found. Waiting for items to be added.");
         }
     }
 
@@ -89,8 +92,11 @@ public class AuctionService {
     }
 
     public synchronized Response processBid(String bidderId, double amount, String payload) {
+        if (currentAuctionItemId == null) {
+            return new Response(MessageType.BID_ERROR, "FAIL", "No active auction session found!", null);
+        }
         if (this.auctionStatus.equals("FINISHED")) {
-            return new Response(MessageType.BID_ERROR, "FAIL", "Phiên đấu giá đã kết thúc!", null);
+            return new Response(MessageType.BID_ERROR, "FAIL", "Auction has already ended!", null);
         }
 
         double requiredMinBid = (currentHighestBidder == null) ? startingPrice : currentHighestBid + minIncrement;
@@ -102,17 +108,19 @@ public class AuctionService {
                 currentHighestBidder = bidderId;
                 System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId);
 
-                broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có giá mới", payload));
+                broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
                 autoBidEngine.triggerEvaluation();
-                return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Đặt giá thành công!", payload);
+                return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", payload);
             }
-            return new Response(MessageType.BID_ERROR, "FAIL", "Lỗi đồng bộ Database", null);
+            return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
         }
-        return new Response(MessageType.BID_ERROR, "FAIL", "Giá tối thiểu là $" + requiredMinBid, null);
+        return new Response(MessageType.BID_ERROR, "FAIL",
+            String.format("Minimum bid is $%.2f", requiredMinBid), null);
     }
 
     // Callback riêng cho luồng Robot
     public synchronized boolean processAutoBid(String bidderId, double nextBid) {
+        if (currentAuctionItemId == null) return false;
         if (this.auctionStatus.equals("FINISHED")) return false;
 
         boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, nextBid, bidderId);
@@ -130,6 +138,7 @@ public class AuctionService {
     }
 
     public synchronized void endAuction() {
+    if (currentAuctionItemId == null) return;
     if (this.auctionStatus.equals("FINISHED")) return;
     
     // 1. Cập nhật trạng thái xuống SQLite trước
@@ -156,8 +165,31 @@ public class AuctionService {
     public Response getCurrentStatusResponse() {
         double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
         String bidder = (currentHighestBidder != null) ? currentHighestBidder : "None";
-        String payload = new Gson().toJson(new BidTransaction("STATUS", currentAuctionItemId, bidder, displayPrice, System.currentTimeMillis()));
+        String payload = new Gson().toJson(new BidTransaction(
+            "STATUS", currentAuctionItemId, bidder, displayPrice, System.currentTimeMillis()));
         return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Status", payload);
+    }
+
+    /**
+     * Returns the status for a specific item by ID.
+     * If the item is the active auction, returns live in-memory state.
+     * Otherwise, fetches current state from the database.
+     */
+    public Response getItemStatusResponse(String itemId) {
+        if (itemId != null && itemId.equals(currentAuctionItemId)) {
+            return getCurrentStatusResponse();
+        }
+        // Fetch from DB for non-active items
+        Item item = itemDAO.getItemById(itemId);
+        if (item == null) {
+            return new Response(MessageType.BID_ERROR, "FAIL", "Item not found: " + itemId, null);
+        }
+        double displayPrice = item.getCurrentHighestBid() > 0
+            ? item.getCurrentHighestBid() : item.getStartingPrice();
+        String bidder = item.getHighestBidderId() != null ? item.getHighestBidderId() : "None";
+        String payload = new Gson().toJson(new BidTransaction(
+            "STATUS", itemId, bidder, displayPrice, System.currentTimeMillis()));
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Item Status", payload);
     }
 
     // Nhạc trưởng gọi một tiếng, đàn em tự động dọn dẹp (Facade Pattern)

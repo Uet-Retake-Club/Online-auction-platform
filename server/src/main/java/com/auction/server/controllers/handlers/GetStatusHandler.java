@@ -9,6 +9,10 @@ import com.auction.shared.dto.Response;
 public class GetStatusHandler implements CommandHandler {
     @Override
     public Response handle(Request request, ClientHandler clientHandler) {
+        final String itemId = request.getPayload();
+        if (itemId != null && !itemId.isEmpty()) {
+            return AuctionService.getInstance().getItemStatusResponse(itemId);
+        }
         return AuctionService.getInstance().getCurrentStatusResponse();
     }
 }

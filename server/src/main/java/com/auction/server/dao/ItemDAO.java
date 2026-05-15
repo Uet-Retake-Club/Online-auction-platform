@@ -6,6 +6,8 @@ public interface ItemDAO {
     
     Item getItemById(String id);
     
+    Item getFirstOpenItem();
+    
     boolean addItem(Item item);
     
     boolean updateCurrentPrice(String itemId, double newPrice, String bidderId);

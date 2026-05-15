@@ -249,3 +249,58 @@
     -fx-max-width: Infinity;
     -fx-max-height: Infinity;
 }
+
+/* ── 12. BID HISTORY ROW ──────────────────────────────────────*/
+.bid-history-row {
+    -fx-border-color: transparent transparent border-color transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 8px 0;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 8px;
+}
+
+.bid-name {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: text-primary;
+}
+
+.bid-price {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: primary;
+}
+
+.bid-time {
+    -fx-font-size: 11px;
+    -fx-text-fill: text-secondary;
+    -fx-min-width: 80px;
+}
+
+/* ── 13. TIMER ────────────────────────────────────────────────*/
+.timer-large {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: warning;
+}
+
+.timer-large-urgent {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: danger;
+}
+
+/* ── 14. AUCTION STATUS LABELS ────────────────────────────────*/
+.status-open     { -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: success; }
+.status-finished { -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: danger; }
+
+/* ── 15. AUTO-BID BUTTON STATES ───────────────────────────────*/
+.btn-autobid-active {
+    -fx-background-color: success;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-padding: 8px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+}

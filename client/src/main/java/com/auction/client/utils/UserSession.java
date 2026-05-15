@@ -24,6 +24,11 @@ public final class UserSession {
   private static UserSession instance;
 
   /**
+   * Database ID of the logged-in user.
+   */
+  private String userId;
+
+  /**
    * First name of the logged-in user.
    */
   private String firstName;
@@ -49,10 +54,19 @@ public final class UserSession {
   private String role;
 
   /** Title of the currently selected auction. */
-  private String selectedAuctionTitle = "Vintage Rolex Submariner 1969";
+  private String selectedAuctionTitle = "";
 
   /** Category of the currently selected auction. */
-  private String selectedAuctionCategory = "Collectibles";
+  private String selectedAuctionCategory = "";
+
+  /** DB item ID of the currently selected auction. */
+  private String selectedItemId = "ITEM-001";
+
+  /** Starting/current price shown on the card. */
+  private double selectedItemPrice = 0.0;
+
+  /** Description of the currently selected auction item. */
+  private String selectedItemDescription = "";
 
   public String getSelectedAuctionTitle() {
     return selectedAuctionTitle;
@@ -68,6 +82,30 @@ public final class UserSession {
 
   public void setSelectedAuctionCategory(final String category) {
     this.selectedAuctionCategory = category;
+  }
+
+  public String getSelectedItemId() {
+    return selectedItemId;
+  }
+
+  public void setSelectedItemId(final String itemId) {
+    this.selectedItemId = itemId;
+  }
+
+  public double getSelectedItemPrice() {
+    return selectedItemPrice;
+  }
+
+  public void setSelectedItemPrice(final double price) {
+    this.selectedItemPrice = price;
+  }
+
+  public String getSelectedItemDescription() {
+    return selectedItemDescription;
+  }
+
+  public void setSelectedItemDescription(final String description) {
+    this.selectedItemDescription = description;
   }
 
   /**
@@ -100,11 +138,13 @@ public final class UserSession {
    * @param userRole BIDDER, SELLER, or ADMIN
    */
   public void signIn(
+      final String userId,
       final String userFirstName,
       final String userLastName,
       final String userUsername,
       final String userEmail,
       final String userRole) {
+    this.userId = userId;
     this.firstName = userFirstName;
     this.lastName = userLastName;
     this.username = userUsername;
@@ -117,6 +157,7 @@ public final class UserSession {
    * LoginView.
    */
   public void clear() {
+    userId = null;
     firstName = null;
     lastName = null;
     username = null;
@@ -125,6 +166,15 @@ public final class UserSession {
   }
 
   // ── Getters ───────────────────────────────────────────────
+  /**
+   * Returns the user's database ID.
+   *
+   * @return user ID, or empty string if not set
+   */
+  public String getUserId() {
+    return userId != null ? userId : "";
+  }
+
   /**
    * Returns the user's first name.
    *

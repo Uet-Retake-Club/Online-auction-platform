@@ -36,6 +36,10 @@ public class AutoBidSettings {
     return bidderId;
   }
 
+  public void setBidderId(String bidderId) {
+    this.bidderId = bidderId;
+  }
+
   public String getAuctionId() {
     return auctionId;
   }

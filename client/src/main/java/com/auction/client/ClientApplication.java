@@ -37,6 +37,10 @@ public class ClientApplication extends Application {
   public void start(final Stage primaryStage) {
     // 1. Register Stage with SceneNavigator first — everything depends on this
     SceneNavigator.init(primaryStage);
+    
+    // 1.5 Apply modern AtlantaFX theme globally
+    Application.setUserAgentStylesheet(
+        new atlantafx.base.theme.PrimerLight().getUserAgentStylesheet());
 
     // 2. Stage owns the window dimensions — set once, never changed on navigate
     primaryStage.setTitle("AuctionHub");
@@ -45,7 +49,10 @@ public class ClientApplication extends Application {
     primaryStage.setMinWidth(MIN_WIDTH);
     primaryStage.setMinHeight(MIN_HEIGHT);
 
-    // 3. Load first screen — CSS is attached inside SceneNavigator.navigateTo()
+    // 3. Connect to the server in background (ready before user hits Login)
+    com.auction.client.services.NetworkClientService.getInstance().connect("localhost", 8080);
+
+    // 4. Load first screen — CSS is attached inside SceneNavigator.navigateTo()
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
 
     // 4. Centre on screen after size is set, then show

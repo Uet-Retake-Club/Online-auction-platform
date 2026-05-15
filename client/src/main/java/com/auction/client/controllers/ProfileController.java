@@ -45,6 +45,7 @@ public class ProfileController implements Initializable {
 
   @FXML
   private void onSave() {
+
     final String firstName = firstNameField.getText().trim();
     final String lastName = lastNameField.getText().trim();
     final String username = usernameField.getText().trim();
@@ -68,7 +69,9 @@ public class ProfileController implements Initializable {
       return;
     }
 
-    UserSession.getInstance().signIn(firstName, lastName, username, email, 
+    UserSession.getInstance().signIn(
+        UserSession.getInstance().getUserId(),
+        firstName, lastName, username, email, 
         UserSession.getInstance().getRole());
     userLabel.setText(UserSession.getInstance().getInitials());
     userTitle.setText("Hello, " + UserSession.getInstance().getDisplayName());

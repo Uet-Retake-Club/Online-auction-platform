@@ -27,6 +27,10 @@ public class ClientHandler implements Runnable {
         this.clientId = clientId;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
     @Override
     public void run() {
         try {

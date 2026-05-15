@@ -52,7 +52,24 @@ public class AuctionServiceTest {
                 public boolean updateStatus(String itemId, String status) { 
                     return true; 
                 }
+                @Override
+                public Item getFirstOpenItem() {
+                    return null; // Mock cho test
+                }
             });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Set currentAuctionItemId and startingPrice so bid logic isn't blocked
+        try {
+            java.lang.reflect.Field itemIdField = AuctionService.class.getDeclaredField("currentAuctionItemId");
+            itemIdField.setAccessible(true);
+            itemIdField.set(manager, "TEST-ITEM-001");
+
+            java.lang.reflect.Field priceField = AuctionService.class.getDeclaredField("startingPrice");
+            priceField.setAccessible(true);
+            priceField.set(manager, 1240.0);
         } catch (Exception e) {
             e.printStackTrace();
         }

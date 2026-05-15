@@ -3,6 +3,11 @@ package com.auction.shared.dto;
 /** Enum for message types between client and server. */
 public enum MessageType {
   LOGIN,
+  LOGIN_SUCCESS,
+  LOGIN_FAIL,
+  REGISTER,
+  REGISTER_SUCCESS,
+  REGISTER_FAIL,
   PLACE_BID, // Yêu cầu đặt giá
   SETUP_AUTO_BID, // Cài đặt auto-bid
   BID_SUCCESS, // Server xác nhận đặt giá hợp lệ

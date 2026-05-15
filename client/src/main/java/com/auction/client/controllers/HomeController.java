@@ -62,31 +62,20 @@ public class HomeController implements Initializable {
   private String currentCategory;
   private String currentSearch = "";
 
+  // Columns: [itemId, title, price, bids, timeLeft, badgeType, category, section, description]
   private static final String[][] ALL_AUCTIONS = {
-    {"Vintage Rolex Watch", "$1,240.00", "14 bids", "2h left",
-        "warning", "Collectibles", "ending"},
-    {"iPhone 15 Pro Max", "$780.00", "31 bids", "45m left",
-        "warning", "Electronics", "ending"},
-    {"Nike Air Jordan 1", "$210.00", "8 bids", "WINNING",
-        "success", "Fashion", "ending"},
-    {"Sony WH-1000XM5", "$190.00", "5 bids", "1h left",
-        "warning", "Electronics", "ending"},
-    {"Gaming Chair RGB", "$95.00", "2 bids", "3d left",
-        "warning", "Home & Garden", "recent"},
-    {"MacBook Air M2", "$850.00", "0 bids", "5d left",
-        "warning", "Electronics", "recent"},
-    {"Lego Star Wars Set", "$45.00", "1 bid", "4d left",
-        "warning", "Collectibles", "recent"},
-    {"Canon EOS R50", "$620.00", "3 bids", "2d left",
-        "warning", "Electronics", "recent"},
-    {"Mountain Bike 2024", "$320.00", "4 bids", "1d left",
-        "warning", "Sports", "recent"},
-    {"Toyota Camry 2018", "$8,500.00", "2 bids", "6d left",
-        "warning", "Vehicles", "recent"},
-    {"Vintage Denim Jacket", "$75.00", "6 bids", "2d left",
-        "warning", "Fashion", "recent"},
-    {"Garden Tool Set", "$55.00", "1 bid", "5d left",
-        "warning", "Home & Garden", "recent"},
+    {"ITEM-001", "Gaming Laptop RTX 4080", "$1,240.00", "0 bids", "30d left",
+        "warning", "Electronics", "ending", "Asus ROG Strix with RTX 4080, i9, 32GB DDR5"},
+    {"ITEM-002", "iPhone 15 Pro Max 256GB", "$780.00", "0 bids", "1d left",
+        "warning", "Electronics", "ending", "Brand new iPhone 15 Pro Max, Natural Titanium"},
+    {"ITEM-006", "Vintage Rolex Submariner 1969", "$4,500.00", "0 bids", "3d left",
+        "warning", "Collectibles", "ending", "Original 1969 Rolex Submariner. Serviced 2022."},
+    {"ITEM-003", "Sony WH-1000XM5", "$190.00", "0 bids", "2d left",
+        "warning", "Electronics", "ending", "Industry-leading noise cancelling headphones"},
+    {"ITEM-004", "MacBook Air M2 13\"", "$850.00", "0 bids", "5d left",
+        "warning", "Electronics", "recent", "Apple M2 chip, 8GB RAM, 256GB SSD, Midnight"},
+    {"ITEM-005", "Mountain Bike 2024 Carbon", "$320.00", "0 bids", "7d left",
+        "warning", "Sports", "recent", "29\" Carbon frame, Shimano 12-speed drivetrain"},
   };
 
   @Override
@@ -193,17 +182,17 @@ public class HomeController implements Initializable {
 
   private void applyFilters() {
     final String[][] filtered = Arrays.stream(ALL_AUCTIONS)
-        .filter(item -> currentCategory == null || item[5].equals(currentCategory))
-        .filter(item -> currentSearch.isEmpty() 
-            || item[0].toLowerCase().contains(currentSearch))
+        .filter(item -> currentCategory == null || item[6].equals(currentCategory))
+        .filter(item -> currentSearch.isEmpty()
+            || item[1].toLowerCase().contains(currentSearch))
         .toArray(String[][]::new);
 
     final String[][] ending = Arrays.stream(filtered)
-        .filter(item -> "ending".equals(item[6]))
+        .filter(item -> "ending".equals(item[7]))
         .toArray(String[][]::new);
 
     final String[][] recent = Arrays.stream(filtered)
-        .filter(item -> "recent".equals(item[6]))
+        .filter(item -> "recent".equals(item[7]))
         .toArray(String[][]::new);
 
     if (filtered.length == 0) {
@@ -257,47 +246,46 @@ public class HomeController implements Initializable {
   private void populateGrid(final FlowPane grid, final String[][] data) {
     grid.getChildren().clear();
     for (final String[] item : data) {
+      // [0]=itemId, [1]=title, [2]=price, [3]=bids, [4]=timeLeft, [5]=badgeType,
+      // [6]=category, [7]=section, [8]=description
       grid.getChildren().add(
-          buildCard(item[0], item[1], item[2], item[3], item[4], item[5])
+          buildCard(item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[8])
       );
     }
   }
 
-  private VBox buildCard(final String title, final String price, final String bids,
-      final String timeLeft, final String badgeType, final String category) {
+  private VBox buildCard(final String itemId, final String title, final String price,
+      final String bids, final String timeLeft, final String badgeType,
+      final String category, final String description) {
 
     final StackPane imgBox = new StackPane();
     imgBox.setPrefWidth(150);
     imgBox.setPrefHeight(105);
+    imgBox.getStyleClass().add("card-img-placeholder");
     imgBox.setStyle("-fx-background-color:#F4F4F4;-fx-background-radius:6px;");
     final Label noImg = new Label("No image");
-    noImg.setStyle("-fx-text-fill:#CCCCCC;-fx-font-size:11px;");
+    noImg.getStyleClass().add("caption");
     imgBox.getChildren().add(noImg);
 
     final Label catChip = new Label(category);
-    catChip.setStyle("-fx-font-size:10px;-fx-text-fill:#1A73E8;"
-        + "-fx-background-color:#E8F0FE;"
-        + "-fx-padding:1px 7px;-fx-background-radius:8px;");
+    catChip.getStyleClass().addAll("badge", "badge-info");
 
     final Label titleLabel = new Label(title);
     titleLabel.setWrapText(true);
     titleLabel.setMaxWidth(150);
-    titleLabel.setStyle("-fx-font-size:12px;-fx-font-weight:bold;"
-        + "-fx-text-fill:#111111;-fx-padding:4px 0;");
+    titleLabel.getStyleClass().add("body-small");
+    titleLabel.setStyle("-fx-font-weight:bold;-fx-padding:4px 0;");
 
     final Label priceLabel = new Label(price);
-    priceLabel.setStyle("-fx-font-size:15px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+    priceLabel.getStyleClass().add("price-tag");
+    priceLabel.setStyle("-fx-font-size:15px;");
 
     final Label bidsLabel = new Label(bids);
-    bidsLabel.setStyle("-fx-font-size:11px;-fx-text-fill:#888888;");
+    bidsLabel.getStyleClass().add("caption");
 
     final Label badge = new Label(timeLeft);
-    final String baseStyle = "-fx-font-size:10px;-fx-font-weight:bold;"
-        + "-fx-padding:2px 8px;-fx-background-radius:10px;";
-    
-    badge.setStyle(baseStyle + ("success".equals(badgeType)
-        ? "-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;"
-        : "-fx-background-color:#FEF6E6;-fx-text-fill:#F5A623;"));
+    badge.getStyleClass().addAll("badge",
+        "success".equals(badgeType) ? "badge-success" : "badge-warning");
 
     final Region spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -306,24 +294,13 @@ public class HomeController implements Initializable {
 
     final VBox card = new VBox(4, imgBox, catChip, titleLabel, priceLabel, metaRow);
     card.setPrefWidth(160);
+    card.getStyleClass().add("auction-card");
 
-    final String normalStyle = "-fx-background-color:white;"
-        + "-fx-border-color:#EBEBEB;-fx-border-width:1px;"
-        + "-fx-border-radius:8px;-fx-background-radius:8px;"
-        + "-fx-padding:10px;-fx-cursor:hand;";
-    
-    final String hoverStyle = "-fx-background-color:white;"
-        + "-fx-border-color:#E53238;-fx-border-width:1.5px;"
-        + "-fx-border-radius:8px;-fx-background-radius:8px;"
-        + "-fx-padding:10px;-fx-cursor:hand;"
-        + "-fx-scale-x:1.02;-fx-scale-y:1.02;";
-
-    card.setStyle(normalStyle);
-    card.setOnMouseEntered(e -> card.setStyle(hoverStyle));
-    card.setOnMouseExited(e -> card.setStyle(normalStyle));
     card.setOnMouseClicked(e -> {
       UserSession.getInstance().setSelectedAuctionTitle(title);
       UserSession.getInstance().setSelectedAuctionCategory(category);
+      UserSession.getInstance().setSelectedItemId(itemId);
+      UserSession.getInstance().setSelectedItemDescription(description);
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
 

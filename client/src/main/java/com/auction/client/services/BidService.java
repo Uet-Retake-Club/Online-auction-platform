@@ -134,7 +134,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     final String payload = gson.toJson(transaction);
 
     final Request req = new Request(MessageType.PLACE_BID, 
-        UserSession.getInstance().getUsername(), payload);
+        UserSession.getInstance().getUserId(), payload);
     NetworkClientService.getInstance().sendRequest(req);
 
     return null; 
@@ -162,18 +162,19 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     final String payload = gson.toJson(settings);
 
     final Request req = new Request(MessageType.SETUP_AUTO_BID,
-        UserSession.getInstance().getUsername(), payload);
+        UserSession.getInstance().getUserId(), payload);
     NetworkClientService.getInstance().sendRequest(req);
 
     return null;
   }
 
   /**
-   * Sends a request to refresh the current auction status.
+   * Sends a request to refresh the current auction status for the given item.
    */
   public void requestStatus() {
+    final String itemId = UserSession.getInstance().getSelectedItemId();
     final Request req = new Request(MessageType.GET_STATUS,
-        UserSession.getInstance().getUsername(), "");
+        UserSession.getInstance().getUserId(), itemId != null ? itemId : "");
     NetworkClientService.getInstance().sendRequest(req);
   }
 

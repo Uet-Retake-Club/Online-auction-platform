@@ -83,16 +83,35 @@ public class LoginController implements Initializable {
       return;
     }
     
-    // Mock login session since AuthService is not yet implemented
+    // Connect the socket to the server
+    com.auction.client.services.NetworkClientService.getInstance().ensureConnected();
+    
     final String email = emailField.getText().trim();
+    final String password = passwordField.getText();
+    // For demo purposes, we will treat the email handle as username since the current UI doesn't have a username field for login
     final String username = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
-    com.auction.client.utils.UserSession.getInstance()
-        .signIn("Test", "User", username, email, "BIDDER");
-    
-    // Connect the socket to the server so bidding works
-    com.auction.client.services.NetworkClientService.getInstance().connect("localhost", 8080);
-    
-    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+
+    com.auction.shared.dto.AuthPayload auth = new com.auction.shared.dto.AuthPayload(username, password, "BIDDER");
+    com.auction.shared.dto.Request loginReq = new com.auction.shared.dto.Request(
+        com.auction.shared.dto.MessageType.LOGIN, "Pending", new com.google.gson.Gson().toJson(auth)
+    );
+
+    com.auction.client.services.NetworkClientService.getInstance().addListener(response -> {
+        if (response.getType() == com.auction.shared.dto.MessageType.LOGIN_SUCCESS) {
+            String userId = response.getPayload(); // Returned from server
+            javafx.application.Platform.runLater(() -> {
+                com.auction.client.utils.UserSession.getInstance()
+                    .signIn(userId, "User", "", username, email, "BIDDER");
+                SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+            });
+        } else if (response.getType() == com.auction.shared.dto.MessageType.LOGIN_FAIL) {
+            javafx.application.Platform.runLater(() -> {
+                showGeneralError(response.getMessage());
+            });
+        }
+    });
+
+    com.auction.client.services.NetworkClientService.getInstance().sendRequest(loginReq);
   }
 
   /** Navigates to the sign-up screen. */

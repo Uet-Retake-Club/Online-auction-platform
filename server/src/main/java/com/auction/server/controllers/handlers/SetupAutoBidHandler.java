@@ -13,7 +13,14 @@ public class SetupAutoBidHandler implements CommandHandler {
 
     @Override
     public Response handle(Request request, ClientHandler clientHandler) {
+        String authenticatedUserId = clientHandler.getClientId();
+        if ("Unknown".equals(authenticatedUserId)) {
+            return new Response(com.auction.shared.dto.MessageType.SETUP_AUTO_BID, "FAIL", "Bạn cần đăng nhập để thực hiện hành động này.", null);
+        }
+
         AutoBidSettings settings = gson.fromJson(request.getPayload(), AutoBidSettings.class);
+        // Force settings to use authenticated user ID
+        settings.setBidderId(authenticatedUserId); 
         return AuctionService.getInstance().registerAutoBid(settings);
     }
 }

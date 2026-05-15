@@ -179,6 +179,28 @@ public class ItemDAOImpl implements ItemDAO {
         }
     }
 
+    @Override
+    public Item getFirstOpenItem() {
+        String sqlBasic = "SELECT id, category FROM items WHERE status = 'OPEN' LIMIT 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sqlBasic);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            if (!rs.next()) {
+                return null;
+            }
+
+            String id = rs.getString("id");
+            ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+            return fetchFullItemDetails(conn, id, category);
+            
+        } catch (SQLException e) {
+            System.err.println("Get first open item error: " + e.getMessage());
+            return null;
+        }
+    }
+
     private Item fetchFullItemDetails(Connection conn, String id, ItemCategory category) throws SQLException {
         String sql;
         switch (category) {
@@ -258,8 +280,8 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     private void mapElectronicsFields(Electronics electronics, ResultSet rs) throws SQLException {
-        electronics.setBrand(rs.getString("battery_info"));
-        electronics.setWarranty_period(rs.getString("warranty"));
+        electronics.setBrand(rs.getString("brand"));
+        electronics.setWarranty_period(rs.getString("warranty_period"));
     }
 
     private void mapHomeAndGardenFields(HomeAndGarden h, ResultSet rs) throws SQLException {

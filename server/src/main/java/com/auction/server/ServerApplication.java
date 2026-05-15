@@ -16,6 +16,7 @@ public class ServerApplication {
 
     public static void main(String[] args) {
         System.out.println("[SERVER] Starting Online Auction Server...");
+        com.auction.server.database.DatabaseConnection.initDatabase();
 
         // Giup tat Pool khi dot nhien tat may
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

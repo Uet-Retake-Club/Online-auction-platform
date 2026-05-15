@@ -11,12 +11,17 @@ public class MessageTypeTest {
     @Test
     void testAllValuesExist() {
         MessageType[] values = MessageType.values();
-        assertEquals(8, values.length, "MessageType phải có đúng 8 giá trị");
+        assertEquals(13, values.length, "MessageType phải có đúng 13 giá trị");
     }
 
     @Test
     void testValueOf() {
         assertEquals(MessageType.LOGIN, MessageType.valueOf("LOGIN"));
+        assertEquals(MessageType.LOGIN_SUCCESS, MessageType.valueOf("LOGIN_SUCCESS"));
+        assertEquals(MessageType.LOGIN_FAIL, MessageType.valueOf("LOGIN_FAIL"));
+        assertEquals(MessageType.REGISTER, MessageType.valueOf("REGISTER"));
+        assertEquals(MessageType.REGISTER_SUCCESS, MessageType.valueOf("REGISTER_SUCCESS"));
+        assertEquals(MessageType.REGISTER_FAIL, MessageType.valueOf("REGISTER_FAIL"));
         assertEquals(MessageType.PLACE_BID, MessageType.valueOf("PLACE_BID"));
         assertEquals(MessageType.SETUP_AUTO_BID, MessageType.valueOf("SETUP_AUTO_BID"));
         assertEquals(MessageType.BID_SUCCESS, MessageType.valueOf("BID_SUCCESS"));

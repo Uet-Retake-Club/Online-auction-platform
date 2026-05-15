@@ -13,8 +13,13 @@ public class PlaceBidHandler implements CommandHandler {
 
     @Override
     public Response handle(Request request, ClientHandler clientHandler) {
+        String authenticatedUserId = clientHandler.getClientId();
+        if ("Unknown".equals(authenticatedUserId)) {
+            return new Response(com.auction.shared.dto.MessageType.BID_ERROR, "FAIL", "Bạn cần đăng nhập để thực hiện hành động này.", null);
+        }
+
         BidTransaction bidTx = gson.fromJson(request.getPayload(), BidTransaction.class);
         return AuctionService.getInstance().processBid(
-                request.getSenderId(), bidTx.getBidAmount(), request.getPayload());
+                authenticatedUserId, bidTx.getBidAmount(), request.getPayload());
     }
 }
