@@ -22,7 +22,7 @@ public class AutoBidEngine {
 
     public void addAutoBidder(AutoBidSettings settings) {
         autoBidders.put(settings.getBidderId(), settings);
-        System.out.println(" [AutoBidEngine] Kích hoạt Auto-Bid thành công cho: " + settings.getBidderId());
+        System.out.println(" [AutoBidEngine] Auto-Bid activated successfully for: " + settings.getBidderId());
     }
 
     public void removeAutoBidder(String clientId) {
@@ -74,7 +74,7 @@ public class AutoBidEngine {
 
     // Đã trả lại y nguyên logic đóng an toàn của bạn
     public void shutdown() {
-        System.out.println(" [AutoBidEngine] Đang dừng hệ thống Robot...");
+        System.out.println(" [AutoBidEngine] Stopping Robot system...");
         autoBidThreadPool.shutdown();
         try {
             if (!autoBidThreadPool.awaitTermination(3, TimeUnit.SECONDS)) {

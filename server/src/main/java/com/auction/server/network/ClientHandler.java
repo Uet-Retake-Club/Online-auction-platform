@@ -39,7 +39,7 @@ public class ClientHandler implements Runnable {
                 processRequest(request);
             }
         } catch (IOException e) {
-            System.out.println("[NETWORK] Client " + clientId + " mất kết nối.");
+            System.out.println("[NETWORK] Client " + clientId + " disconnected.");
         } finally {
             if (!clientId.equals("Unknown")) {
                 AuctionService.getInstance().removeClient(clientId);

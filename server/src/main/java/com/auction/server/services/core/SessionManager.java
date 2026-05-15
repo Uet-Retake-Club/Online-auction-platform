@@ -12,7 +12,7 @@ public class SessionManager {
 
     public void registerClient(String clientId, ClientHandler handler) {
         activeClients.put(clientId, handler);
-        System.out.println(" [SessionManager] Đã định danh Client: " + clientId + " (Tổng online: " + activeClients.size() + ")");
+        System.out.println(" [SessionManager] Client registered: " + clientId + " (Total online: " + activeClients.size() + ")");
     }
 
     public void removeClient(String clientId) {
@@ -26,7 +26,7 @@ public class SessionManager {
     }
 
     public void shutdown() {
-        System.out.println(" [SessionManager] Đang ngắt kết nối toàn bộ Client...");
+        System.out.println(" [SessionManager] Disconnecting all clients...");
         broadcast(new Response(MessageType.AUCTION_ENDED, "FAIL", "Server đang bảo trì/tắt đột ngột!", null));
         activeClients.clear();
     }

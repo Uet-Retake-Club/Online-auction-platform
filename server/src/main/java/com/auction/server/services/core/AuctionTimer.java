@@ -20,13 +20,13 @@ public class AuctionTimer {
         if (delay <= 0) {
             auctionService.endAuction();
         } else {
-            System.out.println(" [AuctionTimer] Phiên đấu giá sẽ tự động kết thúc sau " + (delay / 1000) + " giây.");
+            System.out.println(" [AuctionTimer] Auction will end automatically in " + (delay / 1000) + " seconds.");
             auctionScheduler.schedule(auctionService::endAuction, delay, TimeUnit.MILLISECONDS);
         }
     }
 
     public void shutdown() {
-        System.out.println(" [AuctionTimer] Đang dừng đồng hồ đếm ngược...");
+        System.out.println(" [AuctionTimer] Stopping countdown timer...");
         auctionScheduler.shutdownNow();
     }
 }

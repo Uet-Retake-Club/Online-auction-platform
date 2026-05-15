@@ -82,7 +82,16 @@ public class LoginController implements Initializable {
     if (!validateFields()) {
       return;
     }
-    // TODO: replace with AuthService.login(email, password) when ready
+    
+    // Mock login session since AuthService is not yet implemented
+    final String email = emailField.getText().trim();
+    final String username = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
+    com.auction.client.utils.UserSession.getInstance()
+        .signIn("Test", "User", username, email, "BIDDER");
+    
+    // Connect the socket to the server so bidding works
+    com.auction.client.services.NetworkClientService.getInstance().connect("localhost", 8080);
+    
     SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
 
