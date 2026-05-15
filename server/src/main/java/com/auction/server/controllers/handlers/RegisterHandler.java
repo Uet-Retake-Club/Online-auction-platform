@@ -8,6 +8,10 @@ import com.auction.shared.dto.AuthPayload;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
+import com.auction.shared.models.Admin;
+import com.auction.shared.models.Bidder;
+import com.auction.shared.models.Seller;
+import com.auction.shared.models.User;
 import com.google.gson.Gson;
 import java.util.UUID;
 
@@ -25,9 +29,14 @@ public class RegisterHandler implements CommandHandler {
 
         String newUserId = "USER-" + UUID.randomUUID().toString().substring(0, 8);
         // Use username as email placeholder if no dedicated email field exists in AuthPayload
-        String email = auth.getUsername().contains("@") ? auth.getUsername() : null;
-        boolean success = userDAO.registerUser(newUserId, auth.getUsername(), email,
-            auth.getPassword(), auth.getRole());
+        String email = auth.getUsername().contains("@") ? auth.getUsername() : auth.getUsername() + "@placeholder.com";
+        
+        User user;
+        if ("ADMIN".equals(auth.getRole())) user = new Admin(newUserId, auth.getUsername(), email);
+        else if ("SELLER".equals(auth.getRole())) user = new Seller(newUserId, auth.getUsername(), email);
+        else user = new Bidder(newUserId, auth.getUsername(), email);
+
+        boolean success = userDAO.addUser(user, auth.getPassword());
 
         if (success) {
             return new Response(MessageType.REGISTER_SUCCESS, "SUCCESS", "Registration successful", newUserId);
