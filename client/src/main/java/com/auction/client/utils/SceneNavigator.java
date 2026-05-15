@@ -46,6 +46,8 @@ public final class SceneNavigator {
     MY_BIDS("/com/auction/client/views/MyBidsView.fxml"),
     /** Admin dashboard. */
     ADMIN("/com/auction/client/views/AdminView.fxml"),
+    /** Seller dashboard. */
+    SELLER("/com/auction/client/views/SellerView.fxml"),
     /** User profile screen. */
     PROFILE("/com/auction/client/views/ProfileView.fxml");
 
@@ -116,6 +118,8 @@ public final class SceneNavigator {
   public static void navigateAfterLogin() {
     if (UserSession.getInstance().isAdmin()) {
       navigateTo(View.ADMIN);
+    } else if (UserSession.getInstance().isSeller()) {
+      navigateTo(View.SELLER);
     } else {
       navigateTo(View.HOME);
     }

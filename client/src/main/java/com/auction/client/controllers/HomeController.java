@@ -220,7 +220,7 @@ public class HomeController implements Initializable {
 
   @FXML
   private void onSell() {
-    SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML

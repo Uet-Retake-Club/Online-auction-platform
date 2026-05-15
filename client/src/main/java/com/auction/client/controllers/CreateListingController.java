@@ -96,7 +96,7 @@ public class CreateListingController implements Initializable {
 
   @FXML
   private void onCancel() {
-    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML
@@ -106,22 +106,22 @@ public class CreateListingController implements Initializable {
 
   @FXML
   private void onMyListings() {
-    System.out.println("TODO: MyListingsView");
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML
   private void onActiveAuctions() {
-    System.out.println("TODO: ActiveAuctionsView");
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML
   private void onDrafts() {
-    System.out.println("TODO: DraftsView");
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML
   private void onCompleted() {
-    System.out.println("TODO: CompletedView");
+    SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
   }
 
   @FXML
