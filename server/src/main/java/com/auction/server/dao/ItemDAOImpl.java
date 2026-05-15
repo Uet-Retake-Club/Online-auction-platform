@@ -1,12 +1,20 @@
 package com.auction.server.dao;
 
-import com.auction.server.database.DatabaseConnection;
-import com.auction.shared.models.*;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import com.auction.server.database.DatabaseConnection;
+import com.auction.shared.models.Collectibles;
+import com.auction.shared.models.Electronics;
+import com.auction.shared.models.Fashion;
+import com.auction.shared.models.HomeAndGarden;
+import com.auction.shared.models.Item;
+import com.auction.shared.models.ItemCategory;
+import com.auction.shared.models.ItemFactory;
+import com.auction.shared.models.Sports;
+import com.auction.shared.models.Vehicle;
 
 public class ItemDAOImpl implements ItemDAO {
 

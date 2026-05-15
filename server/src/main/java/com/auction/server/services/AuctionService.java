@@ -1,5 +1,7 @@
 package com.auction.server.services;
 
+import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.dao.BidTransactionDAOImpl;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
 import com.auction.server.network.ClientHandler;
@@ -23,6 +25,7 @@ public class AuctionService {
     
     // Tương tác Database
     private final ItemDAO itemDAO = new ItemDAOImpl();
+    private final BidTransactionDAO bidDAO = new BidTransactionDAOImpl();
     
     private String currentAuctionItemId = null;
     private double startingPrice = 1240.00;
@@ -85,7 +88,7 @@ public class AuctionService {
         double requiredMinBid = (currentHighestBidder == null) ? startingPrice : currentHighestBid + minIncrement;
         if (settings.getMaxPrice() < requiredMinBid) return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Giá tối đa không đủ", null);
         if (settings.getBidIncrement() < minIncrement) return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Bước giá quá thấp", null);
-
+ 
         autoBidEngine.addAutoBidder(settings);
         autoBidEngine.triggerEvaluation();
         return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid kích hoạt!", null);
@@ -120,6 +123,11 @@ public class AuctionService {
             if (!dbUpdated) {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
+
+            // Log transaction to DB
+            BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
+            bidDAO.addTransaction(tx);
+
             currentHighestBid = amount;
             currentHighestBidder = bidderId;
             System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId
@@ -148,6 +156,11 @@ public class AuctionService {
             if (!dbUpdated) {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
+
+            // Log transaction to DB
+            BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), targetItemId, bidderId, amount, System.currentTimeMillis());
+            bidDAO.addTransaction(tx);
+
             System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId
                 + " on item " + targetItemId);
             broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
@@ -166,7 +179,10 @@ public class AuctionService {
             currentHighestBidder = bidderId;
             System.out.println("[AUTO-BID] Auto-bid placed: $" + currentHighestBid + " for " + bidderId);
 
+            // Log transaction to DB
             BidTransaction autoBidTx = new BidTransaction("AUTO-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
+            bidDAO.addTransaction(autoBidTx);
+
             String autoBidPayload = new Gson().toJson(autoBidTx);
             broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Auto-bid placed", autoBidPayload));
             return true;
@@ -175,29 +191,29 @@ public class AuctionService {
     }
 
     public synchronized void endAuction() {
-    if (currentAuctionItemId == null) return;
-    if (this.auctionStatus.equals("FINISHED")) return;
-    
-    // 1. Cập nhật trạng thái xuống SQLite trước
-    boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
-    
-    if (success) {
-        this.auctionStatus = "FINISHED";
-        System.out.println(" [MANAGER] AUCTION ENDED!");
+        if (currentAuctionItemId == null) return;
+        if (this.auctionStatus.equals("FINISHED")) return;
         
-        // 2. Tắt hệ thống Robot
-        autoBidEngine.shutdown();
-
-        // 3. Xác định người thắng và thông báo
-        String winnerMsg = (currentHighestBidder != null) 
-            ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
-            : "Phiên kết thúc mà không có ai đặt giá.";
+        // 1. Cập nhật trạng thái xuống SQLite trước
+        boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
+        
+        if (success) {
+            this.auctionStatus = "FINISHED";
+            System.out.println(" [MANAGER] AUCTION ENDED!");
             
-        broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
-    } else {
-        System.err.println(" [ERROR] Database rejected auction closure!");
+            // 2. Tắt hệ thống Robot
+            autoBidEngine.shutdown();
+
+            // 3. Xác định người thắng và thông báo
+            String winnerMsg = (currentHighestBidder != null) 
+                ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
+                : "Phiên kết thúc mà không có ai đặt giá.";
+                
+            broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
+        } else {
+            System.err.println(" [ERROR] Database rejected auction closure!");
+        }
     }
-}
 
     public Response getCurrentStatusResponse() {
         double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
@@ -238,5 +254,3 @@ public class AuctionService {
         System.out.println(" [AuctionService] Cleanup complete. Server fully shut down!");
     }
 }
-
-// Waiting Database InvoiceDao va logic thanh toan de hoan thanh PAID/CANCELED

@@ -1,13 +1,16 @@
 package com.auction.server.network;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
 import com.auction.server.controllers.RequestDispatcher;
 import com.auction.server.services.AuctionService;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
 import com.google.gson.Gson;
-
-import java.io.*;
-import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;

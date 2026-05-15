@@ -1,6 +1,10 @@
 package com.auction.server.dao;
 
+import com.auction.shared.models.User;
+
 public interface UserDAO {
-    boolean registerUser(String id, String username, String email, String password, String role);
+    User getUserById(String id);
+    User getUserByUsername(String username);
+    boolean addUser(User user, String password);
     String authenticateUser(String emailOrUsername, String password);
 }
