@@ -26,6 +26,7 @@ public class AuctionService {
     // Tương tác Database
     private final ItemDAO itemDAO = new ItemDAOImpl();
     private final BidTransactionDAO bidDAO = new BidTransactionDAOImpl();
+    private final com.auction.server.dao.WalletDAO walletDAO = new com.auction.server.dao.WalletDAOImpl();
     
     private String currentAuctionItemId = null;
     private double startingPrice = 1240.00;
@@ -111,6 +112,12 @@ public class AuctionService {
             return new Response(MessageType.BID_ERROR, "FAIL", "Auction has already ended!", null);
         }
 
+        // 1. Kiểm tra số dư ví (Wallet Check)
+        double userBalance = walletDAO.getBalance(bidderId);
+        if (userBalance < amount) {
+            return new Response(MessageType.BID_ERROR, "FAIL", "Số dư ví không đủ! (Vui lòng nạp thêm tiền)", null);
+        }
+
         if (targetItemId.equals(currentAuctionItemId)) {
             // ── Active auction item: use fast in-memory path ──
             double requiredMinBid = (currentHighestBidder == null)
@@ -123,6 +130,16 @@ public class AuctionService {
             if (!dbUpdated) {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
+
+            // 2. HOÀN TIỀN cho người đặt giá cao nhất cũ
+            if (currentHighestBidder != null && !currentHighestBidder.equals(bidderId)) {
+                walletDAO.updateBalance(currentHighestBidder, currentHighestBid);
+                System.out.println("[WALLET] Refunded $" + currentHighestBid + " to " + currentHighestBidder);
+            }
+
+            // 3. TRỪ TIỀN người đặt giá mới
+            walletDAO.updateBalance(bidderId, -amount);
+            System.out.println("[WALLET] Deducted $" + amount + " from " + bidderId);
 
             // Log transaction to DB
             BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
@@ -152,10 +169,21 @@ public class AuctionService {
                 return new Response(MessageType.BID_ERROR, "FAIL",
                     String.format("Minimum bid is $%.2f", requiredMinBid), null);
             }
+
             boolean dbUpdated = itemDAO.updateCurrentPrice(targetItemId, amount, bidderId);
             if (!dbUpdated) {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
+
+            // 2. HOÀN TIỀN cho người đặt giá cao nhất cũ (non-active item)
+            if (item.getHighestBidderId() != null && !item.getHighestBidderId().equals(bidderId)) {
+                walletDAO.updateBalance(item.getHighestBidderId(), currentItemPrice);
+                System.out.println("[WALLET] Refunded $" + currentItemPrice + " to " + item.getHighestBidderId() + " (Item: " + targetItemId + ")");
+            }
+
+            // 3. TRỪ TIỀN người đặt giá mới
+            walletDAO.updateBalance(bidderId, -amount);
+            System.out.println("[WALLET] Deducted $" + amount + " from " + bidderId);
 
             // Log transaction to DB
             BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), targetItemId, bidderId, amount, System.currentTimeMillis());

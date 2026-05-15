@@ -90,7 +90,7 @@ public class SignupController implements Initializable {
     final String password = passwordField.getText();
 
     final com.auction.shared.dto.AuthPayload auth =
-        new com.auction.shared.dto.AuthPayload(username, password, "BIDDER");
+        new com.auction.shared.dto.AuthPayload(username, email, password, "BIDDER");
     final com.auction.shared.dto.Request registerReq = new com.auction.shared.dto.Request(
         com.auction.shared.dto.MessageType.REGISTER, "Pending",
         new com.google.gson.Gson().toJson(auth));

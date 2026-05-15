@@ -59,17 +59,13 @@ public class AuctionServiceTest {
                     return true;
                 }
                 @Override
-                public boolean updateStatus(String itemId, String status) {
-                    return true;
-                }
+                public boolean updateStatus(String itemId, String status) { return true; }
                 @Override
-                public Item getFirstOpenItem() {
-                    return null;
-                }
+                public com.auction.shared.models.Item getFirstOpenItem() { return null; }
                 @Override
-                public java.util.List<Item> getItemsBySellerId(String sellerId) {
-                    return java.util.Collections.emptyList();
-                }
+                public java.util.List<com.auction.shared.models.Item> getItemsBySellerId(String sellerId) { return java.util.Collections.emptyList(); }
+                @Override
+                public java.util.List<com.auction.shared.models.Item> getAllItems() { return java.util.Collections.emptyList(); }
             });
         } catch (Exception e) {
             e.printStackTrace();

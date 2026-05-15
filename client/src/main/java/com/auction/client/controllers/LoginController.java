@@ -89,7 +89,7 @@ public class LoginController implements Initializable {
     final String password = passwordField.getText();
 
     final com.auction.shared.dto.AuthPayload auth =
-        new com.auction.shared.dto.AuthPayload(usernameInput, password, "BIDDER");
+        new com.auction.shared.dto.AuthPayload(usernameInput, null, password, "BIDDER");
     final com.auction.shared.dto.Request loginReq = new com.auction.shared.dto.Request(
         com.auction.shared.dto.MessageType.LOGIN, "Pending",
         new com.google.gson.Gson().toJson(auth));

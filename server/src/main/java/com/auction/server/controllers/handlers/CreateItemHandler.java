@@ -4,6 +4,7 @@ import com.auction.server.controllers.CommandHandler;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
 import com.auction.server.network.ClientHandler;
+import com.auction.server.services.AuctionService;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
@@ -68,6 +69,9 @@ public class CreateItemHandler implements CommandHandler {
             boolean success = itemDAO.addItem(item);
             if (success) {
                 System.out.println("[CREATE_ITEM] New listing: " + title + " (ID: " + itemId + ") by " + sellerId);
+                // Broadcast to all clients to refresh HomeView
+                AuctionService.getInstance().broadcast(new Response(MessageType.NEW_ITEM_BROADCAST, "SUCCESS", "New item available!", null));
+                
                 return new Response(MessageType.CREATE_ITEM_SUCCESS, "SUCCESS",
                     "Listing created successfully", itemId);
             } else {

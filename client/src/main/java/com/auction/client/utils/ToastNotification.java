@@ -117,10 +117,10 @@ public final class ToastNotification {
 
   private static String iconFor(final Type type) {
     return switch (type) {
-      case SUCCESS -> "✅";
-      case WARNING -> "⚠️";
-      case DANGER  -> "❌";
-      default      -> "ℹ️";
+      case SUCCESS -> "[SUCCESS]";
+      case WARNING -> "[WARNING]";
+      case DANGER  -> "[ERROR]";
+      default      -> "[INFO]";
     };
   }
 

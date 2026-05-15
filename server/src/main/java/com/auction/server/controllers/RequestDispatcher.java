@@ -23,6 +23,13 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.GET_STATUS, new GetStatusHandler());
         handlerRegistry.put(MessageType.CREATE_ITEM, new CreateItemHandler());
         handlerRegistry.put(MessageType.GET_SELLER_ITEMS, new GetSellerItemsHandler());
+        handlerRegistry.put(MessageType.GET_ALL_ITEMS, new GetAllItemsHandler());
+        handlerRegistry.put(MessageType.WATCHLIST_ADD, new WatchlistHandler());
+        handlerRegistry.put(MessageType.WATCHLIST_REMOVE, new WatchlistHandler());
+        handlerRegistry.put(MessageType.GET_WATCHLIST, new WatchlistHandler());
+        handlerRegistry.put(MessageType.GET_WALLET_BALANCE, new WalletHandler());
+        handlerRegistry.put(MessageType.WALLET_TOPUP_REQUEST, new WalletHandler());
+        handlerRegistry.put(MessageType.WALLET_TOPUP_APPROVE, new AdminWalletHandler());
     }
 
     public Response dispatch(Request request, ClientHandler clientHandler) {

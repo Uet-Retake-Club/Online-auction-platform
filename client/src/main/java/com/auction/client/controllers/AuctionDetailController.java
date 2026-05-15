@@ -1,6 +1,8 @@
 package com.auction.client.controllers;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.services.BidService;
+import com.auction.shared.dto.Request;
 import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
@@ -244,9 +246,11 @@ public class AuctionDetailController implements Initializable {
 
   @FXML
   private void onAddWatchlist() {
-    watchlistBtn.setText("Added to watchlist");
+    NetworkClientService.getInstance().sendRequest(
+        new Request(com.auction.shared.dto.MessageType.WATCHLIST_ADD, currentUserId, currentAuctionId));
+    watchlistBtn.setText("Watching \u2713");
     watchlistBtn.setDisable(true);
-    ToastNotification.show(userLabel, "Added to watchlist.", ToastNotification.Type.INFO);
+    ToastNotification.show(userLabel, "[INFO] Đã thêm vào Watchlist", ToastNotification.Type.INFO);
   }
 
   @FXML

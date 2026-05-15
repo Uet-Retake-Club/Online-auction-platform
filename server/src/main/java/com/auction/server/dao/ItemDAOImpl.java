@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.auction.server.database.DatabaseConnection;
 import com.auction.shared.models.Collectibles;
@@ -360,4 +362,24 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
 
+    @Override
+    public List<Item> getAllItems() {
+        List<Item> items = new ArrayList<>();
+        String sql = "SELECT id, category FROM items WHERE status = 'OPEN'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                String id = rs.getString("id");
+                ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+                Item item = fetchFullItemDetails(conn, id, category);
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error fetching all items: " + e.getMessage());
+        }
+        return items;
+    }
 }

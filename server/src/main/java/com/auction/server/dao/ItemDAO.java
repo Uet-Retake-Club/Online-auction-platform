@@ -16,4 +16,5 @@ public interface ItemDAO {
     boolean updateStatus(String itemId, String status);
 
     List<Item> getItemsBySellerId(String sellerId);
+    List<Item> getAllItems();
 }

@@ -28,8 +28,7 @@ public class RegisterHandler implements CommandHandler {
         }
 
         String newUserId = "USER-" + UUID.randomUUID().toString().substring(0, 8);
-        // Use username as email placeholder if no dedicated email field exists in AuthPayload
-        String email = auth.getUsername().contains("@") ? auth.getUsername() : auth.getUsername() + "@placeholder.com";
+        String email = auth.getEmail() != null ? auth.getEmail() : auth.getUsername() + "@placeholder.com";
         
         User user;
         if ("ADMIN".equals(auth.getRole())) user = new Admin(newUserId, auth.getUsername(), email);
@@ -39,6 +38,10 @@ public class RegisterHandler implements CommandHandler {
         boolean success = userDAO.addUser(user, auth.getPassword());
 
         if (success) {
+            // Auto-login: Register client in SessionManager immediately
+            clientHandler.setClientId(newUserId);
+            com.auction.server.services.AuctionService.getInstance().registerClient(newUserId, clientHandler);
+            
             return new Response(MessageType.REGISTER_SUCCESS, "SUCCESS", "Registration successful", newUserId);
         } else {
             return new Response(MessageType.REGISTER_FAIL, "FAIL", "Username already exists or DB error", null);

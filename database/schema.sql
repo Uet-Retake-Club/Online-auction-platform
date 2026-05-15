@@ -118,10 +118,34 @@ CREATE TABLE IF NOT EXISTS invoices (
     final_price REAL NOT NULL,
     timestamp INTEGER NOT NULL,
     status TEXT DEFAULT 'UNPAID',
-    FOREIGN KEY (auction_id) REFERENCES auctions(id),
-    FOREIGN KEY (item_id) REFERENCES items(id),
     FOREIGN KEY (bidder_id) REFERENCES users(id),
     FOREIGN KEY (seller_id) REFERENCES users(id)
+);
+
+-- 8. Bảng Ví tiền (Wallet)
+CREATE TABLE IF NOT EXISTS wallets (
+    user_id TEXT PRIMARY KEY,
+    balance REAL DEFAULT 0.0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 9. Bảng yêu cầu nạp tiền
+CREATE TABLE IF NOT EXISTS topup_requests (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    amount REAL NOT NULL,
+    status TEXT CHECK(status IN ('PENDING', 'APPROVED', 'REJECTED')) DEFAULT 'PENDING',
+    timestamp INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 10. Bảng Danh sách theo dõi (Watchlist)
+CREATE TABLE IF NOT EXISTS watchlists (
+    user_id TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    PRIMARY KEY (user_id, item_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
 -- Seed Data: Default Users
@@ -157,3 +181,8 @@ INSERT OR IGNORE INTO items_collectibles (item_id, type, rarity, condition) VALU
 INSERT OR IGNORE INTO items (id, name, description, category, start_price, current_price, start_time, end_time, seller_id, status)
 VALUES ('ITEM-123', 'Gaming Laptop RTX 4080', 'Asus ROG Strix with RTX 4080', 'ELECTRONICS', 1240.00, 1240.00, 1715760000000, 1718438400000, 'ADMIN-1', 'OPEN');
 INSERT OR IGNORE INTO items_electronics (item_id, brand, warranty_period) VALUES ('ITEM-123', 'Asus ROG', '2 Years');
+
+-- Seed Data: Wallets
+INSERT OR IGNORE INTO wallets (user_id, balance) VALUES ('ADMIN-1', 1000000.0);
+INSERT OR IGNORE INTO wallets (user_id, balance) VALUES ('SELLER-1', 5000.0);
+INSERT OR IGNORE INTO wallets (user_id, balance) VALUES ('SELLER-2', 0.0);
