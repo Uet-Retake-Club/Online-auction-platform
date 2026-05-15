@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    SellerView.fxml
+    Controller : com.auction.client.controllers.SellerController
+    Seller Dashboard — displays all created auctions with their statuses.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.auction.client.controllers.SellerController"
+            fx:id="rootPane"
+            maxWidth="Infinity" maxHeight="Infinity"
+            style="-fx-background-color: #F4F4F4;">
+
+    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12"
+              style="-fx-background-color:white;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:10px 20px;">
+            <HBox alignment="CENTER_LEFT" spacing="0">
+                <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
+                <Label text="Hub"     style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Browse" onAction="#onHome"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+            <Button text="+ Add Listing" onAction="#onCreateListing"
+                    style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:7px 14px;-fx-cursor:hand;-fx-effect:null;"/>
+            <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
+                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;-fx-cursor:hand;"/>
+        </HBox>
+    </top>
+
+    <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
+    <left>
+        <VBox prefWidth="190" spacing="3"
+              style="-fx-background-color:white;-fx-border-color:transparent #EBEBEB transparent transparent;-fx-border-width:0 1px 0 0;-fx-padding:18px 10px;">
+            <Label text="MY LISTINGS"
+                   style="-fx-font-size:10px;-fx-font-weight:bold;-fx-text-fill:#AAAAAA;-fx-padding:0 8px 8px 8px;"/>
+            <Button fx:id="filterAll"    text="All listings" maxWidth="Infinity" onAction="#onFilterAll"
+                    styleClass="nav-item-active" style="-fx-effect:null;"/>
+            <Button fx:id="filterActive" text="Active"       maxWidth="Infinity" onAction="#onFilterActive"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="filterSold"   text="Sold"         maxWidth="Infinity" onAction="#onFilterSold"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="filterUnsold" text="Unsold"       maxWidth="Infinity" onAction="#onFilterUnsold"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="filterDraft"  text="Draft"        maxWidth="Infinity" onAction="#onFilterDraft"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-opacity:0.5;"/>
+            <Button text="Home"     maxWidth="Infinity" onAction="#onHome"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button text="Sign out" maxWidth="Infinity" onAction="#onLogout"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+        </VBox>
+    </left>
+
+    <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+    <center>
+        <VBox style="-fx-padding:24px;" spacing="16" VBox.vgrow="ALWAYS">
+
+            <!-- Header row -->
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Seller Dashboard"
+                       style="-fx-font-size:18px;-fx-font-weight:bold;-fx-text-fill:#111;-fx-font-family:'Segoe UI';"
+                       HBox.hgrow="ALWAYS"/>
+                <Label fx:id="listingCountLabel" text="0 listings"
+                       style="-fx-font-size:13px;-fx-text-fill:#888;-fx-font-family:'Segoe UI';"/>
+            </HBox>
+
+            <!-- Listings table -->
+            <VBox style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;" VBox.vgrow="ALWAYS">
+
+                <!-- Table header -->
+                <HBox style="-fx-background-color:#F7F7F7;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-border-radius:8px 8px 0 0;-fx-background-radius:8px 8px 0 0;-fx-padding:9px 14px;">
+                    <Label text="Item" HBox.hgrow="ALWAYS"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Current Bid" prefWidth="100"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Buy Now Price" prefWidth="120"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Time left" prefWidth="100"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="Status" prefWidth="90"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                    <Label text="" prefWidth="100"
+                           style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                </HBox>
+
+                <!-- Rows — populated by SellerController -->
+                <VBox fx:id="listingsContainer" VBox.vgrow="ALWAYS"/>
+
+                <!-- Empty state -->
+                <VBox fx:id="emptyState" alignment="CENTER" spacing="10"
+                      style="-fx-padding:50px;" visible="false" managed="false">
+                    <Label text="No listings found"
+                           style="-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#767676;-fx-font-family:'Segoe UI';"/>
+                    <Label text="You don't have any listings yet."
+                           style="-fx-font-size:13px;-fx-text-fill:#AAAAAA;-fx-font-family:'Segoe UI';"/>
+                    <Button text="Create Listing" onAction="#onCreateListing"
+                            style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:9px 20px;-fx-cursor:hand;-fx-effect:null;"/>
+                </VBox>
+
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>
