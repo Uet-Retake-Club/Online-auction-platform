@@ -1,7 +1,9 @@
 package com.auction.server.services;
 
+import com.auction.server.dao.BidTransaction;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
+import com.auction.server.dao.BidTransaction;
 import com.auction.server.network.ClientHandler;
 import com.auction.server.services.core.AuctionTimer;
 import com.auction.server.services.core.AutoBidEngine;
@@ -23,6 +25,7 @@ public class AuctionService {
     
     // Tương tác Database
     private final ItemDAO itemDAO = new ItemDAOImpl();
+    private final BidTransaction bidDAO = new BidDAOImpl();
     
     private String currentAuctionItemId = "ITEM-123";
     private double startingPrice = 1240.00;
@@ -82,7 +85,7 @@ public class AuctionService {
         double requiredMinBid = (currentHighestBidder == null) ? startingPrice : currentHighestBid + minIncrement;
         if (settings.getMaxPrice() < requiredMinBid) return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Giá tối đa không đủ", null);
         if (settings.getBidIncrement() < minIncrement) return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Bước giá quá thấp", null);
-
+ 
         autoBidEngine.addAutoBidder(settings);
         autoBidEngine.triggerEvaluation();
         return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid kích hoạt!", null);
@@ -98,6 +101,10 @@ public class AuctionService {
         if (amount >= requiredMinBid) {
             boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, amount, bidderId);
             if (dbUpdated) {
+
+                BidTransaction tx = new BidTransaction("TX-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
+                bidDAO.recordBid(tx);
+
                 currentHighestBid = amount;
                 currentHighestBidder = bidderId;
                 System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId);
@@ -127,31 +134,31 @@ public class AuctionService {
             return true;
         }
         return false;
-    }
+   }
 
     public synchronized void endAuction() {
-    if (this.auctionStatus.equals("FINISHED")) return;
-    
-    // 1. Cập nhật trạng thái xuống SQLite trước
-    boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
-    
-    if (success) {
-        this.auctionStatus = "FINISHED";
-        System.out.println(" [MANAGER] AUCTION ENDED!");
+        if (this.auctionStatus.equals("FINISHED")) return;
         
-        // 2. Tắt hệ thống Robot
-        autoBidEngine.shutdown();
-
-        // 3. Xác định người thắng và thông báo
-        String winnerMsg = (currentHighestBidder != null) 
-            ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
-            : "Phiên kết thúc mà không có ai đặt giá.";
+        // 1. Cập nhật trạng thái xuống SQLite trước
+        boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
+        
+        if (success) {
+            this.auctionStatus = "FINISHED";
+            System.out.println(" [MANAGER] AUCTION ENDED!");
             
-        broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
-    } else {
-        System.err.println(" [ERROR] Database rejected auction closure!");
+            // 2. Tắt hệ thống Robot
+            autoBidEngine.shutdown();
+
+            // 3. Xác định người thắng và thông báo
+            String winnerMsg = (currentHighestBidder != null) 
+                ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
+                : "Phiên kết thúc mà không có ai đặt giá.";
+                
+            broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
+        } else {
+            System.err.println(" [ERROR] Database rejected auction closure!");
+        }
     }
-}
 
     public Response getCurrentStatusResponse() {
         double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;

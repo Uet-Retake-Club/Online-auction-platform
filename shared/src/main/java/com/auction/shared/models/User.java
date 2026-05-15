@@ -5,6 +5,7 @@ public abstract class User extends Entity {
   protected String username;
   protected String email;
   protected String role;
+  protected String password;
 
   /**
    * Constructs a new User.
@@ -13,6 +14,7 @@ public abstract class User extends Entity {
    * @param username the username
    * @param email the email address
    * @param role the user role
+   * @param password the user password
    */
   public User(String id, String username, String email, String role) {
     super(id);
@@ -39,5 +41,17 @@ public abstract class User extends Entity {
 
   public String getRole() {
     return role;
+  }
+
+  public void setRole(String role) {
+    this.role = role;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 }

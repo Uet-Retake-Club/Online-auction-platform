@@ -1,37 +1,38 @@
--- 1. Bảng quản lý người dùng
-CREATE TABLE users (
+-- 1. Bảng quản lý người dùng (Khớp User.java, Admin.java, Bidder.java, Seller.java)
+CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
+    email TEXT NOT NULL,
+    password TEXT NOT NULL, -- Bổ sung để login
     role TEXT CHECK(role IN ('BIDDER', 'SELLER', 'ADMIN')) NOT NULL
 );
 
-
-
-CREATE TABLE items (
+-- 2. Bảng vật phẩm tổng quát (Khớp mapCommonFields trong ItemDAOImpl.java)
+CREATE TABLE IF NOT EXISTS items (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
-    category TEXT NOT NULL, -- Lưu giá trị Enum (ELECTRONICS, SPORTS, VEHICLES...)
+    category TEXT NOT NULL, 
     start_price REAL NOT NULL,
     current_price REAL NOT NULL,
-    start_time TEXT NOT NULL, -- Định dạng ISO-8601
-    end_time TEXT NOT NULL,
-    seller_id TEXT, -- Giả định User ID cũng là String
-    status TEXT DEFAULT 'OPEN'
-
-    FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
+    highest_bidder_id TEXT,
+    start_time INTEGER NOT NULL, -- Đổi TEXT -> INTEGER để dùng rs.getLong()
+    end_time INTEGER NOT NULL,   -- Đổi TEXT -> INTEGER để dùng rs.getLong()
+    seller_id TEXT NOT NULL,
+    status TEXT DEFAULT 'OPEN',
+    FOREIGN KEY (highest_bidder_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE items_electronics (
+-- 3. Các bảng con chi tiết (Khớp saveSubCategoryData trong ItemDAOImpl.java)
+CREATE TABLE IF NOT EXISTS items_electronics (
     item_id TEXT PRIMARY KEY,
     brand TEXT,
-    warranty_period TEXT,
+    warranty_period TEXT, -- Khớp với lệnh INSERT trong ItemDAOImpl
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
--- 3. Bảng con cho Vehicles
-CREATE TABLE items_vehicles (
+CREATE TABLE IF NOT EXISTS items_vehicles (
     item_id TEXT PRIMARY KEY,
     brand TEXT,
     model TEXT,
@@ -39,22 +40,20 @@ CREATE TABLE items_vehicles (
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
--- 4. Bảng con cho Sports (Dựa trên hình bạn gửi)
-CREATE TABLE items_sports (
+CREATE TABLE IF NOT EXISTS items_sports (
     item_id TEXT PRIMARY KEY,
-    sport TEXT, -- Ví dụ: Football, Tennis
-    color TEXT, -- Mới/Cũ
+    sport TEXT,
+    color TEXT,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
-CREATE TABLE items_home_and_garden (
+CREATE TABLE IF NOT EXISTS items_home_garden ( -- Đổi tên cho khớp với code Java
     item_id TEXT PRIMARY KEY,
     color TEXT,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
--- Bảng con cho Fashion
-CREATE TABLE items_fashion (
+CREATE TABLE IF NOT EXISTS items_fashion (
     item_id TEXT PRIMARY KEY,
     brand TEXT,
     size TEXT,
@@ -63,27 +62,43 @@ CREATE TABLE items_fashion (
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
--- Bảng con cho Collectibles
-CREATE TABLE items_collectibles (
+CREATE TABLE IF NOT EXISTS items_collectibles (
     item_id TEXT PRIMARY KEY,
-    type TEXT, -- Ví dụ: Coins, Stamps, Figurines
-    rarity TEXT, -- Rare, Common, etc.
+    type TEXT,
+    rarity TEXT,
     condition TEXT,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
--- Bảng con cho Other (không có thuộc tính riêng, chỉ để phân loại)
-CREATE TABLE items_other (
-    item_id TEXT PRIMARY KEY,
-    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+-- 4. Bảng quản lý phiên đấu giá (Khớp Auction.java)
+CREATE TABLE IF NOT EXISTS auctions (
+    id TEXT PRIMARY KEY,
+    item_id TEXT NOT NULL,
+    seller_id TEXT NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE bids (
-    id TEXT PRIMARY KEY AUTOINCREMENT,
-    item_id TEXT,
-    bidder_id TEXT,
-    amount REAL NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (item_id) REFERENCES items(id),
-    FOREIGN KEY (bidder_id) REFERENCES users(id)
+-- 5. Bảng lịch sử đặt giá (Khớp BidTransaction.java)
+CREATE TABLE IF NOT EXISTS bid_transactions (
+    id TEXT PRIMARY KEY, -- Bỏ AUTOINCREMENT vì Java tự tạo ID String
+    item_id TEXT NOT NULL,
+    bidder_id TEXT NOT NULL,
+    bid_amount REAL NOT NULL,
+    timestamp INTEGER NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
+    FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 6. Bảng cấu hình tự động đặt giá (Khớp AutoBidSettings.java)
+CREATE TABLE IF NOT EXISTS auto_bid_settings (
+    bidder_id TEXT NOT NULL,
+    auction_id TEXT NOT NULL,
+    max_price REAL NOT NULL,
+    bid_increment REAL NOT NULL,
+    active INTEGER DEFAULT 1,
+    aggressive_mode INTEGER DEFAULT 0,
+    PRIMARY KEY (bidder_id, auction_id),
+    FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE
 );
