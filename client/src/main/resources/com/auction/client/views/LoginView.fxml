@@ -19,12 +19,13 @@
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.auction.client.controllers.LoginController"
       fx:id="rootPane"
-      prefWidth="900" prefHeight="560">
+      maxWidth="Infinity" maxHeight="Infinity">
 
     <!-- ════════════════════════════════════════════════════
          LEFT PANEL  — dark brand panel
          ════════════════════════════════════════════════════ -->
-    <VBox prefWidth="360"
+    <!-- Left panel: minWidth cố định, không co lại khi fullscreen -->
+    <VBox minWidth="340" maxWidth="420"
           alignment="CENTER_LEFT"
           spacing="0"
           style="-fx-background-color: #1a1a2e; -fx-padding: 52px 44px;">
@@ -78,6 +79,7 @@
          RIGHT PANEL — login form
          ════════════════════════════════════════════════════ -->
     <VBox HBox.hgrow="ALWAYS"
+          maxWidth="Infinity"
           alignment="CENTER"
           style="-fx-background-color: #F7F7F7; -fx-padding: 40px;">
 

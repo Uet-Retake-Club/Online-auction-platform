@@ -11,28 +11,57 @@ import org.junit.jupiter.api.Test;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
+import com.auction.server.dao.ItemDAO;
+import com.auction.shared.models.Item;
 
 public class AuctionManagerTest {
 
-    private AuctionManager manager;
+    private AuctionService manager;
 
     @BeforeEach
     void setUp() {
         // Reset singleton instance for each test
         try {
-            java.lang.reflect.Field instance = AuctionManager.class.getDeclaredField("instance");
+            java.lang.reflect.Field instance = AuctionService.class.getDeclaredField("instance");
             instance.setAccessible(true);
             instance.set(null, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        manager = AuctionManager.getInstance();
+        manager = AuctionService.getInstance();
+        
+        // Mock ItemDAO to bypass database dependencies in tests
+        try {
+            java.lang.reflect.Field itemDaoField = AuctionService.class.getDeclaredField("itemDAO");
+            itemDaoField.setAccessible(true);
+            itemDaoField.set(manager, new ItemDAO() {
+                @Override
+                public Item getItemById(String id) { 
+                    return null; 
+                }
+                @Override
+                public boolean addItem(Item item) { 
+                    return true; 
+                }
+                @Override
+                public boolean updateCurrentPrice(
+                    String itemId, double newPrice, String bidderId) { 
+                    return true; 
+                }
+                @Override
+                public boolean updateStatus(String itemId, String status) { 
+                    return true; 
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
     void testGetInstance() {
-        AuctionManager instance1 = AuctionManager.getInstance();
-        AuctionManager instance2 = AuctionManager.getInstance();
+        AuctionService instance1 = AuctionService.getInstance();
+        AuctionService instance2 = AuctionService.getInstance();
         assertSame(instance1, instance2, "getInstance should return the same instance");
     }
 
@@ -70,7 +99,7 @@ public class AuctionManagerTest {
         assertEquals("SUCCESS", response.getStatus());
         // Check currentHighestBid using reflection
         try {
-            java.lang.reflect.Field field = AuctionManager.class.getDeclaredField("currentHighestBid");
+            java.lang.reflect.Field field = AuctionService.class.getDeclaredField("currentHighestBid");
             field.setAccessible(true);
             double currentHighestBid = (double) field.get(manager);
             assertEquals(1250.0, currentHighestBid);
@@ -95,7 +124,7 @@ public class AuctionManagerTest {
     void testProcessBidUpdatesHighestBidder() {
         manager.processBid("client1", 1250.0, "payload");
         try {
-            java.lang.reflect.Field field = AuctionManager.class.getDeclaredField("currentHighestBidder");
+            java.lang.reflect.Field field = AuctionService.class.getDeclaredField("currentHighestBidder");
             field.setAccessible(true);
             String highestBidder = (String) field.get(manager);
             assertEquals("client1", highestBidder);
