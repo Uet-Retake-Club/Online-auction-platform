@@ -11,7 +11,7 @@ public class MessageTypeTest {
     @Test
     void testAllValuesExist() {
         MessageType[] values = MessageType.values();
-        assertEquals(13, values.length, "MessageType phải có đúng 13 giá trị");
+        assertEquals(18, values.length, "MessageType must have exactly 18 values");
     }
 
     @Test
@@ -29,6 +29,11 @@ public class MessageTypeTest {
         assertEquals(MessageType.NEW_BID_BROADCAST, MessageType.valueOf("NEW_BID_BROADCAST"));
         assertEquals(MessageType.AUCTION_ENDED, MessageType.valueOf("AUCTION_ENDED"));
         assertEquals(MessageType.GET_STATUS, MessageType.valueOf("GET_STATUS"));
+        assertEquals(MessageType.CREATE_ITEM, MessageType.valueOf("CREATE_ITEM"));
+        assertEquals(MessageType.CREATE_ITEM_SUCCESS, MessageType.valueOf("CREATE_ITEM_SUCCESS"));
+        assertEquals(MessageType.CREATE_ITEM_FAIL, MessageType.valueOf("CREATE_ITEM_FAIL"));
+        assertEquals(MessageType.GET_SELLER_ITEMS, MessageType.valueOf("GET_SELLER_ITEMS"));
+        assertEquals(MessageType.GET_SELLER_ITEMS_RESPONSE, MessageType.valueOf("GET_SELLER_ITEMS_RESPONSE"));
     }
 
     @Test

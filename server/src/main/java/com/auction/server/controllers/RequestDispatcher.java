@@ -21,6 +21,8 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.PLACE_BID, new PlaceBidHandler());
         handlerRegistry.put(MessageType.SETUP_AUTO_BID, new SetupAutoBidHandler());
         handlerRegistry.put(MessageType.GET_STATUS, new GetStatusHandler());
+        handlerRegistry.put(MessageType.CREATE_ITEM, new CreateItemHandler());
+        handlerRegistry.put(MessageType.GET_SELLER_ITEMS, new GetSellerItemsHandler());
     }
 
     public Response dispatch(Request request, ClientHandler clientHandler) {

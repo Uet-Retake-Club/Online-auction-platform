@@ -103,9 +103,6 @@ public class AuctionDetailController implements Initializable {
           totalBids.setText(String.valueOf(currentTotal + 1));
         });
 
-    BidService.getInstance().setOnPriceChangeNotification(msg ->
-        ToastNotification.show(userLabel, msg, ToastNotification.Type.INFO));
-
     BidService.getInstance().setOnAutoBidResult(response -> {
       if ("SUCCESS".equals(response.getStatus())) {
         setupAutoBidBtn.setText("Auto-Bid Active \u2713");

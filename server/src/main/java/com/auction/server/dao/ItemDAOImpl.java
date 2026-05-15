@@ -326,6 +326,30 @@ public class ItemDAOImpl implements ItemDAO {
         }
         return false;
     }
+    @Override
+    public java.util.List<Item> getItemsBySellerId(String sellerId) {
+        java.util.List<Item> items = new java.util.ArrayList<>();
+        String sql = "SELECT id, category FROM items WHERE seller_id = ? ORDER BY start_time DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, sellerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+                    Item item = fetchFullItemDetails(conn, id, category);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Get items by seller error: " + e.getMessage());
+        }
+        return items;
+    }
 
 
 }

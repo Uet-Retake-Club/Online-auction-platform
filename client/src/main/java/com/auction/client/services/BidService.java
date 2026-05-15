@@ -27,9 +27,8 @@ public class BidService implements NetworkClientService.ServerMessageListener {
 
   private Consumer<Double> onPriceUpdated;
   private Consumer<BidTransaction> onNewBid;
-  private Consumer<String> onPriceChangeNotification; 
-  private Consumer<Response> onAutoBidResult;  
-  private Consumer<String> onBidError;         
+  private Consumer<Response> onAutoBidResult;
+  private Consumer<String> onBidError;
 
   private BidService() {
     NetworkClientService.getInstance().addListener(this);
@@ -63,14 +62,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     this.onNewBid = onNewBid;
   }
 
-  /**
-   * Sets the toast-style notification callback for price changes.
-   *
-   * @param callback notification callback
-   */
-  public void setOnPriceChangeNotification(final Consumer<String> callback) {
-    this.onPriceChangeNotification = callback;
-  }
+
 
   /**
    * Sets the callback to receive auto-bid result responses.
@@ -118,7 +110,6 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     this.bidHistory.clear();
     this.onPriceUpdated = null;
     this.onNewBid = null;
-    this.onPriceChangeNotification = null;
     this.onAutoBidResult = null;
     this.onBidError = null;
   }
@@ -141,7 +132,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   public String placeBid(final String bidderId, final String auctionId,
       final double amount) {
     if (!isAuctionOpen) {
-      return "Phiên đấu giá đã đóng.";
+      return "Auction has ended.";
     }
 
     final BidTransaction transaction = new BidTransaction("", auctionId, bidderId, 
@@ -169,7 +160,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
       final double maxPrice, final double bidIncrement,
       final boolean aggressiveMode) {
     if (!isAuctionOpen) {
-      return "Phiên đấu giá đã đóng.";
+      return "Auction has ended.";
     }
 
     final AutoBidSettings settings = new AutoBidSettings(
@@ -195,14 +186,28 @@ public class BidService implements NetworkClientService.ServerMessageListener {
 
   @Override
   public void onMessageReceived(final Response response) {
-    if (response.getType() == MessageType.NEW_BID_BROADCAST 
+    if (response.getType() == MessageType.NEW_BID_BROADCAST
         || response.getType() == MessageType.BID_SUCCESS) {
 
       if (response.getPayload() == null || response.getPayload().isEmpty()) {
         return;
       }
 
-      final BidTransaction newBid = gson.fromJson(response.getPayload(), BidTransaction.class);
+      final BidTransaction newBid;
+      try {
+        newBid = gson.fromJson(response.getPayload(), BidTransaction.class);
+      } catch (Exception e) {
+        return; // malformed payload
+      }
+      if (newBid == null) return;
+
+      // Only update UI if this bid is for the item currently being viewed
+      final String viewingId = UserSession.getInstance().getSelectedItemId();
+      if (viewingId != null && newBid.getItemId() != null
+          && !viewingId.equals(newBid.getItemId())) {
+        return;
+      }
+
       this.currentBidAmount = newBid.getBidAmount();
       bidHistory.add(newBid);
 
@@ -212,11 +217,6 @@ public class BidService implements NetworkClientService.ServerMessageListener {
         }
         if (onNewBid != null) {
           onNewBid.accept(newBid);
-        }
-        if (onPriceChangeNotification != null) {
-          final String msg = String.format("Price updated: $%.2f by %s",
-              newBid.getBidAmount(), newBid.getBidderId());
-          onPriceChangeNotification.accept(msg);
         }
       });
 

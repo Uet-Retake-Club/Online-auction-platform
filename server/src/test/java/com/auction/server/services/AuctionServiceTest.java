@@ -3,7 +3,6 @@ package com.auction.server.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,48 +12,63 @@ import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.server.dao.ItemDAO;
 import com.auction.shared.models.Item;
+import com.auction.shared.models.BidTransaction;
+import com.google.gson.Gson;
 
+import org.junit.jupiter.api.Timeout;
+import java.util.concurrent.TimeUnit;
+
+@Timeout(value = 5, unit = TimeUnit.SECONDS)
 public class AuctionServiceTest {
 
     private AuctionService manager;
 
     @BeforeEach
     void setUp() {
-        // Reset singleton instance for each test
+        // Explicitly shut down existing instance if present to stop its threads
         try {
-            java.lang.reflect.Field instance = AuctionService.class.getDeclaredField("instance");
-            instance.setAccessible(true);
-            instance.set(null, null);
+            java.lang.reflect.Field instanceField = AuctionService.class.getDeclaredField("instance");
+            instanceField.setAccessible(true);
+            AuctionService existing = (AuctionService) instanceField.get(null);
+            if (existing != null) {
+                existing.shutdown();
+            }
+            instanceField.set(null, null); // Reset for new instance
         } catch (Exception e) {
             e.printStackTrace();
         }
-        manager = AuctionService.getInstance();
         
+        manager = AuctionService.getInstance();
+
         // Mock ItemDAO to bypass database dependencies in tests
         try {
             java.lang.reflect.Field itemDaoField = AuctionService.class.getDeclaredField("itemDAO");
             itemDaoField.setAccessible(true);
             itemDaoField.set(manager, new ItemDAO() {
                 @Override
-                public Item getItemById(String id) { 
-                    return null; 
+                public Item getItemById(String id) {
+                    return null;
                 }
                 @Override
-                public boolean addItem(Item item) { 
-                    return true; 
+                public boolean addItem(Item item) {
+                    return true;
                 }
                 @Override
                 public boolean updateCurrentPrice(
-                    String itemId, double newPrice, String bidderId) { 
-                    return true; 
+                    String itemId, double newPrice, String bidderId) {
+                    return true;
                 }
                 @Override
-                public boolean updateStatus(String itemId, String status) { 
-                    return true; 
+                public boolean updateStatus(String itemId, String status) {
+                    return true;
                 }
                 @Override
                 public Item getFirstOpenItem() {
-                    return null; // Mock cho test
+                    return null;
+                }
+                @Override
+                public java.util.List<Item> getItemsBySellerId(String sellerId) {
+                    return java.util.Collections.emptyList();
                 }
             });
         } catch (Exception e) {
@@ -70,6 +84,20 @@ public class AuctionServiceTest {
             java.lang.reflect.Field priceField = AuctionService.class.getDeclaredField("startingPrice");
             priceField.setAccessible(true);
             priceField.set(manager, 1240.0);
+
+            // Ensure auctionStatus is OPEN for tests
+            java.lang.reflect.Field statusField = AuctionService.class.getDeclaredField("auctionStatus");
+            statusField.setAccessible(true);
+            statusField.set(manager, "OPEN");
+
+            // Reset highest bid state to prevent leakage from real DB
+            java.lang.reflect.Field bidField = AuctionService.class.getDeclaredField("currentHighestBid");
+            bidField.setAccessible(true);
+            bidField.set(manager, 0.0);
+
+            java.lang.reflect.Field bidderField = AuctionService.class.getDeclaredField("currentHighestBidder");
+            bidderField.setAccessible(true);
+            bidderField.set(manager, null);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -170,8 +198,10 @@ public class AuctionServiceTest {
         Response status = manager.getCurrentStatusResponse();
         assertEquals("SUCCESS", status.getStatus());
         assertNotNull(status.getPayload());
-        // Payload chứa giá khởi điểm 1240.0 vì chưa ai đặt
-        assertTrue(status.getPayload().contains("1240.0"));
+        
+        BidTransaction bt = new Gson().fromJson(status.getPayload(), BidTransaction.class);
+        assertEquals(1240.0, bt.getBidAmount(), 0.001);
+        assertEquals("None", bt.getBidderId());
     }
 
     @Test
@@ -179,7 +209,9 @@ public class AuctionServiceTest {
         manager.processBid("client1", 1300.0, "payload");
         Response status = manager.getCurrentStatusResponse();
         assertEquals("SUCCESS", status.getStatus());
-        assertTrue(status.getPayload().contains("1300.0"));
-        assertTrue(status.getPayload().contains("client1"));
+        
+        BidTransaction bt = new Gson().fromJson(status.getPayload(), BidTransaction.class);
+        assertEquals(1300.0, bt.getBidAmount(), 0.001);
+        assertEquals("client1", bt.getBidderId());
     }
 }

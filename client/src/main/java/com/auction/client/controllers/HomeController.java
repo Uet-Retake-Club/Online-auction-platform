@@ -1,10 +1,17 @@
 package com.auction.client.controllers;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Request;
+import com.google.gson.Gson;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -62,6 +69,9 @@ public class HomeController implements Initializable {
   private String currentCategory;
   private String currentSearch = "";
 
+  /** Maps itemId → the price Label in its card, so we can update it live. */
+  private final Map<String, Label> priceLabels = new HashMap<>();
+
   // Columns: [itemId, title, price, bids, timeLeft, badgeType, category, section, description]
   private static final String[][] ALL_AUCTIONS = {
     {"ITEM-001", "Gaming Laptop RTX 4080", "$1,240.00", "0 bids", "30d left",
@@ -86,6 +96,64 @@ public class HomeController implements Initializable {
 
     rootPane.widthProperty().addListener(
             (obs, oldW, newW) -> onWindowResized(newW.doubleValue()));
+
+    // Fetch live prices for all visible items once the scene is ready
+    refreshLivePrices();
+  }
+
+  /**
+   * Sends a GET_STATUS request for each item in ALL_AUCTIONS and updates
+   * the matching price label when the server responds.
+   */
+  private void refreshLivePrices() {
+    final Gson gson = new Gson();
+    final String userId = UserSession.getInstance().getUserId();
+    final String[] itemIds = Arrays.stream(ALL_AUCTIONS)
+        .map(row -> row[0]).toArray(String[]::new);
+
+    // One shared listener — handles all incoming NEW_BID_BROADCAST status replies
+    final NetworkClientService.ServerMessageListener[] ref =
+        new NetworkClientService.ServerMessageListener[1];
+    final int[] remaining = {itemIds.length};
+
+    ref[0] = response -> {
+      if (response.getType() != MessageType.NEW_BID_BROADCAST) return;
+      try {
+        final com.auction.shared.models.BidTransaction tx =
+            gson.fromJson(response.getPayload(), com.auction.shared.models.BidTransaction.class);
+        if (tx == null || tx.getItemId() == null) return;
+
+        final String formattedPrice = String.format("$%.2f", tx.getBidAmount());
+        Platform.runLater(() -> {
+          final Label lbl = priceLabels.get(tx.getItemId());
+          if (lbl != null) {
+            lbl.setText(formattedPrice);
+          }
+        });
+      } catch (Exception ignored) { }
+
+      synchronized (remaining) {
+        remaining[0]--;
+        if (remaining[0] <= 0) {
+          NetworkClientService.getInstance().removeListener(ref[0]);
+        }
+      }
+    };
+
+    NetworkClientService.getInstance().addListener(ref[0]);
+
+    // Fire one GET_STATUS per item with a small delay between each so the
+    // server isn't flooded and responses stay distinguishable
+    new Thread(() -> {
+      for (final String itemId : itemIds) {
+        final Request req = new Request(MessageType.GET_STATUS, userId, itemId);
+        NetworkClientService.getInstance().sendRequest(req);
+        try { Thread.sleep(80); } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    }, "HomePrice-Refresh").start();
   }
 
   private void onWindowResized(final double windowWidth) {
@@ -279,6 +347,8 @@ public class HomeController implements Initializable {
     final Label priceLabel = new Label(price);
     priceLabel.getStyleClass().add("price-tag");
     priceLabel.setStyle("-fx-font-size:15px;");
+    // Register so refreshLivePrices() can update it when server responds
+    priceLabels.put(itemId, priceLabel);
 
     final Label bidsLabel = new Label(bids);
     bidsLabel.getStyleClass().add("caption");

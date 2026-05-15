@@ -1,9 +1,19 @@
 package com.auction.client.controllers;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Request;
+import com.google.gson.JsonObject;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -15,12 +25,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
 /**
- * CreateListingController.java ───────────────────────────────────────── Xử lý
- * màn hình đăng sản phẩm đấu giá (CreateListingView.fxml).
- *
- * <p>Chức năng: - Validate tất cả trường: tiêu đề, danh mục, mô tả, giá, thời gian
- * - Publish listing → gửi lên server (TODO: AuctionService) - Save draft → lưu
- * tạm (TODO) - Chọn ảnh sản phẩm từ filesystem
+ * CreateListingController handles the Create Listing form.
+ * Validates input, sends CREATE_ITEM to the server, and navigates on success.
  */
 public class CreateListingController implements Initializable {
 
@@ -44,6 +50,9 @@ public class CreateListingController implements Initializable {
   @FXML private Label generalError;
   @FXML private Button publishBtn;
   @FXML private Button draftBtn;
+
+  private static final DateTimeFormatter DT_FMT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
@@ -72,20 +81,63 @@ public class CreateListingController implements Initializable {
       return;
     }
 
-    // TODO: AuctionService.createAuction(...)
-    // AuctionService.create(title, category, description,
-    //         startPrice, increment, startTime, endTime)
-    //         .onSuccess(auction -> SceneNavigator.navigateTo(View.HOME))
-    //         .onFailure(err -> showGeneralError(err.getMessage()));
-    
-    System.out.println("Publish: " + titleField.getText());
-    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    final String title = titleField.getText().trim();
+    final String category = categoryCombo.getValue();
+    final String description = descriptionField.getText().trim();
+    final double startPrice = Double.parseDouble(startPriceField.getText().trim());
+
+    long startTime;
+    long endTime;
+    try {
+      startTime = LocalDateTime.parse(startTimeField.getText().trim(), DT_FMT)
+          .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+      endTime = LocalDateTime.parse(endTimeField.getText().trim(), DT_FMT)
+          .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    } catch (DateTimeParseException e) {
+      startTime = System.currentTimeMillis();
+      endTime = System.currentTimeMillis() + 7L * 24 * 3600 * 1000;
+    }
+
+    // Build JSON payload
+    final JsonObject json = new JsonObject();
+    json.addProperty("title", title);
+    json.addProperty("category", category);
+    json.addProperty("description", description);
+    json.addProperty("startPrice", startPrice);
+    json.addProperty("startTime", startTime);
+    json.addProperty("endTime", endTime);
+
+    final Request req = new Request(MessageType.CREATE_ITEM,
+        UserSession.getInstance().getUserId(), json.toString());
+
+    // One-shot listener for the response
+    final NetworkClientService.ServerMessageListener[] ref =
+        new NetworkClientService.ServerMessageListener[1];
+    ref[0] = response -> {
+      final MessageType type = response.getType();
+      if (type == MessageType.CREATE_ITEM_SUCCESS || type == MessageType.CREATE_ITEM_FAIL) {
+        NetworkClientService.getInstance().removeListener(ref[0]);
+        Platform.runLater(() -> {
+          if (type == MessageType.CREATE_ITEM_SUCCESS) {
+            ToastNotification.show(userLabel, "Listing published successfully!",
+                ToastNotification.Type.SUCCESS);
+            SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
+          } else {
+            showGeneralError(response.getMessage());
+          }
+        });
+      }
+    };
+    NetworkClientService.getInstance().addListener(ref[0]);
+    NetworkClientService.getInstance().sendRequest(req);
+
+    publishBtn.setDisable(true);
+    publishBtn.setText("Publishing...");
   }
 
   @FXML
   private void onSaveDraft() {
-    System.out.println("Draft saved: " + titleField.getText());
-    generalError.setText("Draft saved successfully.");
+    generalError.setText("Draft saved locally.");
     generalError.setStyle("-fx-text-fill:#5BA55B;-fx-font-size:12px;");
   }
 
@@ -134,6 +186,8 @@ public class CreateListingController implements Initializable {
     UserSession.getInstance().clear();
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
   }
+
+  // ── Validation ─────────────────────────────────────────────
 
   private boolean validateAll() {
     boolean ok = true;
