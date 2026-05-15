@@ -166,4 +166,13 @@ public class SignupController implements Initializable {
     generalError.setText(msg);
     generalError.setVisible(true);
   }
+  
+  @FXML
+  private void onHome() {
+  }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
 }

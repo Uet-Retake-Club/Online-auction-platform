@@ -90,4 +90,14 @@ public class ProfileController implements Initializable {
     statusLabel.setText(message);
     statusLabel.setStyle("-fx-text-fill: " + color + "; -fx-font-size: 12px;");
   }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
+
+  @FXML
+  private void onHome() {
+    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
 }

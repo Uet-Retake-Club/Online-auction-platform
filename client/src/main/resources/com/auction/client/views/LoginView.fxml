@@ -31,8 +31,8 @@
           style="-fx-background-color: #1a1a2e; -fx-padding: 52px 44px;">
 
         <!-- Logo -->
-        <HBox alignment="CENTER_LEFT" spacing="0">
-            <Label text="Auction"
+        <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
+                <Label text="Auction"
                    style="-fx-font-size: 32px; -fx-font-weight: bold;
                           -fx-text-fill: #E53238; -fx-font-family: 'Segoe UI';"/>
             <Label text="Hub"

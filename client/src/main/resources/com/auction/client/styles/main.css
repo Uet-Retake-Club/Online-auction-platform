@@ -39,6 +39,17 @@
     -fx-background-color: background;
 }
 
+/* Dark Theme Overrides */
+.dark-theme {
+    surface:            #1E1E1E;
+    background:         #121212;
+    border-color:       #333333;
+
+    text-primary:       #E0E0E0;
+    text-secondary:     #AAAAAA;
+    text-disabled:      #555555;
+}
+
 /* ── 2. TYPOGRAPHY ────────────────────────────────────────────
    Usage in FXML:  styleClass="heading-1"                      */
 .heading-1 { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: text-primary; }

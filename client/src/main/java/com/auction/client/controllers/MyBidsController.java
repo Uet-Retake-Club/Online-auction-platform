@@ -216,4 +216,9 @@ public class MyBidsController implements Initializable {
     }
     return btn;
   }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
 }

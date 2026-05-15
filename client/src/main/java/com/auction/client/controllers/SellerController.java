@@ -221,4 +221,9 @@ public class SellerController implements Initializable {
     }
     return btn;
   }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
 }

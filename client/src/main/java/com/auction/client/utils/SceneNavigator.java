@@ -69,6 +69,33 @@ public final class SceneNavigator {
     stage = primaryStage;
   }
 
+  private static boolean isDarkMode = false;
+
+  /**
+   * Toggles the global theme between light and dark mode.
+   */
+  public static void toggleTheme() {
+    isDarkMode = !isDarkMode;
+    if (stage.getScene() != null && stage.getScene().getRoot() != null) {
+      applyTheme(stage.getScene().getRoot());
+    }
+  }
+
+  /**
+   * Applies the current theme to the given root node.
+   *
+   * @param root the node to apply the theme to
+   */
+  private static void applyTheme(final Parent root) {
+    if (isDarkMode) {
+      if (!root.getStyleClass().contains("dark-theme")) {
+        root.getStyleClass().add("dark-theme");
+      }
+    } else {
+      root.getStyleClass().remove("dark-theme");
+    }
+  }
+
   /**
    * Navigates to the given screen with a smooth fade transition.
    *
@@ -79,6 +106,7 @@ public final class SceneNavigator {
       final Parent root = FXMLLoader.load(
           SceneNavigator.class.getResource(view.path)
       );
+      applyTheme(root);
 
       if (stage.getScene() == null) {
         final Scene scene = new Scene(root);

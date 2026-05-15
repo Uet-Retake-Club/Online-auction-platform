@@ -16,6 +16,8 @@
             <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;"/>
             <Label text="Hub" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;"/>
             <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="☀/🌙" onAction="#onToggleTheme"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:16px;-fx-cursor:hand;-fx-effect:null;-fx-padding:0 8px;"/>
             <Label fx:id="userLabel" text="JD"
                    style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;"/>
             <Button text="Sign out" onAction="#onLogout"

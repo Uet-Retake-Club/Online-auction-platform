@@ -222,4 +222,9 @@ public class CreateListingController implements Initializable {
     generalError.setStyle("-fx-text-fill:#E53238;-fx-font-size:12px;");
     generalError.setText(msg);
   }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
 }
