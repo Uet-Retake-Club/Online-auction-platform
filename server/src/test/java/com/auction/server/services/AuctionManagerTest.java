@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
+import com.auction.server.dao.ItemDAO;
+import com.auction.shared.models.Item;
 
 public class AuctionManagerTest {
 
@@ -27,6 +29,33 @@ public class AuctionManagerTest {
             e.printStackTrace();
         }
         manager = AuctionService.getInstance();
+        
+        // Mock ItemDAO to bypass database dependencies in tests
+        try {
+            java.lang.reflect.Field itemDaoField = AuctionService.class.getDeclaredField("itemDAO");
+            itemDaoField.setAccessible(true);
+            itemDaoField.set(manager, new ItemDAO() {
+                @Override
+                public Item getItemById(String id) { 
+                    return null; 
+                }
+                @Override
+                public boolean addItem(Item item) { 
+                    return true; 
+                }
+                @Override
+                public boolean updateCurrentPrice(
+                    String itemId, double newPrice, String bidderId) { 
+                    return true; 
+                }
+                @Override
+                public boolean updateStatus(String itemId, String status) { 
+                    return true; 
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

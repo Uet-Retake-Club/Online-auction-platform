@@ -296,11 +296,11 @@ public class ItemDAOImpl implements ItemDAO {
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println(" [DATABASE] Item " + itemId + " chuyển sang trạng thái: " + status);
+                System.out.println(" [DATABASE] Item " + itemId + " status updated to: " + status);
                 return true;
             }
         } catch (SQLException e) {
-            System.err.println(" [SQL Error] Không thể cập nhật trạng thái: " + e.getMessage());
+            System.err.println(" [SQL Error] Cannot update status: " + e.getMessage());
         }
         return false;
     }

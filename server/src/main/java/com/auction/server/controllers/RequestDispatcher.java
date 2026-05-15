@@ -33,28 +33,28 @@ public class RequestDispatcher {
             } catch (InvalidBidException e) {
                 // 1. BẮT LỖI SAI LUẬT (Ví dụ: Giá thấp hơn quy định)
                 // -> Trả về trạng thái "FAIL" cho Client biết họ nhập sai
-                System.err.println("[Nghiệp vụ] Từ chối Client " + request.getSenderId() + ": " + e.getMessage());
+                System.err.println("[Business] Rejected Client " + request.getSenderId() + ": " + e.getMessage());
                 return new Response(request.getType(), "FAIL", e.getMessage(), null);
                 
             } catch (DatabaseOperationException e) {
                 // 2. BẮT LỖI CƠ SỞ DỮ LIỆU (Ví dụ: Không lưu được vào SQLite)
                 // -> Trả về trạng thái "ERROR" báo lỗi máy chủ
-                System.err.println("[Database] Lỗi truy xuất đối với lệnh " + request.getType() + ": " + e.getMessage());
+                System.err.println("[Database] Access error for command " + request.getType() + ": " + e.getMessage());
                 return new Response(request.getType(), "ERROR", "Hệ thống lưu trữ đang bận. Vui lòng thử lại sau!", null);
                 
             } catch (AuctionException e) {
                 // 3. BẮT CÁC LỖI NGHIỆP VỤ KHÁC CHƯA PHÂN LOẠI (Lưới vét cho các lỗi con còn lại)
-                System.err.println(" [Nghiệp vụ] Lỗi từ Client " + request.getSenderId() + ": " + e.getMessage());
+                System.err.println(" [Business] Error from Client " + request.getSenderId() + ": " + e.getMessage());
                 return new Response(request.getType(), "FAIL", e.getMessage(), null);
                 
             } catch (Exception e) {
                 // 4. BẮT CÁC LỖI BẤT NGỜ CỦA HỆ THỐNG (NullPointerException, lỗi mạng...)
-                System.err.println(" [Hệ thống] Lỗi nghiêm trọng khi xử lý lệnh " + request.getType());
+                System.err.println(" [System] Critical error processing command " + request.getType());
                 e.printStackTrace();
                 return new Response(request.getType(), "ERROR", "Lỗi máy chủ nội bộ. Vui lòng thử lại sau!", null);
             }
         } else {
-            System.out.println(" [DISPATCHER] Không tìm thấy Handler cho lệnh: " + request.getType());
+            System.out.println(" [DISPATCHER] Handler not found for command: " + request.getType());
             return new Response(request.getType(), "ERROR", "Lệnh không được hệ thống hỗ trợ!", null);
         }
     }

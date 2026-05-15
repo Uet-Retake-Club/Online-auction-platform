@@ -58,7 +58,7 @@ public class AuctionService {
             this.startingPrice = item.getStartingPrice();
             this.currentHighestBid = item.getCurrentHighestBid();
             this.currentHighestBidder = item.getHighestBidderId();
-            System.out.println(" [DATABASE] Đã khôi phục trạng thái: $" + currentHighestBid + " từ SQLite.");
+            System.out.println(" [DATABASE] State restored: $" + currentHighestBid + " from SQLite.");
             
             // Nếu có dữ liệu endTime, kích hoạt đồng hồ luôn:
             // auctionTimer.scheduleAuctionEnd(item.getEndTime());
@@ -100,7 +100,7 @@ public class AuctionService {
             if (dbUpdated) {
                 currentHighestBid = amount;
                 currentHighestBidder = bidderId;
-                System.out.println("[MANAGER] Giá mới: $" + amount + " từ " + bidderId);
+                System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId);
 
                 broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Có giá mới", payload));
                 autoBidEngine.triggerEvaluation();
@@ -119,7 +119,7 @@ public class AuctionService {
         if (dbUpdated) {
             currentHighestBid = nextBid;
             currentHighestBidder = bidderId;
-            System.out.println("[AUTO-BID] Tự nâng giá: $" + currentHighestBid + " cho " + bidderId);
+            System.out.println("[AUTO-BID] Auto-bid placed: $" + currentHighestBid + " for " + bidderId);
 
             BidTransaction autoBidTx = new BidTransaction("AUTO-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
             String autoBidPayload = new Gson().toJson(autoBidTx);
@@ -137,7 +137,7 @@ public class AuctionService {
     
     if (success) {
         this.auctionStatus = "FINISHED";
-        System.out.println(" [MANAGER] KẾT THÚC PHIÊN ĐẤU GIÁ!");
+        System.out.println(" [MANAGER] AUCTION ENDED!");
         
         // 2. Tắt hệ thống Robot
         autoBidEngine.shutdown();
@@ -149,7 +149,7 @@ public class AuctionService {
             
         broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
     } else {
-        System.err.println(" [LỖI] Database không cho phép chốt phiên!");
+        System.err.println(" [ERROR] Database rejected auction closure!");
     }
 }
 
@@ -162,11 +162,11 @@ public class AuctionService {
 
     // Nhạc trưởng gọi một tiếng, đàn em tự động dọn dẹp (Facade Pattern)
     public void shutdown() {
-        System.out.println(" [AuctionService] Bắt đầu tắt Server an toàn...");
+        System.out.println(" [AuctionService] Initiating safe Server shutdown...");
         sessionManager.shutdown();
         auctionTimer.shutdown();
         autoBidEngine.shutdown();
-        System.out.println(" [AuctionService] Đã dọn dẹp xong. Server tắt hoàn toàn!");
+        System.out.println(" [AuctionService] Cleanup complete. Server fully shut down!");
     }
 }
 
