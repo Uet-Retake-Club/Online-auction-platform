@@ -102,3 +102,18 @@ CREATE TABLE IF NOT EXISTS auto_bid_settings (
     FOREIGN KEY (bidder_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (auction_id) REFERENCES auctions(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS invoices (
+    id TEXT PRIMARY KEY,          -- Mã hóa đơn (Invoice ID)
+    auction_id TEXT NOT NULL,     -- Phiên đấu giá nào
+    item_id TEXT NOT NULL,        -- Vật phẩm nào
+    bidder_id TEXT NOT NULL,      -- Người thắng cuộc (Người mua)
+    seller_id TEXT NOT NULL,      -- Người bán
+    final_price REAL NOT NULL,    -- Giá chốt cuối cùng
+    timestamp INTEGER NOT NULL,   -- Thời gian xuất hóa đơn
+    status TEXT DEFAULT 'UNPAID', -- Trạng thái: UNPAID, PAID, CANCELLED
+    FOREIGN KEY (auction_id) REFERENCES auctions(id),
+    FOREIGN KEY (item_id) REFERENCES items(id),
+    FOREIGN KEY (bidder_id) REFERENCES users(id),
+    FOREIGN KEY (seller_id) REFERENCES users(id)
+);
