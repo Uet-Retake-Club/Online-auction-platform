@@ -1,5 +1,11 @@
 package com.auction.server.network;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
 import com.auction.server.services.AuctionManager;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
@@ -7,9 +13,6 @@ import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
 import com.google.gson.Gson;
-
-import java.io.*;
-import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -23,7 +26,6 @@ public class ClientHandler implements Runnable {
     }
 
 
-    //uhgiuylguyfyfj
     @Override
     public void run() {
         try {
