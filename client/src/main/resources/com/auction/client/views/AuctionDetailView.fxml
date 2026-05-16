@@ -55,66 +55,82 @@
                        styleClass="body-small"
                        style="-fx-text-fill: -info; -fx-cursor: hand; -fx-font-weight: bold;"/>
 
-                <!-- ── Top section: image + bid panel ──────── -->
-                <HBox spacing="24" alignment="TOP_LEFT">
-
-                    <!-- Item image -->
-                    <VBox HBox.hgrow="ALWAYS"
-                          minWidth="400" minHeight="300"
-                          alignment="CENTER"
-                          styleClass="card-img-placeholder">
-                        <Label text="No image" styleClass="body-text" style="-fx-text-fill: var(--text-muted);"/>
-                    </VBox>
-
-                    <!-- Bid panel -->
-                    <VBox HBox.hgrow="ALWAYS" spacing="0" maxWidth="400" styleClass="card" style="-fx-padding: 24px;">
-
-                        <!-- Title & category -->
-                        <Label fx:id="itemTitle" text="Vintage Rolex Submariner 1969" styleClass="heading-2"/>
-                        <Label fx:id="itemMeta" text="Electronics  ·  Seller: watch_king99" styleClass="body-small" style="-fx-padding: 6px 0 20px 0;"/>
-
-                        <Separator style="-fx-opacity: 0.2; -fx-padding: 0 0 20px 0;"/>
-
-                        <!-- Current price -->
-                        <Label text="Current highest bid" styleClass="body-small" style="-fx-text-fill: var(--text-secondary);"/>
-                        <Label fx:id="currentPrice" text="\$1,240.00" styleClass="heading-1" style="-fx-text-fill: var(--primary); -fx-padding: 4px 0 20px 0;"/>
-
-                        <!-- Stats row -->
-                        <HBox spacing="12" style="-fx-padding: 0 0 20px 0;">
-                            <VBox alignment="CENTER" HBox.hgrow="ALWAYS" styleClass="card-img-placeholder" style="-fx-padding: 10px;">
-                                <Label fx:id="totalBids" text="14" styleClass="label-bold" style="-fx-font-size: 16px;"/>
-                                <Label text="Bids" styleClass="body-small"/>
-                            </VBox>
-                            <VBox alignment="CENTER" HBox.hgrow="ALWAYS" styleClass="card-img-placeholder" style="-fx-padding: 10px;">
-                                <Label fx:id="totalBidders" text="7" styleClass="label-bold" style="-fx-font-size: 16px;"/>
-                                <Label text="Bidders" styleClass="body-small"/>
-                            </VBox>
-                            <VBox alignment="CENTER" HBox.hgrow="ALWAYS" styleClass="card-img-placeholder" style="-fx-padding: 10px;">
-                                <Label fx:id="auctionStatus" text="OPEN" styleClass="label-bold" style="-fx-text-fill: -success;"/>
-                                <Label text="Status" styleClass="body-small"/>
-                            </VBox>
-                        </HBox>
-
-                        <!-- Countdown timer -->
-                        <VBox spacing="4" styleClass="badge" style="-fx-background-color: -warning-light; -fx-padding: 12px 20px; -fx-background-radius: 10px; -fx-margin: 0 0 20px 0;">
-                            <Label fx:id="countdownTimer" text="01:47:32" styleClass="heading-2" style="-fx-text-fill: -warning;"/>
-                            <Label text="Time remaining" styleClass="body-small" style="-fx-text-fill: -warning; -fx-opacity: 0.8;"/>
+                <!-- ── 2-Column Main Layout ──────── -->
+                <HBox spacing="30" alignment="TOP_LEFT">
+                    
+                    <!-- LEFT COLUMN: Content -->
+                    <VBox HBox.hgrow="ALWAYS" spacing="24">
+                        <!-- Item image -->
+                        <VBox alignment="CENTER" minHeight="480" styleClass="card-img-placeholder">
+                            <Label text="No image" styleClass="body-text" style="-fx-text-fill: var(--text-muted);"/>
                         </VBox>
 
-                        <Region style="-fx-min-height: 20px;"/>
+                        <!-- Item description -->
+                        <VBox styleClass="card" style="-fx-padding: 24px;">
+                            <Label text="Description" styleClass="heading-3" style="-fx-padding: 0 0 12px 0;"/>
+                            <Label fx:id="itemDescription" text="No description provided." styleClass="body-text" style="-fx-line-spacing: 4px;" wrapText="true"/>
+                        </VBox>
+                    </VBox>
 
-                        <!-- Bid input -->
-                        <Label fx:id="minBidHint" text="Minimum bid: &#36;1,260.00" styleClass="body-small" style="-fx-padding: 0 0 8px 0;"/>
-                        <TextField fx:id="bidAmountField" promptText="Enter amount" styleClass="text-field-base" maxWidth="Infinity"/>
-                        <Label fx:id="bidError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
+                    <!-- RIGHT COLUMN: Sidebar (Dominant components) -->
+                    <VBox spacing="24" prefWidth="450" maxWidth="480">
+                        
+                        <!-- 1. Bid Control Card -->
+                        <VBox spacing="0" styleClass="card" style="-fx-padding: 24px;">
+                            <Label fx:id="itemTitle" text="Item Title" styleClass="heading-2"/>
+                            <Label fx:id="itemMeta" text="Category  ·  Seller" styleClass="body-small" style="-fx-padding: 6px 0 20px 0;"/>
 
-                        <!-- Place bid button -->
-                        <Button fx:id="placeBidBtn" text="Place bid" maxWidth="Infinity" onAction="#onPlaceBid" styleClass="button, btn-primary" style="-fx-pref-height: 48px;"/>
+                            <Separator style="-fx-opacity: 0.2; -fx-padding: 0 0 20px 0;"/>
 
-                        <Region style="-fx-min-height: 12px;"/>
+                            <Label text="Current highest bid" styleClass="body-small" style="-fx-text-fill: var(--text-secondary);"/>
+                            <Label fx:id="currentPrice" text="$0.00" styleClass="heading-1" style="-fx-text-fill: var(--primary); -fx-padding: 4px 0 20px 0;"/>
 
-                        <!-- Auto-Bid section -->
-                        <VBox styleClass="card-img-placeholder" style="-fx-padding: 16px;" spacing="12">
+                            <!-- Stats row (Compact) -->
+                            <HBox spacing="10" style="-fx-padding: 0 0 20px 0;">
+                                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" styleClass="card-img-placeholder" style="-fx-padding: 8px;">
+                                    <Label fx:id="totalBids" text="0" styleClass="label-bold" style="-fx-font-size: 14px;"/>
+                                    <Label text="Bids" style="-fx-font-size: 10px;"/>
+                                </VBox>
+                                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" styleClass="card-img-placeholder" style="-fx-padding: 8px;">
+                                    <Label fx:id="totalBidders" text="0" styleClass="label-bold" style="-fx-font-size: 14px;"/>
+                                    <Label text="Bidders" style="-fx-font-size: 10px;"/>
+                                </VBox>
+                                <VBox alignment="CENTER" HBox.hgrow="ALWAYS" styleClass="card-img-placeholder" style="-fx-padding: 8px;">
+                                    <Label fx:id="auctionStatus" text="OPEN" styleClass="label-bold" style="-fx-text-fill: -success; -fx-font-size: 14px;"/>
+                                    <Label text="Status" style="-fx-font-size: 10px;"/>
+                                </VBox>
+                            </HBox>
+
+                            <!-- Countdown timer -->
+                            <VBox spacing="4" styleClass="badge" style="-fx-background-color: -warning-light; -fx-padding: 12px 20px; -fx-background-radius: 10px;">
+                                <Label fx:id="countdownTimer" text="00:00:00" styleClass="heading-2" style="-fx-text-fill: -warning;"/>
+                                <Label text="Time remaining" styleClass="body-small" style="-fx-text-fill: -warning; -fx-opacity: 0.8;"/>
+                            </VBox>
+
+                            <Region minHeight="24"/>
+
+                            <!-- Bid input -->
+                            <Label fx:id="minBidHint" text="Minimum bid: $0.00" styleClass="body-small" style="-fx-padding: 0 0 8px 0;"/>
+                            <TextField fx:id="bidAmountField" promptText="Enter amount" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <Label fx:id="bidError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
+
+                            <Button fx:id="placeBidBtn" text="Place bid" maxWidth="Infinity" onAction="#onPlaceBid" styleClass="button, btn-primary" style="-fx-pref-height: 48px;"/>
+                            
+                            <Region minHeight="12"/>
+                            <Button fx:id="watchlistBtn" text="Add to watchlist" maxWidth="Infinity" onAction="#onAddWatchlist" styleClass="button, btn-outline"/>
+                        </VBox>
+
+                        <!-- 2. Bid History Card (Dominant) -->
+                        <VBox spacing="16" styleClass="card" style="-fx-padding: 24px;" VBox.vgrow="ALWAYS">
+                            <Label text="Bid history" styleClass="heading-3"/>
+                            <ScrollPane fitToWidth="true" styleClass="scroll-pane" minHeight="250" maxHeight="400">
+                                <VBox fx:id="bidHistoryList" spacing="10"/>
+                            </ScrollPane>
+                            <Label fx:id="noBidsLabel" text="No bids placed yet." styleClass="body-text" style="-fx-text-fill: -text-muted;"/>
+                        </VBox>
+
+                        <!-- 3. Auto-Bid Card (Compact) -->
+                        <VBox styleClass="card" style="-fx-padding: 20px;" spacing="12">
                             <Label text="Auto-Bid Settings" styleClass="label-bold"/>
                             <HBox spacing="10">
                                 <VBox HBox.hgrow="ALWAYS" spacing="4">
@@ -129,26 +145,8 @@
                             <CheckBox fx:id="aggressiveModeCheckBox" text="Aggressive Mode" styleClass="body-small"/>
                             <Button fx:id="setupAutoBidBtn" text="Set Auto-Bid" maxWidth="Infinity" onAction="#onSetupAutoBid" styleClass="button, btn-primary" style="-fx-background-color: -info; -fx-padding: 8px;"/>
                         </VBox>
-
-                        <Region style="-fx-min-height: 12px;"/>
-
-                        <!-- Watchlist button -->
-                        <Button fx:id="watchlistBtn" text="Add to watchlist" maxWidth="Infinity" onAction="#onAddWatchlist" styleClass="button, btn-outline"/>
                     </VBox>
                 </HBox>
-
-                <!-- ── Item description ──────────────────── -->
-                <VBox styleClass="card" style="-fx-padding: 24px;">
-                    <Label text="Description" styleClass="heading-3" style="-fx-padding: 0 0 12px 0;"/>
-                    <Label fx:id="itemDescription" text="No description provided." styleClass="body-text" style="-fx-line-spacing: 4px;"/>
-                </VBox>
-
-                <!-- ── Bid history ───────────────────────── -->
-                <VBox styleClass="card" style="-fx-padding: 24px;">
-                    <Label text="Bid history" styleClass="heading-3" style="-fx-padding: 0 0 16px 0;"/>
-                    <VBox fx:id="bidHistoryList" spacing="0"/>
-                    <Label fx:id="noBidsLabel" text="No bids placed yet. Be the first!" styleClass="body-text" style="-fx-text-fill: -text-muted; -fx-padding: 12px 0;"/>
-                </VBox>
 
             </VBox>
         </ScrollPane>

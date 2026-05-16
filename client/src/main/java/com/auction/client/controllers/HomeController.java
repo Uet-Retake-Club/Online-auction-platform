@@ -245,7 +245,10 @@ public class HomeController implements Initializable {
   @FXML private void onSeeAllRecent() { /* placeholder — scroll to section or navigate */ }
   @FXML private void onSell() { SceneNavigator.navigateTo(SceneNavigator.View.SELLER); }
   @FXML private void onMyBids() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-  @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
+  @FXML private void onWatchlist() {
+    UserSession.getInstance().setPendingMyBidsFilter("watching");
+    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
+  }
   @FXML private void onProfile() { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
   @FXML private void onLogout() { UserSession.getInstance().clear(); SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
   @FXML private void onToggleTheme() { SceneNavigator.toggleTheme(); }

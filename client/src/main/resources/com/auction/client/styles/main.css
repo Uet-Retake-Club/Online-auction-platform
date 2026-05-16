@@ -140,6 +140,7 @@
 }
 .card-hover:hover {
     -fx-effect: -shadow-md;
+    -fx-cursor: hand;
 }
 
 .glass {
@@ -256,4 +257,39 @@
 .field-error {
     -fx-text-fill: -danger;
     -fx-font-size: 11px;
+}
+
+/* Bid History Sidebar Styles */
+.bid-history-row {
+    -fx-padding: 10px 14px;
+    -fx-background-color: -bg-surface-alt;
+    -fx-background-radius: 8px;
+    -fx-alignment: CENTER_LEFT;
+}
+.dark-theme .bid-history-row {
+    -fx-background-color: #242736;
+}
+.bid-history-row:hover {
+    -fx-background-color: derive(-bg-surface-alt, -5%);
+}
+.bid-name {
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-main;
+}
+.bid-price {
+    -fx-text-fill: -primary;
+    -fx-font-weight: bold;
+}
+.bid-time {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-muted;
+}
+
+/* Scroll Pane adjustments */
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
 }

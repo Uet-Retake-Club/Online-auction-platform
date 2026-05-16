@@ -68,6 +68,17 @@ public final class UserSession {
   /** Description of the currently selected auction item. */
   private String selectedItemDescription = "";
 
+  /** Filter to apply when navigating to My Bids view (e.g. "watching"). */
+  private String pendingMyBidsFilter = "";
+
+  public String getPendingMyBidsFilter() {
+    return pendingMyBidsFilter;
+  }
+
+  public void setPendingMyBidsFilter(final String filter) {
+    this.pendingMyBidsFilter = filter;
+  }
+
   public String getSelectedAuctionTitle() {
     return selectedAuctionTitle;
   }

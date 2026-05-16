@@ -40,8 +40,15 @@ public class MyBidsController implements Initializable {
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
-    activeFilter = filterAll;
-    populateRows(ALL_BIDS);
+    
+    final String pending = UserSession.getInstance().getPendingMyBidsFilter();
+    if ("watching".equals(pending)) {
+      UserSession.getInstance().setPendingMyBidsFilter("");
+      onFilterWatchlist();
+    } else {
+      activeFilter = filterAll;
+      populateRows(ALL_BIDS);
+    }
   }
 
   @FXML private void onFilterAll() {

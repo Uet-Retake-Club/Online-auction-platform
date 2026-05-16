@@ -46,33 +46,37 @@
                 </HBox>
 
                 <!-- ───────────── Wallet Card ───────────── -->
-                <VBox spacing="0" styleClass="auth-left-panel" style="-fx-padding: 0; -fx-background-radius: 20px;">
-
-                    <!-- Card header -->
-                    <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 30px;">
-                        <StackPane style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 50%; -fx-min-width: 60px; -fx-min-height: 60px;">
-                            <Label text="💳" style="-fx-font-size: 28px;"/>
-                        </StackPane>
-
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
-                            <Label text="MY WALLET" styleClass="body-small" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-font-weight: bold; -fx-letter-spacing: 1px;"/>
-                            <Label fx:id="walletBalanceLabel" text="Loading..." styleClass="heading-1" style="-fx-text-fill: white; -fx-font-size: 36px;"/>
-                            <Label text="Available balance" styleClass="body-small" style="-fx-text-fill: rgba(255,255,255,0.5);"/>
+                <VBox spacing="0" styleClass="auth-left-panel" style="-fx-padding: 0; -fx-background-radius: 20px;" maxWidth="850">
+                    <HBox alignment="CENTER_LEFT" spacing="0">
+                        <!-- Left: Balance Info -->
+                        <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-padding: 30px;">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <StackPane style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 12px; -fx-min-width: 44px; -fx-min-height: 44px;">
+                                    <Label text="💳" style="-fx-font-size: 20px;"/>
+                                </StackPane>
+                                <Label text="MY WALLET" styleClass="body-small" style="-fx-text-fill: rgba(255,255,255,0.7); -fx-font-weight: bold; -fx-letter-spacing: 1px;"/>
+                            </HBox>
+                            
+                            <VBox spacing="2">
+                                <Label fx:id="walletBalanceLabel" text="Loading..." styleClass="heading-1" style="-fx-text-fill: white; -fx-font-size: 38px;"/>
+                                <Label text="Available balance" styleClass="body-small" style="-fx-text-fill: rgba(255,255,255,0.5);"/>
+                            </VBox>
+                            
+                            <Button text="⟳ Refresh" onAction="#onRefreshWallet" styleClass="button" style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 20px; -fx-background-radius: 20px; -fx-padding: 6px 14px; -fx-font-size: 12px;"/>
                         </VBox>
 
-                        <Button text="⟳ Refresh" onAction="#onRefreshWallet" styleClass="button" style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 20px; -fx-background-radius: 20px; -fx-padding: 8px 16px;"/>
+                        <Separator orientation="VERTICAL" style="-fx-opacity: 0.1;"/>
+
+                        <!-- Right: Top-up Section -->
+                        <VBox spacing="15" prefWidth="320" style="-fx-padding: 30px;">
+                            <Label text="Quick Top-up" styleClass="label-bold" style="-fx-text-fill: white;"/>
+                            <VBox spacing="8">
+                                <TextField fx:id="topUpField" promptText="Enter amount" styleClass="text-field-base" style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-border-color: rgba(255,255,255,0.2); -fx-pref-height: 45px;"/>
+                                <Button text="Request Top-up" onAction="#onTopUp" maxWidth="Infinity" styleClass="button, btn-primary" style="-fx-pref-height: 45px;"/>
+                            </VBox>
+                            <Label fx:id="walletStatusLabel" text="" styleClass="body-small" wrapText="true" style="-fx-text-fill: rgba(255,255,255,0.7);"/>
+                        </VBox>
                     </HBox>
-
-                    <Separator style="-fx-opacity: 0.1;"/>
-
-                    <!-- Top-up row -->
-                    <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-padding: 20px 30px 30px 30px;">
-                        <Label text="Top up:" styleClass="body-text" style="-fx-text-fill: white;"/>
-                        <TextField fx:id="topUpField" promptText="Enter amount" HBox.hgrow="ALWAYS" styleClass="text-field-base" style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-border-color: rgba(255,255,255,0.2);"/>
-                        <Button text="Request Top-up" onAction="#onTopUp" styleClass="button, btn-primary" style="-fx-padding: 10px 24px;"/>
-                    </HBox>
-
-                    <Label fx:id="walletStatusLabel" text="" styleClass="body-small" style="-fx-padding: 0 30px 20px 30px; -fx-text-fill: rgba(255,255,255,0.7);"/>
                 </VBox>
 
                 <!-- ───────────── Profile Details Card ───────────── -->

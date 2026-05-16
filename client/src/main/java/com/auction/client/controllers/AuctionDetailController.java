@@ -286,6 +286,7 @@ public class AuctionDetailController implements Initializable {
 
   @FXML
   private void onWatchlist() {
+    UserSession.getInstance().setPendingMyBidsFilter("watching");
     SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
   }
 
