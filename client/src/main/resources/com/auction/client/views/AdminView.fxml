@@ -52,34 +52,48 @@
 
                 <!-- ── DASHBOARD TAB ──────────────────────── -->
                 <VBox fx:id="dashboardTab" spacing="24">
-
                     <!-- Stat cards row -->
                     <HBox spacing="16">
                         <VBox HBox.hgrow="ALWAYS" styleClass="card" style="-fx-padding: 20px;">
-                            <Label fx:id="statTotalUsers" text="1,284" styleClass="heading-1"/>
+                            <Label fx:id="statTotalUsers" text="..." styleClass="heading-1"/>
                             <Label text="Total users" styleClass="body-small" style="-fx-text-fill: -text-secondary;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" styleClass="card" style="-fx-padding: 20px;">
-                            <Label fx:id="statActiveAuctions" text="342" styleClass="heading-1"/>
+                            <Label fx:id="statActiveAuctions" text="..." styleClass="heading-1"/>
                             <Label text="Active auctions" styleClass="body-small" style="-fx-text-fill: -text-secondary;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" styleClass="card" style="-fx-padding: 20px;">
-                            <Label fx:id="statTotalBids" text="8,741" styleClass="heading-1"/>
-                            <Label text="Total bids today" styleClass="body-small" style="-fx-text-fill: -text-secondary;"/>
+                            <Label fx:id="statTotalBids" text="..." styleClass="heading-1"/>
+                            <Label text="Total bids" styleClass="body-small" style="-fx-text-fill: -text-secondary;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" styleClass="card" style="-fx-padding: 20px;">
-                            <Label fx:id="statRevenue" text="\$94,200" styleClass="heading-1" style="-fx-text-fill: -success;"/>
-                            <Label text="Revenue this month" styleClass="body-small" style="-fx-text-fill: -text-secondary;"/>
+                            <Label fx:id="statRevenue" text="..." styleClass="heading-1" style="-fx-text-fill: -success;"/>
+                            <Label text="Total Revenue" styleClass="body-small" style="-fx-text-fill: -text-secondary;"/>
                         </VBox>
                     </HBox>
 
-                    <!-- Recent users table -->
+                    <HBox spacing="24">
+                        <VBox HBox.hgrow="ALWAYS" spacing="12" styleClass="card" style="-fx-padding: 24px;">
+                            <Label text="Quick Actions" styleClass="heading-3"/>
+                            <HBox spacing="10">
+                                <Button text="Manage Users" onAction="#onTabUsers" styleClass="button, btn-primary" style="-fx-font-size: 12px;"/>
+                                <Button text="Review Auctions" onAction="#onTabAuctions" styleClass="button, btn-outline" style="-fx-font-size: 12px;"/>
+                            </HBox>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" spacing="12" styleClass="card" style="-fx-padding: 24px;">
+                            <Label text="System Status" styleClass="heading-3"/>
+                            <Label text="Server: Online" styleClass="body-text" style="-fx-text-fill: -success;"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- ── USERS TAB ─────────────────────────── -->
+                <VBox fx:id="usersTab" spacing="24" visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="User Management" styleClass="heading-2" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button text="Refresh" onAction="#onTabUsers" styleClass="button, btn-outline"/>
+                    </HBox>
                     <VBox spacing="0" styleClass="card" style="-fx-padding: 0;">
-                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 20px;">
-                            <Label text="Recent users" styleClass="heading-3" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                            <Button text="View all users" onAction="#onTabUsers" styleClass="button, btn-outline" style="-fx-padding: 6px 16px;"/>
-                        </HBox>
-                        <!-- Table header -->
                         <HBox styleClass="card-img-placeholder" style="-fx-background-radius: 0; -fx-padding: 10px 20px; -fx-border-width: 1px 0 1px 0;">
                             <Label text="Username" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="label-bold" style="-fx-font-size: 11px;"/>
                             <Label text="Email"    prefWidth="200" styleClass="label-bold" style="-fx-font-size: 11px;"/>
@@ -87,16 +101,17 @@
                             <Label text="Status"   prefWidth="90"  styleClass="label-bold" style="-fx-font-size: 11px;"/>
                             <Label text="Actions"  prefWidth="120" styleClass="label-bold" style="-fx-font-size: 11px;"/>
                         </HBox>
-                        <!-- User rows — populated by controller -->
                         <VBox fx:id="usersTableContainer"/>
                     </VBox>
+                </VBox>
 
-                    <!-- Recent auctions table -->
+                <!-- ── AUCTIONS TAB ──────────────────────── -->
+                <VBox fx:id="auctionsTab" spacing="24" visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Auction Management" styleClass="heading-2" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button text="Refresh" onAction="#onTabAuctions" styleClass="button, btn-outline"/>
+                    </HBox>
                     <VBox spacing="0" styleClass="card" style="-fx-padding: 0;">
-                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 20px;">
-                            <Label text="Recent auctions" styleClass="heading-3" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                            <Button text="View all auctions" onAction="#onTabAuctions" styleClass="button, btn-outline" style="-fx-padding: 6px 16px;"/>
-                        </HBox>
                         <HBox styleClass="card-img-placeholder" style="-fx-background-radius: 0; -fx-padding: 10px 20px; -fx-border-width: 1px 0 1px 0;">
                             <Label text="Item title"    HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="label-bold" style="-fx-font-size: 11px;"/>
                             <Label text="Seller"        prefWidth="130" styleClass="label-bold" style="-fx-font-size: 11px;"/>
@@ -106,13 +121,11 @@
                         </HBox>
                         <VBox fx:id="auctionsTableContainer"/>
                     </VBox>
-
                 </VBox>
 
                 <!-- ── WALLET APPROVAL TAB ────────────────── -->
                 <VBox fx:id="walletTab" spacing="24" visible="false" managed="false">
                     <Label text="Pending Fund Requests" styleClass="heading-2"/>
-                    
                     <VBox spacing="0" styleClass="card" style="-fx-padding: 0;">
                         <HBox alignment="CENTER_LEFT" style="-fx-padding: 20px;">
                             <Label text="Pending requests" styleClass="heading-3" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
@@ -129,7 +142,29 @@
                     </VBox>
                 </VBox>
 
-                <VBox fx:id="tabPlaceholder" alignment="CENTER" spacing="15" style="-fx-padding: 80px 0;" visible="false" managed="false"/>
+                <!-- ── BIDS LOG TAB ────────────────── -->
+                <VBox fx:id="bidsTab" spacing="24" visible="false" managed="false">
+                    <Label text="System-wide Bids Log" styleClass="heading-2"/>
+                    <VBox spacing="0" styleClass="card" style="-fx-padding: 0;">
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 20px;">
+                            <Label text="All bid transactions" styleClass="heading-3" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Button text="Refresh" onAction="#onTabBids" styleClass="button, btn-outline" style="-fx-padding: 6px 16px;"/>
+                        </HBox>
+                        <HBox styleClass="card-img-placeholder" style="-fx-background-radius: 0; -fx-padding: 10px 20px; -fx-border-width: 1px 0 1px 0;">
+                            <Label text="Bid ID"    prefWidth="160" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                            <Label text="Item ID"   prefWidth="120" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                            <Label text="Bidder"    HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                            <Label text="Amount"    prefWidth="110" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                            <Label text="Timestamp" prefWidth="160" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                        </HBox>
+                        <VBox fx:id="bidsTableContainer"/>
+                    </VBox>
+                </VBox>
+
+                <VBox fx:id="tabPlaceholder" alignment="CENTER" spacing="15" style="-fx-padding: 80px 0;" visible="false" managed="false">
+                    <ProgressIndicator/>
+                    <Label text="Loading content..." styleClass="body-text"/>
+                </VBox>
 
             </VBox>
         </ScrollPane>

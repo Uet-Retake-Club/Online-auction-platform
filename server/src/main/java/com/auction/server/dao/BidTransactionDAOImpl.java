@@ -51,7 +51,26 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
     }
 
     @Override
+    public List<BidTransaction> getAllTransactions() {
+        List<BidTransaction> history = new ArrayList<>();
+        String sql = "SELECT * FROM bid_transactions ORDER BY timestamp DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                history.add(new BidTransaction(
+                    rs.getString("id"),
+                    rs.getString("item_id"),
+                    rs.getString("bidder_id"),
+                    rs.getDouble("bid_amount"),
+                    rs.getLong("timestamp")
+                ));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return history;
+    }
 
+    @Override
     public int getTotalBidCount() {
         String sql = "SELECT COUNT(*) FROM bid_transactions";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -65,4 +84,40 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         }
         return 0;
     }
-}
+
+    @Override
+    public double getMaxBidAmount(String userId, String itemId) {
+        String sql = "SELECT MAX(bid_amount) FROM bid_transactions WHERE bidder_id = ? AND item_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userId);
+            pstmt.setString(2, itemId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
+    @Override
+    public List<String> getBiddersForItem(String itemId) {
+        List<String> bidders = new ArrayList<>();
+        String sql = "SELECT DISTINCT bidder_id FROM bid_transactions WHERE item_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, itemId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    bidders.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return bidders;
+    }
+}

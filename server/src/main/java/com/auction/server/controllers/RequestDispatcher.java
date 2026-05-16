@@ -37,6 +37,9 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.ADMIN_GET_STATS, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_GET_USERS, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_GET_AUCTIONS, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_BAN_USER, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_UNBAN_USER, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_GET_BIDS, adminHandler);
     }
 
 

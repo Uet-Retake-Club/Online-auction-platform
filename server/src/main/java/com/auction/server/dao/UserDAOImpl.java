@@ -73,6 +73,12 @@ public class UserDAOImpl implements UserDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    // Check if user is active
+                    User u = getUserById(rs.getString("id"));
+                    if (u != null && !"ACTIVE".equals(u.getStatus())) {
+                        System.err.println("[UserDAO] User " + emailOrUsername + " is " + u.getStatus());
+                        return null;
+                    }
                     return rs.getString("id");
                 }
             }
@@ -114,15 +120,30 @@ public class UserDAOImpl implements UserDAO {
         return 0;
     }
 
+    @Override
+    public boolean updateUserStatus(String userId, String status) {
+        String sql = "UPDATE users SET status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setString(2, userId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private User mapUser(ResultSet rs) throws SQLException {
 
         String role = rs.getString("role");
         String id = rs.getString("id");
         String user = rs.getString("username");
         String email = rs.getString("email");
+        String status = rs.getString("status");
         
-        if ("ADMIN".equals(role)) return new Admin(id, user, email);
-        if ("SELLER".equals(role)) return new Seller(id, user, email);
-        return new Bidder(id, user, email);
+        if ("ADMIN".equals(role)) return new Admin(id, user, email, status);
+        if ("SELLER".equals(role)) return new Seller(id, user, email, status);
+        return new Bidder(id, user, email, status);
     }
 }

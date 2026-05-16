@@ -5,6 +5,7 @@ import com.auction.server.dao.*;
 import com.auction.server.network.ClientHandler;
 import com.auction.shared.dto.*;
 import com.auction.shared.models.Item;
+import com.auction.shared.models.BidTransaction;
 import com.auction.shared.models.TopupRequest;
 import com.auction.shared.models.User;
 import com.google.gson.Gson;
@@ -33,6 +34,9 @@ public class AdminHandler implements CommandHandler {
             case ADMIN_GET_PENDING_TOPUPS -> getPendingTopups();
             case ADMIN_APPROVE_TOPUP -> approveTopup(request.getPayload());
             case ADMIN_REJECT_TOPUP -> rejectTopup(request.getPayload());
+            case ADMIN_BAN_USER -> banUser(request.getPayload());
+            case ADMIN_UNBAN_USER -> unbanUser(request.getPayload());
+            case ADMIN_GET_BIDS -> getAllBids();
             default -> new Response(request.getType(), "FAIL", "Unknown admin command", null);
         };
     }
@@ -84,5 +88,22 @@ public class AdminHandler implements CommandHandler {
         boolean success = walletDAO.updateRequestStatus(requestId, "REJECTED");
         return new Response(MessageType.ADMIN_REJECT_TOPUP, success ? "SUCCESS" : "FAIL",
                 success ? "Request rejected" : "Failed to reject request", null);
+    }
+
+    private Response banUser(String userId) {
+        boolean success = userDAO.updateUserStatus(userId, "SUSPENDED");
+        return new Response(MessageType.ADMIN_BAN_USER, success ? "SUCCESS" : "FAIL",
+                success ? "User suspended" : "Failed to suspend user", null);
+    }
+
+    private Response unbanUser(String userId) {
+        boolean success = userDAO.updateUserStatus(userId, "ACTIVE");
+        return new Response(MessageType.ADMIN_UNBAN_USER, success ? "SUCCESS" : "FAIL",
+                success ? "User activated" : "Failed to activate user", null);
+    }
+
+    private Response getAllBids() {
+        List<BidTransaction> bids = bidDAO.getAllTransactions();
+        return new Response(MessageType.ADMIN_BIDS_RESPONSE, "SUCCESS", "Bids fetched", gson.toJson(bids));
     }
 }

@@ -62,7 +62,10 @@ public class AuctionServiceTest {
             bidDaoField.set(manager, new BidTransactionDAO() {
                 @Override public boolean addTransaction(BidTransaction tx) { return true; }
                 @Override public java.util.List<BidTransaction> getHistoryByItem(String itemId) { return java.util.Collections.emptyList(); }
+                @Override public java.util.List<BidTransaction> getAllTransactions() { return java.util.Collections.emptyList(); }
                 @Override public int getTotalBidCount() { return 0; }
+                @Override public double getMaxBidAmount(String userId, String itemId) { return 0.0; }
+                @Override public java.util.List<String> getBiddersForItem(String itemId) { return java.util.Collections.emptyList(); }
             });
 
             java.lang.reflect.Field walletDaoField = AuctionService.class.getDeclaredField("walletDAO");

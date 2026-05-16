@@ -9,5 +9,6 @@ public interface UserDAO {
     String authenticateUser(String emailOrUsername, String password);
     java.util.List<User> getAllUsers();
     int getUserCount();
+    boolean updateUserStatus(String userId, String status);
 }
 

@@ -35,6 +35,14 @@ public class DatabaseConnection {
             } catch (SQLException ignored) {
                 // Column already exists — safe to ignore
             }
+
+            // Migration: add status column to users if it doesn't exist
+            try {
+                stmt.execute("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'ACTIVE'");
+                System.out.println("[DATABASE] Migration: added 'status' column to users.");
+            } catch (SQLException ignored) {
+                // Column already exists — safe to ignore
+            }
             
         } catch (SQLException | IOException e) {
             System.err.println("[DATABASE ERROR] Failed to initialize database: " + e.getMessage());

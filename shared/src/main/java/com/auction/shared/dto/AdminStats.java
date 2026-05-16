@@ -9,6 +9,8 @@ public class AdminStats {
     public int totalBids;
     public double revenue;
 
+    public AdminStats() {}
+
     public AdminStats(int totalUsers, int activeAuctions, int totalBids, double revenue) {
         this.totalUsers = totalUsers;
         this.activeAuctions = activeAuctions;

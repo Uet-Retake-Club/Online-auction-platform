@@ -14,6 +14,7 @@ import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
 import com.auction.shared.models.Item;
 import com.google.gson.Gson;
+import java.util.List;
 
 public class AuctionService {
     private static volatile AuctionService instance;
@@ -112,10 +113,14 @@ public class AuctionService {
             return new Response(MessageType.BID_ERROR, "FAIL", "Auction has already ended!", null);
         }
 
-        // 1. Kiểm tra số dư ví (Wallet Check)
+        // 1. Kiểm tra số dư ví (Cumulative Stake check)
+        double previousStake = bidDAO.getMaxBidAmount(bidderId, targetItemId);
+        double deductionNeeded = amount - previousStake;
         double userBalance = walletDAO.getBalance(bidderId);
-        if (userBalance < amount) {
-            return new Response(MessageType.BID_ERROR, "FAIL", "Số dư ví không đủ! (Vui lòng nạp thêm tiền)", null);
+
+        if (userBalance < deductionNeeded) {
+            return new Response(MessageType.BID_ERROR, "FAIL", 
+                String.format("Số dư ví không đủ! Cần thêm $%.2f (Đã đặt: $%.2f)", deductionNeeded, previousStake), null);
         }
 
         if (targetItemId.equals(currentAuctionItemId)) {
@@ -131,15 +136,9 @@ public class AuctionService {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
 
-            // 2. HOÀN TIỀN cho người đặt giá cao nhất cũ
-            if (currentHighestBidder != null && !currentHighestBidder.equals(bidderId)) {
-                walletDAO.updateBalance(currentHighestBidder, currentHighestBid);
-                System.out.println("[WALLET] Refunded $" + currentHighestBid + " to " + currentHighestBidder);
-            }
-
-            // 3. TRỪ TIỀN người đặt giá mới
-            walletDAO.updateBalance(bidderId, -amount);
-            System.out.println("[WALLET] Deducted $" + amount + " from " + bidderId);
+            // 2. TRỪ TIỀN người đặt giá mới (Chỉ trừ phần chênh lệch)
+            walletDAO.updateBalance(bidderId, -deductionNeeded);
+            System.out.println("[WALLET] Cumulative Stake: Deducted additional $" + deductionNeeded + " from " + bidderId + " (Total: $" + amount + ")");
 
             // Log transaction to DB
             BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
@@ -175,15 +174,9 @@ public class AuctionService {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
 
-            // 2. HOÀN TIỀN cho người đặt giá cao nhất cũ (non-active item)
-            if (item.getHighestBidderId() != null && !item.getHighestBidderId().equals(bidderId)) {
-                walletDAO.updateBalance(item.getHighestBidderId(), currentItemPrice);
-                System.out.println("[WALLET] Refunded $" + currentItemPrice + " to " + item.getHighestBidderId() + " (Item: " + targetItemId + ")");
-            }
-
-            // 3. TRỪ TIỀN người đặt giá mới
-            walletDAO.updateBalance(bidderId, -amount);
-            System.out.println("[WALLET] Deducted $" + amount + " from " + bidderId);
+            // 2. TRỪ TIỀN người đặt giá mới (Chỉ trừ phần chênh lệch)
+            walletDAO.updateBalance(bidderId, -deductionNeeded);
+            System.out.println("[WALLET] Cumulative Stake: Deducted additional $" + deductionNeeded + " from " + bidderId + " (Total: $" + amount + ")");
 
             // Log transaction to DB
             BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), targetItemId, bidderId, amount, System.currentTimeMillis());
@@ -201,8 +194,22 @@ public class AuctionService {
         if (currentAuctionItemId == null) return false;
         if (this.auctionStatus.equals("FINISHED")) return false;
 
+        // 1. Kiểm tra số dư ví (Cumulative Stake check)
+        double previousStake = bidDAO.getMaxBidAmount(bidderId, currentAuctionItemId);
+        double deductionNeeded = nextBid - previousStake;
+        double userBalance = walletDAO.getBalance(bidderId);
+
+        if (userBalance < deductionNeeded) {
+            System.err.println("[AUTO-BID] Insufficient funds for " + bidderId + " to bid $" + nextBid);
+            return false;
+        }
+
         boolean dbUpdated = itemDAO.updateCurrentPrice(currentAuctionItemId, nextBid, bidderId);
         if (dbUpdated) {
+            // 2. TRỪ TIỀN (Chỉ trừ phần chênh lệch)
+            walletDAO.updateBalance(bidderId, -deductionNeeded);
+            System.out.println("[AUTO-BID] Cumulative Stake: Deducted additional $" + deductionNeeded + " from " + bidderId + " (Total: $" + nextBid + ")");
+
             currentHighestBid = nextBid;
             currentHighestBidder = bidderId;
             System.out.println("[AUTO-BID] Auto-bid placed: $" + currentHighestBid + " for " + bidderId);
@@ -232,7 +239,19 @@ public class AuctionService {
             // 2. Tắt hệ thống Robot
             autoBidEngine.shutdown();
 
-            // 3. Xác định người thắng và thông báo
+            // 3. Hoàn tiền cho tất cả những người tham gia nhưng không thắng
+            List<String> participants = bidDAO.getBiddersForItem(currentAuctionItemId);
+            for (String pId : participants) {
+                if (!pId.equals(currentHighestBidder)) {
+                    double refundAmount = bidDAO.getMaxBidAmount(pId, currentAuctionItemId);
+                    if (refundAmount > 0) {
+                        walletDAO.updateBalance(pId, refundAmount);
+                        System.out.println("[ESCROW] Refunded $" + refundAmount + " to " + pId + " (Non-winner)");
+                    }
+                }
+            }
+
+            // 4. Xác định người thắng và thông báo
             String winnerMsg = (currentHighestBidder != null) 
                 ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
                 : "Phiên kết thúc mà không có ai đặt giá.";

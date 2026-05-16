@@ -12,4 +12,8 @@ public class Bidder extends User {
   public Bidder(String id, String username, String email) {
     super(id, username, email, "BIDDER");
   }
+
+  public Bidder(String id, String username, String email, String status) {
+    super(id, username, email, "BIDDER", status);
+  }
 }

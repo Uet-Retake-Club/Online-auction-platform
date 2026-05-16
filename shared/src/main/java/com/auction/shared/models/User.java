@@ -6,6 +6,7 @@ public abstract class User extends Entity {
   protected String email;
   protected String role;
   protected String password;
+  protected String status = "ACTIVE";
 
   /**
    * Constructs a new User.
@@ -14,13 +15,20 @@ public abstract class User extends Entity {
    * @param username the username
    * @param email the email address
    * @param role the user role
-   * @param password the user password
    */
   public User(String id, String username, String email, String role) {
     super(id);
     this.username = username;
     this.email = email;
     this.role = role;
+  }
+
+  public User(String id, String username, String email, String role, String status) {
+    super(id);
+    this.username = username;
+    this.email = email;
+    this.role = role;
+    this.status = status;
   }
 
   public String getUsername() {
@@ -53,5 +61,13 @@ public abstract class User extends Entity {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
   }
 }

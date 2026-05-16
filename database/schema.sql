@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    role TEXT CHECK(role IN ('BIDDER', 'SELLER', 'ADMIN')) NOT NULL
+    role TEXT CHECK(role IN ('BIDDER', 'SELLER', 'ADMIN')) NOT NULL,
+    status TEXT DEFAULT 'ACTIVE'
 );
 
 -- 2. Bảng Items (với đầy đủ các cột cho đấu giá, khớp mapCommonFields trong ItemDAOImpl.java)
