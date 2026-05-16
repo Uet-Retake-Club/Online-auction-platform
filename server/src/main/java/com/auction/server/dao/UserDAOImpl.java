@@ -73,12 +73,6 @@ public class UserDAOImpl implements UserDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    // Check if user is active
-                    User u = getUserById(rs.getString("id"));
-                    if (u != null && !"ACTIVE".equals(u.getStatus())) {
-                        System.err.println("[UserDAO] User " + emailOrUsername + " is " + u.getStatus());
-                        return null;
-                    }
                     return rs.getString("id");
                 }
             }

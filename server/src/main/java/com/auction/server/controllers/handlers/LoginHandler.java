@@ -26,9 +26,15 @@ public class LoginHandler implements CommandHandler {
         String userId = userDAO.authenticateUser(auth.getUsername(), auth.getPassword());
         
         if (userId != null) {
+            com.auction.shared.models.User user = userDAO.getUserById(userId);
+            
+            if (user != null && !"ACTIVE".equals(user.getStatus())) {
+                return new Response(MessageType.LOGIN_FAIL, "FAIL", 
+                    "Your account has been suspended (" + user.getStatus() + "). Please contact the administrator.", null);
+            }
+
             clientHandler.setClientId(userId);
             AuctionService.getInstance().registerClient(userId, clientHandler);
-            com.auction.shared.models.User user = userDAO.getUserById(userId);
             return new Response(MessageType.LOGIN_SUCCESS, "SUCCESS", "Login successful", gson.toJson(user));
         } else {
             return new Response(MessageType.LOGIN_FAIL, "FAIL", "Invalid username or password", null);
