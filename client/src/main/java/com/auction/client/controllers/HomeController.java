@@ -200,15 +200,13 @@ public class HomeController implements Initializable {
     
     final StackPane imgBox = new StackPane(new Label("No image"));
     imgBox.getStyleClass().add("card-img-placeholder");
-    imgBox.setStyle("-fx-background-color:#F4F4F4;-fx-background-radius:6px;");
 
     final Label catChip = new Label(category);
     catChip.getStyleClass().addAll("badge", "badge-info");
 
     final Label titleLabel = new Label(title);
     titleLabel.setWrapText(true);
-    titleLabel.getStyleClass().add("body-small");
-    titleLabel.setStyle("-fx-font-weight:bold;-fx-padding:4px 0;");
+    titleLabel.getStyleClass().add("label-bold");
 
     final Label priceLabel = new Label(price);
     priceLabel.getStyleClass().add("price-tag");
@@ -216,14 +214,17 @@ public class HomeController implements Initializable {
 
     final long remaining = item.getEndTime() - System.currentTimeMillis();
     final Label badge = new Label(remaining > 0 ? (remaining / 3600000) + "h left" : "Ended");
-    badge.getStyleClass().addAll("badge", remaining > 3600000 ? "badge-success" : "badge-warning");
+    badge.getStyleClass().add("badge");
+    if (remaining > 3600000) badge.getStyleClass().add("badge-success");
+    else if (remaining > 0) badge.getStyleClass().add("badge-warning");
+    else badge.getStyleClass().add("badge-danger");
 
     final HBox metaRow = new HBox(new Label("Live"), new Region(), badge);
     HBox.setHgrow(metaRow.getChildren().get(1), Priority.ALWAYS);
     metaRow.setAlignment(Pos.CENTER_LEFT);
 
-    final VBox card = new VBox(4, imgBox, catChip, titleLabel, priceLabel, metaRow);
-    card.getStyleClass().add("auction-card");
+    final VBox card = new VBox(8, imgBox, catChip, titleLabel, priceLabel, metaRow);
+    card.getStyleClass().addAll("auction-card", "card-hover");
     card.setOnMouseClicked(e -> {
       UserSession.getInstance().setSelectedAuctionTitle(title);
       UserSession.getInstance().setSelectedAuctionCategory(category);

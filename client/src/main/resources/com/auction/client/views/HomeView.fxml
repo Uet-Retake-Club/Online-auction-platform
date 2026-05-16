@@ -15,133 +15,53 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.HomeController"
             fx:id="rootPane"
-            maxWidth="Infinity" maxHeight="Infinity"
-            style="-fx-background-color: #F4F4F4;">
+            maxWidth="Infinity" maxHeight="Infinity">
 
     <!-- ════════════════════════════════════════════════════
          TOP NAVIGATION BAR
          ════════════════════════════════════════════════════ -->
     <top>
-        <HBox alignment="CENTER_LEFT"
-              spacing="12"
-              style="-fx-background-color: white;
-                     -fx-border-color: transparent transparent #EBEBEB transparent;
-                     -fx-border-width: 0 0 1px 0;
-                     -fx-padding: 10px 20px;">
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
 
             <!-- Logo -->
             <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
-                <Label text="Auction"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold;
-                              -fx-text-fill: #E53238; -fx-font-family: 'Segoe UI';"/>
-                <Label text="Hub"
-                       style="-fx-font-size: 20px; -fx-font-weight: bold;
-                              -fx-text-fill: #111111; -fx-font-family: 'Segoe UI';"/>
+                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
+                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
             </HBox>
 
             <!-- Search bar -->
-            <HBox alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="500">
+            <HBox alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="600" styleClass="search-bar-container">
                 <TextField fx:id="searchField"
                            promptText="Search for anything..."
                            HBox.hgrow="ALWAYS"
-                           style="-fx-background-color: white;
-                                  -fx-border-color: #E0E0E0 transparent #E0E0E0 #E0E0E0;
-                                  -fx-border-width: 1.5px 0 1.5px 1.5px;
-                                  -fx-border-radius: 24px 0 0 24px;
-                                  -fx-background-radius: 24px 0 0 24px;
-                                  -fx-padding: 8px 18px;
-                                  -fx-font-size: 13px;
-                                  -fx-font-family: 'Segoe UI';"
+                           styleClass="search-field"
                            onAction="#onSearch"/>
                 <Button text="Search"
                         onAction="#onSearch"
-                        style="-fx-background-color: #E53238;
-                               -fx-text-fill: white;
-                               -fx-font-weight: bold;
-                               -fx-font-size: 13px;
-                               -fx-border-radius: 0 24px 24px 0;
-                               -fx-background-radius: 0 24px 24px 0;
-                               -fx-padding: 8px 18px;
-                               -fx-cursor: hand;
-                               -fx-effect: null;"/>
+                        styleClass="button, btn-primary"
+                        style="-fx-background-radius: 0 24px 24px 0; -fx-padding: 8px 24px;"/>
             </HBox>
 
             <!-- Push nav actions to the right -->
             <Region HBox.hgrow="ALWAYS"/>
 
-            <!-- Watchlist -->
-            <Button fx:id="watchlistBtn"
-                    text="Watchlist"
-                    onAction="#onWatchlist"
-                    style="-fx-background-color: transparent;
-                           -fx-text-fill: #555555;
-                           -fx-font-size: 13px;
-                           -fx-border-color: transparent;
-                           -fx-border-radius: 6px;
-                           -fx-background-radius: 6px;
-                           -fx-padding: 7px 12px;
-                           -fx-cursor: hand;
-                           -fx-effect: null;"/>
-
-            <!-- My bids -->
-            <Button fx:id="myBidsBtn"
-                    text="My bids"
-                    onAction="#onMyBids"
-                    style="-fx-background-color: transparent;
-                           -fx-text-fill: #555555;
-                           -fx-font-size: 13px;
-                           -fx-border-color: transparent;
-                           -fx-border-radius: 6px;
-                           -fx-background-radius: 6px;
-                           -fx-padding: 7px 12px;
-                           -fx-cursor: hand;
-                           -fx-effect: null;"/>
-
-            <!-- Admin panel -->
-            <Button fx:id="adminBtn"
-                    text="🛡 Admin"
-                    onAction="#onAdmin"
-                    visible="false" managed="false"
-                    style="-fx-background-color: #1A73E8;
-                           -fx-text-fill: white;
-                           -fx-font-weight: bold;
-                           -fx-font-size: 13px;
-                           -fx-border-color: transparent;
-                           -fx-border-radius: 6px;
-                           -fx-background-radius: 6px;
-                           -fx-padding: 7px 14px;
-                           -fx-cursor: hand;
-                           -fx-effect: null;"/>
-
-            <!-- Sell button -->
-            <Button fx:id="sellBtn"
-                    text="+ Sell"
-                    onAction="#onSell"
-                    style="-fx-background-color: #E53238;
-                           -fx-text-fill: white;
-                           -fx-font-weight: bold;
-                           -fx-font-size: 13px;
-                           -fx-border-color: transparent;
-                           -fx-border-radius: 6px;
-                           -fx-background-radius: 6px;
-                           -fx-padding: 7px 14px;
-                           -fx-cursor: hand;
-                           -fx-effect: null;"/>
-
-            <!-- User avatar pill -->
-                        <Button text="☀/🌙" onAction="#onToggleTheme"
-                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:16px;-fx-cursor:hand;-fx-effect:null;-fx-padding:0 8px;"/>
-            <Label fx:id="userLabel"
-                   text="JD"
-                   onMouseClicked="#onProfile"
-                   style="-fx-background-color: #FDECEA;
-                          -fx-text-fill: #E53238;
-                          -fx-font-weight: bold;
-                          -fx-font-size: 12px;
-                          -fx-font-family: 'Segoe UI';
-                          -fx-padding: 7px 13px;
-                          -fx-background-radius: 20px;
-                          -fx-cursor: hand;"/>
+            <!-- Nav Actions -->
+            <HBox alignment="CENTER" spacing="8">
+                <Button fx:id="watchlistBtn" text="Watchlist" onAction="#onWatchlist" styleClass="btn-ghost"/>
+                <Button fx:id="myBidsBtn"    text="My bids"   onAction="#onMyBids"    styleClass="btn-ghost"/>
+                <Button fx:id="adminBtn"     text="🛡 Admin"  onAction="#onAdmin"    visible="false" managed="false" styleClass="btn-primary" style="-fx-background-color: -info;"/>
+                <Button fx:id="sellBtn"      text="+ Sell"    onAction="#onSell"     styleClass="btn-primary"/>
+                
+                <Separator orientation="VERTICAL" style="-fx-padding: 0 10px;"/>
+                
+                <Button text="☀/🌙" onAction="#onToggleTheme" styleClass="btn-ghost" style="-fx-font-size: 16px;"/>
+                
+                <Label fx:id="userLabel"
+                       text="JD"
+                       onMouseClicked="#onProfile"
+                       styleClass="badge"
+                       style="-fx-background-color: -primary-light; -fx-text-fill: -primary; -fx-padding: 8px 14px; -fx-background-radius: 20px; -fx-cursor: hand;"/>
+            </HBox>
 
         </HBox>
     </top>
@@ -150,66 +70,25 @@
          LEFT SIDEBAR — category navigation
          ════════════════════════════════════════════════════ -->
     <left>
-        <VBox prefWidth="190"
-              spacing="3"
-              style="-fx-background-color: white;
-                     -fx-border-color: transparent #EBEBEB transparent transparent;
-                     -fx-border-width: 0 1px 0 0;
-                     -fx-padding: 18px 10px;">
+        <VBox prefWidth="220" spacing="4" styleClass="sidebar">
 
-            <!-- Section label -->
-            <Label text="CATEGORIES"
-                   style="-fx-font-size: 10px; -fx-font-weight: bold;
-                          -fx-text-fill: #AAAAAA; -fx-font-family: 'Segoe UI';
-                          -fx-padding: 0 8px 8px 8px;"/>
+            <Label text="CATEGORIES" styleClass="body-small" style="-fx-font-weight: bold; -fx-padding: 0 12px 10px 12px;"/>
 
-            <!-- Category buttons -->
-            <Button fx:id="allCategoriesBtn" text="All categories"
-                    maxWidth="Infinity" onAction="#onCategoryAll"
-                    styleClass="nav-item-active"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="electronicsBtn"   text="Electronics"
-                    maxWidth="Infinity" onAction="#onCategoryElectronics"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="fashionBtn"       text="Fashion"
-                    maxWidth="Infinity" onAction="#onCategoryFashion"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="homeGardenBtn"    text="Home &amp; Garden"
-                    maxWidth="Infinity" onAction="#onCategoryHome"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="sportsBtn"        text="Sports"
-                    maxWidth="Infinity" onAction="#onCategorySports"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="collectiblesBtn"  text="Collectibles"
-                    maxWidth="Infinity" onAction="#onCategoryCollectibles"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="vehiclesBtn"      text="Vehicles"
-                    maxWidth="Infinity" onAction="#onCategoryVehicles"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="otherBtn"         text="Other"
-                    maxWidth="Infinity" onAction="#onCategoryOther"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
+            <Button fx:id="allCategoriesBtn" text="All categories"      maxWidth="Infinity" onAction="#onCategoryAll"      styleClass="nav-item-active"/>
+            <Button fx:id="electronicsBtn"   text="Electronics"         maxWidth="Infinity" onAction="#onCategoryElectronics" styleClass="nav-item"/>
+            <Button fx:id="fashionBtn"       text="Fashion"             maxWidth="Infinity" onAction="#onCategoryFashion"     styleClass="nav-item"/>
+            <Button fx:id="homeGardenBtn"    text="Home &amp; Garden"   maxWidth="Infinity" onAction="#onCategoryHome"        styleClass="nav-item"/>
+            <Button fx:id="sportsBtn"        text="Sports"              maxWidth="Infinity" onAction="#onCategorySports"      styleClass="nav-item"/>
+            <Button fx:id="collectiblesBtn"  text="Collectibles"        maxWidth="Infinity" onAction="#onCategoryCollectibles" styleClass="nav-item"/>
+            <Button fx:id="vehiclesBtn"      text="Vehicles"            maxWidth="Infinity" onAction="#onCategoryVehicles"     styleClass="nav-item"/>
+            <Button fx:id="otherBtn"         text="Other"               maxWidth="Infinity" onAction="#onCategoryOther"        styleClass="nav-item"/>
 
-            <!-- Push profile/logout to bottom -->
             <Region VBox.vgrow="ALWAYS"/>
 
-            <Separator style="-fx-opacity: 0.5;"/>
+            <Separator style="-fx-opacity: 0.3; -fx-padding: 10px 0;"/>
 
-            <Button fx:id="profileBtn" text="My profile"
-                    maxWidth="Infinity" onAction="#onProfile"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
-            <Button fx:id="logoutBtn"  text="Sign out"
-                    maxWidth="Infinity" onAction="#onLogout"
-                    styleClass="nav-item"
-                    style="-fx-effect: null;"/>
+            <Button fx:id="profileBtn" text="My profile" maxWidth="Infinity" onAction="#onProfile" styleClass="nav-item"/>
+            <Button fx:id="logoutBtn"  text="Sign out"   maxWidth="Infinity" onAction="#onLogout"  styleClass="nav-item"/>
 
         </VBox>
     </left>
@@ -218,91 +97,40 @@
          CENTER — scrollable main content
          ════════════════════════════════════════════════════ -->
     <center>
-        <ScrollPane fitToWidth="true"
-                    styleClass="scroll-pane">
-            <VBox spacing="0"
-                  style="-fx-padding: 22px;">
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="30" style="-fx-padding: 30px;">
 
                 <!-- ── Section: Ending Soon ─────────────────── -->
-                <HBox alignment="CENTER_LEFT"
-                      style="-fx-padding: 0 0 12px 0;">
-                    <Label text="Ending soon"
-                           HBox.hgrow="ALWAYS"
-                           style="-fx-font-size: 15px; -fx-font-weight: bold;
-                                  -fx-text-fill: #111111; -fx-font-family: 'Segoe UI';"/>
-                    <Label fx:id="seeAllEndingSoon"
-                           text="See all"
-                           onMouseClicked="#onSeeAllEndingSoon"
-                           style="-fx-font-size: 12px; -fx-text-fill: #1A73E8;
-                                  -fx-cursor: hand; -fx-font-family: 'Segoe UI';"/>
-                </HBox>
+                <VBox spacing="15">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Ending soon" styleClass="heading-3" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Label fx:id="seeAllEndingSoon" text="See all" onMouseClicked="#onSeeAllEndingSoon" styleClass="body-small" style="-fx-text-fill: -info; -fx-cursor: hand;"/>
+                    </HBox>
+                    <FlowPane fx:id="endingSoonGrid" hgap="16" vgap="16"/>
+                </VBox>
 
-                <!-- Cards grid — HomeController adds VBox cards here -->
-                <FlowPane fx:id="endingSoonGrid"
-                          hgap="14" vgap="14"
-                          style="-fx-padding: 0 0 24px 0;"/>
-
-                <!-- ── Divider ──────────────────────────────── -->
-                <Separator style="-fx-opacity: 0.6; -fx-padding: 0 0 22px 0;"/>
-
-                <Region style="-fx-min-height: 20px; -fx-pref-height: 20px;"/>
+                <Separator style="-fx-opacity: 0.3;"/>
 
                 <!-- ── Section: Recently Listed ───────────────  -->
-                <HBox alignment="CENTER_LEFT"
-                      style="-fx-padding: 0 0 12px 0;">
-                    <Label text="Recently listed"
-                           HBox.hgrow="ALWAYS"
-                           style="-fx-font-size: 15px; -fx-font-weight: bold;
-                                  -fx-text-fill: #111111; -fx-font-family: 'Segoe UI';"/>
-                    <Label fx:id="seeAllRecent"
-                           text="See all"
-                           onMouseClicked="#onSeeAllRecent"
-                           style="-fx-font-size: 12px; -fx-text-fill: #1A73E8;
-                                  -fx-cursor: hand; -fx-font-family: 'Segoe UI';"/>
-                </HBox>
-
-                <FlowPane fx:id="recentGrid"
-                          hgap="14" vgap="14"
-                          style="-fx-padding: 0 0 24px 0;"/>
+                <VBox spacing="15">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="Recently listed" styleClass="heading-3" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Label fx:id="seeAllRecent" text="See all" onMouseClicked="#onSeeAllRecent" styleClass="body-small" style="-fx-text-fill: -info; -fx-cursor: hand;"/>
+                    </HBox>
+                    <FlowPane fx:id="recentGrid" hgap="16" vgap="16"/>
+                </VBox>
 
                 <!-- ── Empty state (hidden until no results) ── -->
-                <VBox fx:id="emptyState"
-                      alignment="CENTER"
-                      spacing="10"
-                      visible="false" managed="false"
-                      style="-fx-padding: 60px 0;">
-                    <Label text="No auctions found"
-                           style="-fx-font-size: 18px; -fx-font-weight: bold;
-                                  -fx-text-fill: #767676; -fx-font-family: 'Segoe UI';"/>
-                    <Label text="Try a different search term or browse a category."
-                           style="-fx-font-size: 13px; -fx-text-fill: #AAAAAA;
-                                  -fx-font-family: 'Segoe UI';"/>
-                    <Button text="Clear search"
-                            onAction="#onClearSearch"
-                            style="-fx-background-color: white;
-                                   -fx-text-fill: #333333;
-                                   -fx-border-color: #E0E0E0;
-                                   -fx-border-width: 1.5px;
-                                   -fx-border-radius: 6px;
-                                   -fx-background-radius: 6px;
-                                   -fx-padding: 8px 20px;
-                                   -fx-cursor: hand;
-                                   -fx-font-size: 13px;
-                                   -fx-effect: null;"/>
+                <VBox fx:id="emptyState" alignment="CENTER" spacing="15" visible="false" managed="false" style="-fx-padding: 80px 0;">
+                    <Label text="No auctions found" styleClass="heading-2" style="-fx-text-fill: -text-secondary;"/>
+                    <Label text="Try a different search term or browse a category." styleClass="body-text" style="-fx-text-fill: -text-muted;"/>
+                    <Button text="Clear search" onAction="#onClearSearch" styleClass="button, btn-outline"/>
                 </VBox>
 
                 <!-- ── Loading state (hidden until fetching) ── -->
-                <VBox fx:id="loadingState"
-                      alignment="CENTER"
-                      spacing="12"
-                      visible="false" managed="false"
-                      style="-fx-padding: 60px 0;">
-                    <ProgressIndicator
-                           style="-fx-progress-color: #E53238;"
-                           prefWidth="44" prefHeight="44"/>
-                    <Label text="Loading auctions..."
-                           style="-fx-font-size: 13px; -fx-text-fill: #AAAAAA;
-                                  -fx-font-family: 'Segoe UI';"/>
+                <VBox fx:id="loadingState" alignment="CENTER" spacing="15" visible="false" managed="false" style="-fx-padding: 80px 0;">
+                    <ProgressIndicator style="-fx-progress-color: -primary;" prefWidth="48" prefHeight="48"/>
+                    <Label text="Loading auctions..." styleClass="body-text" style="-fx-text-fill: -text-muted;"/>
                 </VBox>
 
             </VBox>
