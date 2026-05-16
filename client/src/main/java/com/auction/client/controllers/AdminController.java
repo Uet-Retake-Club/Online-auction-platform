@@ -375,11 +375,15 @@ public class AdminController implements Initializable {
   }
 
   private void loadAuctionsTableItem(final Item a) {
-    auctionsTableContainer.getChildren().add(buildAuctionRow(a.getName(), a.getSellerId(), String.format("$%,.2f", a.getCurrentHighestBid()), a.getStatus()));
+    auctionsTableContainer.getChildren().add(buildAuctionRow(a));
   }
 
-  private HBox buildAuctionRow(final String title, final String seller,
-      final String price, final String status) {
+  private HBox buildAuctionRow(final Item item) {
+    final String title = item.getName();
+    final String seller = item.getSellerId();
+    final String price = String.format("$%,.2f", item.getCurrentHighestBid());
+    final String status = item.getStatus();
+
     final HBox row = new HBox();
     row.getStyleClass().add("table-row");
 
@@ -398,8 +402,8 @@ public class AdminController implements Initializable {
     priceLabel.setStyle("-fx-font-size: 13px;");
 
     final String badgeClass = switch (status) {
-      case "RUNNING" -> "badge-success";
-      case "OPEN" -> "badge-info";
+      case "RUNNING", "OPEN" -> "badge-info";
+      case "FINISHED" -> "badge-success";
       default -> "badge-warning";
     };
     final Label statusLabel = buildSmallBadge(status, badgeClass);
@@ -408,7 +412,13 @@ public class AdminController implements Initializable {
     final Button viewBtn = new Button("View");
     viewBtn.getStyleClass().add("btn-outline");
     viewBtn.setStyle("-fx-font-size: 11px; -fx-padding: 3px 10px;");
-    viewBtn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+    viewBtn.setOnAction(e -> {
+      UserSession.getInstance().setSelectedItemId(item.getId());
+      UserSession.getInstance().setSelectedAuctionTitle(item.getName());
+      UserSession.getInstance().setSelectedAuctionCategory(item.getCategory() != null ? item.getCategory().name() : "");
+      UserSession.getInstance().setSelectedItemDescription(item.getDescription());
+      SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
+    });
 
     final HBox actions = new HBox(6, viewBtn);
     actions.setPrefWidth(100);

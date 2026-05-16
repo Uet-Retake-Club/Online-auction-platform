@@ -19,6 +19,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
@@ -266,7 +267,7 @@ public class AuctionDetailController implements Initializable {
         new Request(com.auction.shared.dto.MessageType.WATCHLIST_ADD, currentUserId, currentAuctionId));
     watchlistBtn.setText("Watching \u2713");
     watchlistBtn.setDisable(true);
-    ToastNotification.show(userLabel, "[INFO] Đã thêm vào Watchlist", ToastNotification.Type.INFO);
+    ToastNotification.show(userLabel, "[INFO] Added to Watchlist", ToastNotification.Type.INFO);
   }
 
   @FXML
@@ -311,11 +312,11 @@ public class AuctionDetailController implements Initializable {
       final String time, final String badge) {
     final HBox row = new HBox();
     row.getStyleClass().add("bid-history-row");
-    row.setSpacing(8);
+    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+    row.setSpacing(12);
 
     final Label nameLbl = new Label(name);
     nameLbl.getStyleClass().add("bid-name");
-    HBox.setHgrow(nameLbl, Priority.ALWAYS);
 
     final Label priceLbl = new Label(price);
     priceLbl.getStyleClass().add("bid-price");
@@ -324,6 +325,11 @@ public class AuctionDetailController implements Initializable {
     timeLbl.getStyleClass().add("bid-time");
 
     row.getChildren().addAll(nameLbl, priceLbl, timeLbl);
+
+    // Spacer to push the badge to the right
+    final Region spacer = new Region();
+    HBox.setHgrow(spacer, Priority.ALWAYS);
+    row.getChildren().add(spacer);
 
     if (!badge.isEmpty()) {
       final Label bdg = new Label("Winning");
