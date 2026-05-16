@@ -126,28 +126,29 @@ public class MyBidsController implements Initializable {
   private HBox buildRow(final String title, final String myBid, 
       final String curPrice, final String timeLeft, final String status) {
     final HBox row = new HBox();
-    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
-        + "-fx-border-width:0 0 1px 0;-fx-padding:10px 14px;");
+    row.getStyleClass().add("table-row");
 
     final Label titleLbl = new Label(title);
-    titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
+    titleLbl.getStyleClass().add("label-bold");
     HBox.setHgrow(titleLbl, Priority.ALWAYS);
+    titleLbl.setMaxWidth(Double.MAX_VALUE);
 
     final Label myBidLbl = new Label(myBid);
-    myBidLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
-    myBidLbl.setPrefWidth(100);
+    myBidLbl.getStyleClass().add("body-text");
+    myBidLbl.setPrefWidth(120);
 
     final Label curPriceLbl = new Label(curPrice);
-    curPriceLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
-    curPriceLbl.setPrefWidth(120);
+    curPriceLbl.getStyleClass().addAll("label-bold", "price-tag");
+    curPriceLbl.setPrefWidth(140);
+    curPriceLbl.setStyle("-fx-font-size: 14px;"); // Slight adjustment for emphasis
 
     final Label timeLbl = new Label(timeLeft);
-    timeLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#888;");
-    timeLbl.setPrefWidth(100);
+    timeLbl.getStyleClass().add("body-small");
+    timeLbl.setPrefWidth(120);
 
     final Label badge = buildBadge(status);
-    badge.setPrefWidth(90);
+    badge.setPrefWidth(100);
+    
     final Button action = buildActionButton(status);
     action.setPrefWidth(100);
 
@@ -157,44 +158,38 @@ public class MyBidsController implements Initializable {
 
   private Label buildBadge(final String status) {
     final Label b = new Label();
+    b.getStyleClass().add("badge");
     switch (status) {
       case "winning" -> {
         b.setText("Winning");
-        b.setStyle(badgeStyle("#EAF5EA", "#5BA55B"));
+        b.getStyleClass().add("badge-success");
       }
       case "outbid" -> {
         b.setText("Outbid");
-        b.setStyle(badgeStyle("#FEF6E6", "#F5A623"));
+        b.getStyleClass().add("badge-warning");
       }
       case "won" -> {
         b.setText("Won");
-        b.setStyle(badgeStyle("#EAF5EA", "#5BA55B"));
+        b.getStyleClass().add("badge-success");
       }
       case "lost" -> {
         b.setText("Lost");
-        b.setStyle(badgeStyle("#F4F4F4", "#888888"));
+        b.getStyleClass().add("badge-danger");
       }
       case "watching" -> {
         b.setText("Watching");
-        b.setStyle(badgeStyle("#E8F0FE", "#1A73E8"));
+        b.getStyleClass().add("badge-info");
       }
       default -> b.setText(status);
     }
     return b;
   }
 
-  private String badgeStyle(final String bg, final String fg) {
-    return "-fx-background-color:" + bg + ";-fx-text-fill:" + fg + ";"
-        + "-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:3px 10px;"
-        + "-fx-background-radius:10px;";
-  }
 
   private Button buildActionButton(final String status) {
     final Button btn = new Button();
-    btn.setStyle("-fx-background-color:white;-fx-border-color:#E0E0E0;"
-        + "-fx-border-width:1px;-fx-border-radius:5px;"
-        + "-fx-background-radius:5px;-fx-font-size:11px;"
-        + "-fx-padding:4px 12px;-fx-cursor:hand;-fx-effect:null;");
+    btn.getStyleClass().add("btn-outline");
+    btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
     
     switch (status) {
       case "outbid" -> {
@@ -203,10 +198,8 @@ public class MyBidsController implements Initializable {
       }
       case "won" -> {
         btn.setText("Pay now");
-        btn.setStyle("-fx-background-color:#E53238;-fx-text-fill:white;"
-            + "-fx-font-weight:bold;-fx-border-color:transparent;"
-            + "-fx-border-radius:5px;-fx-background-radius:5px;"
-            + "-fx-font-size:11px;-fx-padding:4px 12px;-fx-cursor:hand;");
+        btn.getStyleClass().removeAll("btn-outline");
+        btn.getStyleClass().add("btn-primary");
         btn.setOnAction(e -> System.out.println("TODO: payment flow"));
       }
       default -> {

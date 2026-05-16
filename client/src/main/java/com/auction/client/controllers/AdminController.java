@@ -19,6 +19,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -245,37 +246,40 @@ public class AdminController implements Initializable {
 
   private HBox buildWalletRequestRow(final TopupRequest tr) {
     final HBox row = new HBox();
-    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
-        + "-fx-border-width:0 0 1px 0;-fx-padding:9px 16px;");
+    row.getStyleClass().add("table-row");
 
     final Label idLabel = new Label(tr.id);
     idLabel.setPrefWidth(120);
-    idLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#888;");
+    idLabel.getStyleClass().add("body-small");
 
     final Label userLabel = new Label(tr.userId);
-    userLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
+    userLabel.getStyleClass().add("label-bold");
     HBox.setHgrow(userLabel, Priority.ALWAYS);
+    userLabel.setMaxWidth(Double.MAX_VALUE);
 
     final Label amountLabel = new Label(String.format("$%,.2f", tr.amount));
     amountLabel.setPrefWidth(120);
-    amountLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#5BA55B;");
+    amountLabel.getStyleClass().addAll("label-bold", "price-tag");
+    amountLabel.setStyle("-fx-text-fill: -success; -fx-font-size: 13px;");
 
     final java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
     final Label timeLabel = new Label(sdf.format(new java.util.Date(tr.timestamp)));
     timeLabel.setPrefWidth(160);
-    timeLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#555;");
+    timeLabel.getStyleClass().add("body-small");
 
     final Button approveBtn = new Button("Approve");
-    approveBtn.setStyle("-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;-fx-font-size:11px;-fx-padding:4px 12px;-fx-cursor:hand;");
+    approveBtn.getStyleClass().addAll("button", "btn-primary");
+    approveBtn.setStyle("-fx-background-color: -success; -fx-font-size: 11px; -fx-padding: 4px 12px;");
     approveBtn.setOnAction(e -> approveRequest(tr.id));
 
     final Button rejectBtn = new Button("Reject");
-    rejectBtn.setStyle("-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-size:11px;-fx-padding:4px 12px;-fx-cursor:hand;");
+    rejectBtn.getStyleClass().addAll("button", "btn-outline");
+    rejectBtn.setStyle("-fx-text-fill: -danger; -fx-border-color: -danger; -fx-font-size: 11px; -fx-padding: 4px 12px;");
     rejectBtn.setOnAction(e -> rejectRequest(tr.id));
 
     final HBox actions = new HBox(8, approveBtn, rejectBtn);
     actions.setPrefWidth(180);
+    actions.setAlignment(Pos.CENTER_LEFT);
 
     row.getChildren().addAll(idLabel, userLabel, amountLabel, timeLabel, actions);
     return row;
@@ -326,37 +330,37 @@ public class AdminController implements Initializable {
   private HBox buildUserRow(final String username, final String email,
       final String role, final String status) {
     final HBox row = new HBox();
-    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
-        + "-fx-border-width:0 0 1px 0;-fx-padding:9px 16px;");
+    row.getStyleClass().add("table-row");
 
     final Label usernameLabel = new Label(username);
-    usernameLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
+    usernameLabel.getStyleClass().add("label-bold");
     HBox.setHgrow(usernameLabel, Priority.ALWAYS);
+    usernameLabel.setMaxWidth(Double.MAX_VALUE);
 
     final Label emailLabel = new Label(email);
     emailLabel.setPrefWidth(200);
-    emailLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#555;");
+    emailLabel.getStyleClass().add("body-text");
 
-    final Label roleLabel = buildSmallBadge(role,
-        role.equalsIgnoreCase("Admin") || role.equalsIgnoreCase("Seller") ? "#F4F4F4:#555555" : "#E8F0FE:#1A73E8");
+    final Label roleLabel = buildSmallBadge(role, role.equalsIgnoreCase("Admin") ? "badge-danger" : "badge-info");
     roleLabel.setPrefWidth(90);
 
-    final Label statusLabel = buildSmallBadge(status,
-        status.equals("Active") ? "#EAF5EA:#5BA55B" : "#FEF6E6:#F5A623");
+    final Label statusLabel = buildSmallBadge(status, status.equals("Active") ? "badge-success" : "badge-warning");
     statusLabel.setPrefWidth(90);
 
     final Button editBtn = new Button("Edit");
-    editBtn.setStyle(smallBtnStyle(false));
+    editBtn.getStyleClass().add("btn-outline");
+    editBtn.setStyle("-fx-font-size: 11px; -fx-padding: 3px 10px;");
     editBtn.setOnAction(e -> System.out.println("TODO: edit user " + username));
 
     final boolean isBanned = status.equals("Suspended");
     final Button banBtn = new Button(isBanned ? "Unban" : "Ban");
-    banBtn.setStyle(smallBtnStyle(true));
+    banBtn.getStyleClass().add("btn-outline");
+    banBtn.setStyle("-fx-text-fill: -danger; -fx-border-color: -danger; -fx-font-size: 11px; -fx-padding: 3px 10px;");
     banBtn.setOnAction(e -> System.out.println("TODO: toggle ban " + username));
 
     final HBox actions = new HBox(6, editBtn, banBtn);
     actions.setPrefWidth(120);
+    actions.setAlignment(Pos.CENTER_LEFT);
 
     row.getChildren().addAll(usernameLabel, emailLabel, roleLabel, statusLabel, actions);
     return row;
@@ -377,36 +381,38 @@ public class AdminController implements Initializable {
   private HBox buildAuctionRow(final String title, final String seller,
       final String price, final String status) {
     final HBox row = new HBox();
-    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
-        + "-fx-border-width:0 0 1px 0;-fx-padding:9px 16px;");
+    row.getStyleClass().add("table-row");
 
     final Label titleLabel = new Label(title);
-    titleLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
+    titleLabel.getStyleClass().add("label-bold");
     HBox.setHgrow(titleLabel, Priority.ALWAYS);
+    titleLabel.setMaxWidth(Double.MAX_VALUE);
 
     final Label sellerLabel = new Label(seller);
     sellerLabel.setPrefWidth(130);
-    sellerLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#555;");
+    sellerLabel.getStyleClass().add("body-text");
 
     final Label priceLabel = new Label(price);
     priceLabel.setPrefWidth(110);
-    priceLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
+    priceLabel.getStyleClass().addAll("label-bold", "price-tag");
+    priceLabel.setStyle("-fx-font-size: 13px;");
 
-    final String badgeColors = switch (status) {
-      case "RUNNING" -> "#EAF5EA:#5BA55B";
-      case "OPEN" -> "#E8F0FE:#1A73E8";
-      default -> "#F4F4F4:#888888";
+    final String badgeClass = switch (status) {
+      case "RUNNING" -> "badge-success";
+      case "OPEN" -> "badge-info";
+      default -> "badge-warning";
     };
-    final Label statusLabel = buildSmallBadge(status, badgeColors);
+    final Label statusLabel = buildSmallBadge(status, badgeClass);
     statusLabel.setPrefWidth(90);
 
     final Button viewBtn = new Button("View");
-    viewBtn.setStyle(smallBtnStyle(false));
+    viewBtn.getStyleClass().add("btn-outline");
+    viewBtn.setStyle("-fx-font-size: 11px; -fx-padding: 3px 10px;");
     viewBtn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
 
     final HBox actions = new HBox(6, viewBtn);
     actions.setPrefWidth(100);
+    actions.setAlignment(Pos.CENTER_LEFT);
 
     row.getChildren().addAll(titleLabel, sellerLabel, priceLabel, statusLabel, actions);
     return row;
@@ -419,27 +425,12 @@ public class AdminController implements Initializable {
    * @param colors format bg:fg
    * @return a formatted Label
    */
-  private Label buildSmallBadge(final String text, final String colors) {
-    final String[] c = colors.split(":");
+  private Label buildSmallBadge(final String text, final String styleClass) {
     final Label l = new Label(text);
-    l.setStyle("-fx-background-color:" + c[0] + ";-fx-text-fill:" + c[1] + ";"
-        + "-fx-font-size:10px;-fx-font-weight:bold;"
-        + "-fx-padding:3px 8px;-fx-background-radius:10px;");
+    l.getStyleClass().addAll("badge", styleClass);
     return l;
   }
 
-  private String smallBtnStyle(final boolean danger) {
-    if (danger) {
-      return "-fx-background-color:#FDECEA;-fx-text-fill:#E53238;"
-          + "-fx-border-color:transparent;-fx-border-radius:4px;"
-          + "-fx-background-radius:4px;-fx-font-size:11px;"
-          + "-fx-padding:3px 10px;-fx-cursor:hand;-fx-effect:null;";
-    }
-    return "-fx-background-color:white;-fx-text-fill:#555;"
-        + "-fx-border-color:#E0E0E0;-fx-border-width:1px;"
-        + "-fx-border-radius:4px;-fx-background-radius:4px;"
-        + "-fx-font-size:11px;-fx-padding:3px 10px;-fx-cursor:hand;-fx-effect:null;";
-  }
 
   @FXML
   private void onToggleTheme() {

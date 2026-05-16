@@ -183,28 +183,28 @@ public class SellerController implements Initializable {
     final String category = item.has("category") ? item.get("category").getAsString() : "";
 
     final HBox row = new HBox();
-    row.setAlignment(Pos.CENTER_LEFT);
-    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
-        + "-fx-border-width:0 0 1px 0;-fx-padding:10px 14px;");
+    row.getStyleClass().add("table-row");
 
     final Label titleLbl = new Label(name);
-    titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
+    titleLbl.getStyleClass().add("label-bold");
     HBox.setHgrow(titleLbl, Priority.ALWAYS);
+    titleLbl.setMaxWidth(Double.MAX_VALUE);
 
     final Label currentBidLbl = new Label(String.format("$%.2f", currentPrice));
-    currentBidLbl.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#E53238;");
-    currentBidLbl.setPrefWidth(100);
+    currentBidLbl.getStyleClass().addAll("label-bold", "price-tag");
+    currentBidLbl.setPrefWidth(120);
+    currentBidLbl.setStyle("-fx-font-size: 14px;");
 
     final Label startPriceLbl = new Label(String.format("$%.2f", startPrice));
-    startPriceLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333;");
-    startPriceLbl.setPrefWidth(120);
+    startPriceLbl.getStyleClass().add("body-text");
+    startPriceLbl.setPrefWidth(140);
 
     final Label timeLbl = new Label(formatTimeLeft(item));
-    timeLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#888;");
-    timeLbl.setPrefWidth(100);
+    timeLbl.getStyleClass().add("body-small");
+    timeLbl.setPrefWidth(120);
 
     final Label badge = buildBadge(status);
-    badge.setPrefWidth(90);
+    badge.setPrefWidth(100);
 
     final Button action = buildActionButton(status, itemId, name, category, description);
     action.setPrefWidth(100);
@@ -228,44 +228,38 @@ public class SellerController implements Initializable {
 
   private Label buildBadge(final String status) {
     final Label b = new Label();
+    b.getStyleClass().add("badge");
     switch (status) {
       case "OPEN" -> {
         b.setText("Active");
-        b.setStyle(badgeStyle("#E8F0FE", "#1A73E8"));
+        b.getStyleClass().add("badge-info");
       }
       case "FINISHED" -> {
         b.setText("Sold");
-        b.setStyle(badgeStyle("#EAF5EA", "#5BA55B"));
+        b.getStyleClass().add("badge-success");
       }
       case "CANCELED" -> {
         b.setText("Unsold");
-        b.setStyle(badgeStyle("#FEF6E6", "#F5A623"));
+        b.getStyleClass().add("badge-warning");
       }
       case "DRAFT" -> {
         b.setText("Draft");
-        b.setStyle(badgeStyle("#F4F4F4", "#888888"));
+        b.getStyleClass().add("badge-danger");
       }
       default -> {
         b.setText(status);
-        b.setStyle(badgeStyle("#F4F4F4", "#333333"));
+        b.getStyleClass().add("badge-danger");
       }
     }
     return b;
   }
 
-  private String badgeStyle(final String bg, final String fg) {
-    return "-fx-background-color:" + bg + ";-fx-text-fill:" + fg + ";"
-        + "-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:3px 10px;"
-        + "-fx-background-radius:10px;";
-  }
 
   private Button buildActionButton(final String status, final String itemId,
       final String name, final String category, final String description) {
     final Button btn = new Button();
-    btn.setStyle("-fx-background-color:white;-fx-border-color:#E0E0E0;"
-        + "-fx-border-width:1px;-fx-border-radius:5px;"
-        + "-fx-background-radius:5px;-fx-font-size:11px;"
-        + "-fx-padding:4px 12px;-fx-cursor:hand;-fx-effect:null;");
+    btn.getStyleClass().add("btn-outline");
+    btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
 
     btn.setText("View");
     btn.setOnAction(e -> {

@@ -7,8 +7,9 @@
 <!--
     AuctionDetailView.fxml
     Controller : com.auction.client.controllers.AuctionDetailController
-    Màn hình chi tiết sản phẩm đấu giá — hiển thị giá, đồng hồ đếm ngược,
-    lịch sử đặt g<BorderPane xmlns="http://javafx.com/javafx"
+    Display auction details, price history, and bidding controls.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.AuctionDetailController"
             fx:id="rootPane"

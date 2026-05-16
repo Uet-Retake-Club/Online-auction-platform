@@ -9,7 +9,7 @@
     Controller : com.auction.client.controllers.AdminController
     System Administration Screen - statistics, user management, auction management.
 -->
-<<BorderPane xmlns="http://javafx.com/javafx"
+<BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.AdminController"
             fx:id="rootPane"
@@ -129,6 +129,9 @@
                     </VBox>
                 </VBox>
 
-                <!-- ── Empty state when other tabs active ── -->
-                <VBox fx:id="tabPlaceholder" alignment="CENTER" spacing="15" style="-fx-padding: 80px 0;" visible="false" managed="false">
+                <VBox fx:id="tabPlaceholder" alignment="CENTER" spacing="15" style="-fx-padding: 80px 0;" visible="false" managed="false"/>
+
+            </VBox>
+        </ScrollPane>
+    </center>
 </BorderPane>

@@ -37,6 +37,10 @@
     -fx-font-family:      "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -fx-font-size:        14px;
     -fx-background-color: -bg-main;
+    font-family:          "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size:            14px;
+    background-color:     #F8F9FA;
+    color:                #212529;
 }
 
 /* ── 2. DARK MODE OVERRIDES ──────────────────────────────── */
@@ -56,17 +60,19 @@
     -shadow-sm:          dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0, 0, 2);
     -shadow-md:          dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0, 0, 4);
     -shadow-lg:          dropshadow(gaussian, rgba(0,0,0,0.4), 24, 0, 0, 8);
+    background-color:     #0F111A;
+    color:                #E9ECEF;
 }
 
 /* ── 3. BASE COMPONENTS ──────────────────────────────────── */
 
 /* Typography */
-.heading-1 { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: -text-main; }
-.heading-2 { -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: -text-main; }
-.heading-3 { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -text-main; }
-.body-text  { -fx-text-fill: -text-main; }
-.body-small { -fx-font-size: 12px; -fx-text-fill: -text-secondary; }
-.label-bold { -fx-font-weight: bold; -fx-text-fill: -text-main; }
+.heading-1 { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: -text-main; font-size: 28px; font-weight: bold; color: -text-main; }
+.heading-2 { -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: -text-main; font-size: 22px; font-weight: bold; color: -text-main; }
+.heading-3 { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -text-main; font-size: 18px; font-weight: bold; color: -text-main; }
+.body-text  { -fx-text-fill: -text-main; color: -text-main; }
+.body-small { -fx-font-size: 12px; -fx-text-fill: -text-secondary; font-size: 12px; color: -text-secondary; }
+.label-bold { -fx-font-weight: bold; -fx-text-fill: -text-main; font-weight: bold; color: -text-main; }
 
 /* Buttons */
 .button {
@@ -74,12 +80,18 @@
     -fx-padding: 10px 20px;
     -fx-background-radius: 8px;
     -fx-border-radius: 8px;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
 }
 
 .btn-primary {
     -fx-background-color: -primary;
     -fx-text-fill: -text-on-primary;
     -fx-font-weight: bold;
+    background-color: -primary;
+    color: -text-on-primary;
+    font-weight: bold;
 }
 .btn-primary:hover { -fx-background-color: -primary-hover; }
 
@@ -229,7 +241,19 @@
     -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: -primary;
-    font-size: 22px;
-    font-weight: bold;
-    color: -primary;
+}
+
+/* Tables & Lists */
+.table-row {
+    -fx-border-color: transparent transparent -border-color transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 12px 20px;
+}
+.table-row:hover {
+    -fx-background-color: -bg-surface-alt;
+}
+
+.field-error {
+    -fx-text-fill: -danger;
+    -fx-font-size: 11px;
 }

@@ -7,8 +7,9 @@
 <!--
     CreateListingView.fxml
     Controller : com.auction.client.controllers.CreateListingController
-    Màn hình Seller đăng sản phẩm đấu giá mới.
-    Gồm: tiêu đề, danh mục, mô tả, giá khởi điể<BorderPane xmlns="http://javafx.com/javafx"
+    Screen for sellers to create a new auction listing.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.CreateListingController"
             fx:id="rootPane"
