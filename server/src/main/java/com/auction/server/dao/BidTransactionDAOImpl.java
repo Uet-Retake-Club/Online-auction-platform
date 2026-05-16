@@ -49,4 +49,20 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return history;
     }
-}
+
+    @Override
+
+    public int getTotalBidCount() {
+        String sql = "SELECT COUNT(*) FROM bid_transactions";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+}

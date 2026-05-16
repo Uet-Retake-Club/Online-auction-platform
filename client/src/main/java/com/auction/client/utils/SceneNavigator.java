@@ -1,5 +1,8 @@
 package com.auction.client.utils;
 
+import java.net.URL;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -24,6 +27,7 @@ import javafx.util.Duration;
  */
 public final class SceneNavigator {
 
+  private static final Logger LOGGER = Logger.getLogger(SceneNavigator.class.getName());
   private static final int FADE_OUT_MS = 120;
   private static final int FADE_IN_MS = 150;
   private static Stage stage;
@@ -102,19 +106,23 @@ public final class SceneNavigator {
    * @param view the target screen to navigate to
    */
   public static void navigateTo(final View view) {
+    System.out.println("NAVIGATING TO: " + view.name() + " (" + view.path + ")");
     try {
-      final Parent root = FXMLLoader.load(
-          SceneNavigator.class.getResource(view.path)
-      );
+      final URL fxmlUrl = SceneNavigator.class.getResource(view.path);
+      if (fxmlUrl == null) {
+        System.err.println("FATAL: FXML file not found at path: " + view.path);
+        return;
+      }
+      
+      final FXMLLoader loader = new FXMLLoader(fxmlUrl);
+      final Parent root = loader.load();
+      
+      final String css = SceneNavigator.class.getResource("/com/auction/client/styles/main.css").toExternalForm();
+      root.getStylesheets().add(css);
       applyTheme(root);
 
       if (stage.getScene() == null) {
         final Scene scene = new Scene(root);
-        scene.getStylesheets().add(
-            SceneNavigator.class
-                .getResource("/com/auction/client/styles/main.css")
-                .toExternalForm()
-        );
         stage.setScene(scene);
       } else {
         final Parent oldRoot = stage.getScene().getRoot();
@@ -135,8 +143,12 @@ public final class SceneNavigator {
       }
 
     } catch (Exception ex) {
-      System.err.println("Navigation error → " + view.path);
+      System.err.println("Navigation error -> " + view.path);
       ex.printStackTrace();
+      if (ex.getCause() != null) {
+        System.err.println("Caused by:");
+        ex.getCause().printStackTrace();
+      }
     }
   }
 

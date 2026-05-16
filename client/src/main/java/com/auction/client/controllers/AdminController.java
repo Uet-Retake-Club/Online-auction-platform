@@ -1,13 +1,27 @@
 package com.auction.client.controllers;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Request;
+import com.auction.shared.dto.Response;
+import com.auction.shared.dto.AdminStats;
+import com.auction.shared.models.Item;
+import com.auction.shared.models.User;
+import com.auction.shared.models.TopupRequest;
+import com.auction.client.utils.ToastNotification;
+import com.google.gson.Gson;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -18,7 +32,11 @@ import javafx.scene.layout.VBox;
  * <p>Features: Dashboard stats, Users table, Auctions table, and Tab navigation.
  */
 public class AdminController implements Initializable {
+  private static final Logger LOGGER = Logger.getLogger(AdminController.class.getName());
 
+
+  @FXML
+  private BorderPane rootPane;
   @FXML
   private Label adminLabel;
   @FXML
@@ -45,36 +63,35 @@ public class AdminController implements Initializable {
   private Button navAuctions;
   @FXML
   private Button navBids;
+  @FXML
+  private Button navWallet;
+  @FXML
+  private VBox walletTab;
+  @FXML
+  private VBox walletTableContainer;
+
+  private final Gson gson = new Gson();
 
   private Button activeNav;
 
-  private static final String[][] DUMMY_USERS = {
-    {"user_alpha", "alpha@mail.com", "Bidder", "Active"},
-    {"watch_king99", "king@mail.com", "Seller", "Active"},
-    {"collector_vn", "col@mail.com", "Bidder", "Suspended"},
-    {"techbid2025", "tech@mail.com", "Bidder", "Active"},
-    {"admin_root", "admin@hub.com", "Admin", "Active"},
-  };
-
-  private static final String[][] DUMMY_AUCTIONS = {
-    {"Vintage Rolex Submariner", "watch_king99", "$1,240.00", "RUNNING"},
-    {"iPhone 15 Pro Max", "techbid2025", "$780.00", "RUNNING"},
-    {"Nike Air Jordan 1", "collector_vn", "$210.00", "FINISHED"},
-    {"MacBook Air M2", "user_alpha", "$820.00", "OPEN"},
-  };
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     adminLabel.setText(UserSession.getInstance().getDisplayName());
     activeNav = navDashboard;
 
-    statTotalUsers.setText("1,284");
-    statActiveAuctions.setText("342");
-    statTotalBids.setText("8,741");
-    statRevenue.setText("$94,200");
+    // Reset stats
+    statTotalUsers.setText("...");
+    statActiveAuctions.setText("...");
+    statTotalBids.setText("...");
+    statRevenue.setText("...");
 
-    loadUsersTable(DUMMY_USERS);
-    loadAuctionsTable(DUMMY_AUCTIONS);
+    Platform.runLater(this::fetchStats);
+  }
+
+  private void fetchStats() {
+    NetworkClientService.getInstance().addListener(this::handleAdminResponse);
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.ADMIN_GET_STATS, UserSession.getInstance().getUserId(), ""));
   }
 
   @FXML
@@ -89,19 +106,187 @@ public class AdminController implements Initializable {
   @FXML
   private void onTabUsers() {
     switchNav(navUsers);
-    showPlaceholder("Users management — coming soon");
+    dashboardTab.setVisible(false);
+    dashboardTab.setManaged(false);
+    walletTab.setVisible(false);
+    walletTab.setManaged(false);
+    tabPlaceholder.setVisible(true);
+    tabPlaceholder.setManaged(true);
+    ((Label) tabPlaceholder.getChildren().get(0)).setText("Loading users...");
+    
+    Platform.runLater(this::fetchUsers);
+  }
+
+  private void fetchUsers() {
+    NetworkClientService.getInstance().addListener(this::handleAdminResponse);
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.ADMIN_GET_USERS, UserSession.getInstance().getUserId(), ""));
   }
 
   @FXML
   private void onTabAuctions() {
     switchNav(navAuctions);
-    showPlaceholder("Auctions management — coming soon");
+    dashboardTab.setVisible(false);
+    dashboardTab.setManaged(false);
+    walletTab.setVisible(false);
+    walletTab.setManaged(false);
+    tabPlaceholder.setVisible(true);
+    tabPlaceholder.setManaged(true);
+    ((Label) tabPlaceholder.getChildren().get(0)).setText("Loading auctions...");
+
+    Platform.runLater(this::fetchAuctions);
+  }
+
+  private void fetchAuctions() {
+    NetworkClientService.getInstance().addListener(this::handleAdminResponse);
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.ADMIN_GET_AUCTIONS, UserSession.getInstance().getUserId(), ""));
   }
 
   @FXML
   private void onTabBids() {
     switchNav(navBids);
-    showPlaceholder("Bids log — coming soon");
+    showPlaceholder("Bids log - coming soon");
+  }
+
+  @FXML
+  private void onTabWallet() {
+    switchNav(navWallet);
+    dashboardTab.setVisible(false);
+    dashboardTab.setManaged(false);
+    tabPlaceholder.setVisible(false);
+    tabPlaceholder.setManaged(false);
+    walletTab.setVisible(true);
+    walletTab.setManaged(true);
+    Platform.runLater(this::fetchPendingRequests);
+  }
+
+  private void fetchPendingRequests() {
+    final Request req = new Request(MessageType.ADMIN_GET_PENDING_TOPUPS, UserSession.getInstance().getUserId(), "");
+    NetworkClientService.getInstance().addListener(this::handleAdminResponse);
+    NetworkClientService.getInstance().sendRequest(req);
+  }
+
+  private void handleAdminResponse(Response response) {
+    if (response.getType() == MessageType.ADMIN_STATS_RESPONSE) {
+      NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
+      Platform.runLater(() -> {
+        try {
+          final AdminStats stats = gson.fromJson(response.getPayload(), AdminStats.class);
+          statTotalUsers.setText(String.format("%, d", stats.totalUsers));
+          statActiveAuctions.setText(String.format("%, d", stats.activeAuctions));
+          statTotalBids.setText(String.format("%, d", stats.totalBids));
+          statRevenue.setText(String.format("$%,.2f", stats.revenue));
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error parsing stats", e);
+        }
+      });
+    } else if (response.getType() == MessageType.ADMIN_USERS_RESPONSE) {
+      NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
+      Platform.runLater(() -> {
+        try {
+          final User[] users = gson.fromJson(response.getPayload(), User[].class);
+          loadUsersTable(users);
+          tabPlaceholder.setVisible(false);
+          tabPlaceholder.setManaged(false);
+          dashboardTab.setVisible(true);
+          dashboardTab.setManaged(true);
+          // Show users, hide stats area if needed, but for now just load into the container
+          usersTableContainer.getParent().setVisible(true);
+          auctionsTableContainer.getParent().setVisible(false);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error parsing users", e);
+        }
+      });
+    } else if (response.getType() == MessageType.ADMIN_AUCTIONS_RESPONSE) {
+      NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
+      Platform.runLater(() -> {
+        try {
+          final Item[] items = gson.fromJson(response.getPayload(), Item[].class);
+          loadAuctionsTable(items);
+          tabPlaceholder.setVisible(false);
+          tabPlaceholder.setManaged(false);
+          dashboardTab.setVisible(true);
+          dashboardTab.setManaged(true);
+          usersTableContainer.getParent().setVisible(false);
+          auctionsTableContainer.getParent().setVisible(true);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error parsing auctions", e);
+        }
+      });
+    } else if (response.getType() == MessageType.ADMIN_PENDING_TOPUPS_RESPONSE) {
+      NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
+      Platform.runLater(() -> {
+        try {
+          final TopupRequest[] requests = gson.fromJson(response.getPayload(), TopupRequest[].class);
+          loadWalletTable(requests);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error parsing pending topups", e);
+        }
+      });
+    } else if (response.getType() == MessageType.ADMIN_APPROVE_TOPUP || response.getType() == MessageType.ADMIN_REJECT_TOPUP) {
+      Platform.runLater(() -> {
+        ToastNotification.show(rootPane, response.getMessage(), response.getStatus().equals("SUCCESS") ? ToastNotification.Type.SUCCESS : ToastNotification.Type.DANGER);
+        fetchPendingRequests(); // Refresh list
+      });
+    }
+  }
+
+  private void loadWalletTable(final TopupRequest[] requests) {
+    walletTableContainer.getChildren().clear();
+    if (requests == null || requests.length == 0) {
+      final Label lbl = new Label("No pending requests");
+      lbl.setStyle("-fx-text-fill:#888;-fx-padding:20px;");
+      walletTableContainer.getChildren().add(lbl);
+      return;
+    }
+    for (TopupRequest tr : requests) {
+      walletTableContainer.getChildren().add(buildWalletRequestRow(tr));
+    }
+  }
+
+  private HBox buildWalletRequestRow(final TopupRequest tr) {
+    final HBox row = new HBox();
+    row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+    row.setStyle("-fx-border-color:transparent transparent #F4F4F4 transparent;"
+        + "-fx-border-width:0 0 1px 0;-fx-padding:9px 16px;");
+
+    final Label idLabel = new Label(tr.id);
+    idLabel.setPrefWidth(120);
+    idLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#888;");
+
+    final Label userLabel = new Label(tr.userId);
+    userLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#111;");
+    HBox.setHgrow(userLabel, Priority.ALWAYS);
+
+    final Label amountLabel = new Label(String.format("$%,.2f", tr.amount));
+    amountLabel.setPrefWidth(120);
+    amountLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#5BA55B;");
+
+    final java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+    final Label timeLabel = new Label(sdf.format(new java.util.Date(tr.timestamp)));
+    timeLabel.setPrefWidth(160);
+    timeLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#555;");
+
+    final Button approveBtn = new Button("Approve");
+    approveBtn.setStyle("-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;-fx-font-size:11px;-fx-padding:4px 12px;-fx-cursor:hand;");
+    approveBtn.setOnAction(e -> approveRequest(tr.id));
+
+    final Button rejectBtn = new Button("Reject");
+    rejectBtn.setStyle("-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-size:11px;-fx-padding:4px 12px;-fx-cursor:hand;");
+    rejectBtn.setOnAction(e -> rejectRequest(tr.id));
+
+    final HBox actions = new HBox(8, approveBtn, rejectBtn);
+    actions.setPrefWidth(180);
+
+    row.getChildren().addAll(idLabel, userLabel, amountLabel, timeLabel, actions);
+    return row;
+  }
+
+  private void approveRequest(String requestId) {
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.ADMIN_APPROVE_TOPUP, UserSession.getInstance().getUserId(), requestId));
+  }
+
+  private void rejectRequest(String requestId) {
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.ADMIN_REJECT_TOPUP, UserSession.getInstance().getUserId(), requestId));
   }
 
   private void switchNav(final Button btn) {
@@ -117,6 +302,8 @@ public class AdminController implements Initializable {
   private void showPlaceholder(final String msg) {
     dashboardTab.setVisible(false);
     dashboardTab.setManaged(false);
+    walletTab.setVisible(false);
+    walletTab.setManaged(false);
     tabPlaceholder.setVisible(true);
     tabPlaceholder.setManaged(true);
     ((Label) tabPlaceholder.getChildren().get(0)).setText(msg);
@@ -128,10 +315,11 @@ public class AdminController implements Initializable {
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
   }
 
-  private void loadUsersTable(final String[][] users) {
+  private void loadUsersTable(final User[] users) {
     usersTableContainer.getChildren().clear();
-    for (String[] u : users) {
-      usersTableContainer.getChildren().add(buildUserRow(u[0], u[1], u[2], u[3]));
+    if (users == null) return;
+    for (User u : users) {
+      usersTableContainer.getChildren().add(buildUserRow(u.getUsername(), u.getEmail(), u.getRole(), "Active"));
     }
   }
 
@@ -151,7 +339,7 @@ public class AdminController implements Initializable {
     emailLabel.setStyle("-fx-font-size:12px;-fx-text-fill:#555;");
 
     final Label roleLabel = buildSmallBadge(role,
-        role.equals("Admin") || role.equals("Seller") ? "#F4F4F4:#555555" : "#E8F0FE:#1A73E8");
+        role.equalsIgnoreCase("Admin") || role.equalsIgnoreCase("Seller") ? "#F4F4F4:#555555" : "#E8F0FE:#1A73E8");
     roleLabel.setPrefWidth(90);
 
     final Label statusLabel = buildSmallBadge(status,
@@ -174,11 +362,16 @@ public class AdminController implements Initializable {
     return row;
   }
 
-  private void loadAuctionsTable(final String[][] auctions) {
+  private void loadAuctionsTable(final Item[] auctions) {
     auctionsTableContainer.getChildren().clear();
-    for (String[] a : auctions) {
-      auctionsTableContainer.getChildren().add(buildAuctionRow(a[0], a[1], a[2], a[3]));
+    if (auctions == null) return;
+    for (Item a : auctions) {
+      loadAuctionsTableItem(a);
     }
+  }
+
+  private void loadAuctionsTableItem(final Item a) {
+    auctionsTableContainer.getChildren().add(buildAuctionRow(a.getName(), a.getSellerId(), String.format("$%,.2f", a.getCurrentHighestBid()), a.getStatus()));
   }
 
   private HBox buildAuctionRow(final String title, final String seller,

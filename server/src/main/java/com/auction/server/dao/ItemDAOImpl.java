@@ -382,4 +382,20 @@ public class ItemDAOImpl implements ItemDAO {
         }
         return items;
     }
-}
+
+    @Override
+
+    public int getActiveAuctionCount() {
+        String sql = "SELECT COUNT(*) FROM items WHERE status = 'OPEN'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+}

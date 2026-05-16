@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.auction.shared.models.TopupRequest;
 
 public class WalletDAOImpl implements WalletDAO {
 
@@ -76,6 +77,30 @@ public class WalletDAOImpl implements WalletDAO {
                     rs.getString("status"),
                     rs.getLong("timestamp")
                 ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return requests;
+    }
+
+    @Override
+    public List<TopupRequest> getHistory(String userId) {
+        List<TopupRequest> requests = new ArrayList<>();
+        String sql = "SELECT * FROM topup_requests WHERE user_id = ? ORDER BY timestamp DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    requests.add(new TopupRequest(
+                        rs.getString("id"),
+                        rs.getString("user_id"),
+                        rs.getDouble("amount"),
+                        rs.getString("status"),
+                        rs.getLong("timestamp")
+                    ));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

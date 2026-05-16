@@ -30,6 +30,9 @@ public class WalletHandler implements CommandHandler {
             } catch (Exception e) {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Invalid amount", null);
             }
+        } else if (request.getType() == MessageType.GET_WALLET_HISTORY) {
+            java.util.List<com.auction.shared.models.TopupRequest> history = walletDAO.getHistory(userId);
+            return new Response(MessageType.WALLET_HISTORY_RESPONSE, "SUCCESS", "History fetched", new com.google.gson.Gson().toJson(history));
         }
 
         return new Response(MessageType.BID_ERROR, "FAIL", "Unknown wallet command", null);

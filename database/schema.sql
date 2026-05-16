@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS watchlists (
 );
 
 -- Seed Data: Default Users
-INSERT OR IGNORE INTO users (id, username, email, password, role) VALUES ('ADMIN-1', 'admin', 'admin@auction.com', 'admin123', 'ADMIN');
+INSERT OR REPLACE INTO users (id, username, email, password, role) VALUES ('ADMIN-1', 'admin', 'admin@auction.com', 'admin123', 'ADMIN');
 INSERT OR IGNORE INTO users (id, username, email, password, role) VALUES ('SELLER-1', 'seller1', 'seller1@auction.com', 'seller123', 'SELLER');
 INSERT OR IGNORE INTO users (id, username, email, password, role) VALUES ('SELLER-2', 'seller2', 'seller2@auction.com', 'seller123', 'SELLER');
 

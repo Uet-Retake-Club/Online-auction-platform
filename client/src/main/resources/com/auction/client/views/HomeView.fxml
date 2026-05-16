@@ -8,8 +8,8 @@
     HomeView.fxml
     Controller : com.auction.client.controllers.HomeController
     CSS        : main.css loaded in ClientApplication.java
-    Size       : 1100 x 700 — full app shell
-    Layout     : BorderPane → top nav / left sidebar / center scroll
+    Size       : 1100 x 700 - full app shell
+    Layout     : BorderPane -> top nav / left sidebar / center scroll
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -94,6 +94,22 @@
                            -fx-border-radius: 6px;
                            -fx-background-radius: 6px;
                            -fx-padding: 7px 12px;
+                           -fx-cursor: hand;
+                           -fx-effect: null;"/>
+
+            <!-- Admin panel -->
+            <Button fx:id="adminBtn"
+                    text="🛡 Admin"
+                    onAction="#onAdmin"
+                    visible="false" managed="false"
+                    style="-fx-background-color: #1A73E8;
+                           -fx-text-fill: white;
+                           -fx-font-weight: bold;
+                           -fx-font-size: 13px;
+                           -fx-border-color: transparent;
+                           -fx-border-radius: 6px;
+                           -fx-background-radius: 6px;
+                           -fx-padding: 7px 14px;
                            -fx-cursor: hand;
                            -fx-effect: null;"/>
 

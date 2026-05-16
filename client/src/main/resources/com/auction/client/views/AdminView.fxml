@@ -7,8 +7,7 @@
 <!--
     AdminView.fxml
     Controller : com.auction.client.controllers.AdminController
-    Màn hình quản trị hệ thống — thống kê tổng quan, quản lý user,
-    quản lý phiên đấu giá.
+    System Administration Screen - statistics, user management, auction management.
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -50,6 +49,8 @@
                     styleClass="nav-item" style="-fx-effect:null;"/>
             <Button fx:id="navBids"       text="Bids"       maxWidth="Infinity" onAction="#onTabBids"
                     styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="navWallet"     text="Wallet Approval" maxWidth="Infinity" onAction="#onTabWallet"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
         </VBox>
     </left>
 
@@ -86,7 +87,7 @@
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS"
                               style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:16px;">
-                            <Label fx:id="statRevenue" text="$94,200"
+                            <Label fx:id="statRevenue" text="\$94,200"
                                    style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#5BA55B;"/>
                             <Label text="Revenue this month"
                                    style="-fx-font-size:11px;-fx-text-fill:#888;-fx-padding:2px 0 0 0;"/>
@@ -135,6 +136,33 @@
                         <VBox fx:id="auctionsTableContainer"/>
                     </VBox>
 
+                </VBox>
+
+                <!-- ── WALLET APPROVAL TAB ────────────────── -->
+                <VBox fx:id="walletTab" spacing="16" visible="false" managed="false">
+                    <Label text="Pending Fund Requests"
+                           style="-fx-font-size:18px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                    
+                    <VBox spacing="0"
+                          style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;">
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding:14px 16px 10px 16px;">
+                            <Label text="Pending requests"
+                                   style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#111;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Button text="Refresh" onAction="#onTabWallet"
+                                    style="-fx-background-color:white;-fx-border-color:#E0E0E0;-fx-border-width:1px;-fx-border-radius:5px;-fx-background-radius:5px;-fx-font-size:12px;-fx-padding:5px 12px;-fx-cursor:hand;-fx-effect:null;"/>
+                        </HBox>
+                        <!-- Table header -->
+                        <HBox style="-fx-background-color:#F7F7F7;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:8px 16px;">
+                            <Label text="Request ID" prefWidth="120" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="User ID"    HBox.hgrow="ALWAYS" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Amount"     prefWidth="120" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Timestamp"  prefWidth="160" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                            <Label text="Actions"    prefWidth="180" style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#888;"/>
+                        </HBox>
+                        <!-- Request rows — populated by controller -->
+                        <VBox fx:id="walletTableContainer"/>
+                    </VBox>
                 </VBox>
 
                 <!-- ── Empty state when other tabs active ── -->

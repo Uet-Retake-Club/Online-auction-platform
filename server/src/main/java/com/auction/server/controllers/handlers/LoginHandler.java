@@ -28,7 +28,8 @@ public class LoginHandler implements CommandHandler {
         if (userId != null) {
             clientHandler.setClientId(userId);
             AuctionService.getInstance().registerClient(userId, clientHandler);
-            return new Response(MessageType.LOGIN_SUCCESS, "SUCCESS", "Login successful", userId);
+            com.auction.shared.models.User user = userDAO.getUserById(userId);
+            return new Response(MessageType.LOGIN_SUCCESS, "SUCCESS", "Login successful", gson.toJson(user));
         } else {
             return new Response(MessageType.LOGIN_FAIL, "FAIL", "Invalid username or password", null);
         }

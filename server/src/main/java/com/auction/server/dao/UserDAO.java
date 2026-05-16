@@ -7,4 +7,7 @@ public interface UserDAO {
     User getUserByUsername(String username);
     boolean addUser(User user, String password);
     String authenticateUser(String emailOrUsername, String password);
+    java.util.List<User> getAllUsers();
+    int getUserCount();
 }
+

@@ -11,6 +11,8 @@ import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.server.dao.ItemDAO;
+import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.dao.WalletDAO;
 import com.auction.shared.models.Item;
 import com.auction.shared.models.BidTransaction;
 import com.google.gson.Gson;
@@ -40,33 +42,40 @@ public class AuctionServiceTest {
         
         manager = AuctionService.getInstance();
 
-        // Mock ItemDAO to bypass database dependencies in tests
+        // Mock DAOs to bypass database dependencies in tests
         try {
             java.lang.reflect.Field itemDaoField = AuctionService.class.getDeclaredField("itemDAO");
             itemDaoField.setAccessible(true);
             itemDaoField.set(manager, new ItemDAO() {
-                @Override
-                public Item getItemById(String id) {
-                    return null;
-                }
-                @Override
-                public boolean addItem(Item item) {
-                    return true;
-                }
-                @Override
-                public boolean updateCurrentPrice(
-                    String itemId, double newPrice, String bidderId) {
-                    return true;
-                }
-                @Override
-                public boolean updateStatus(String itemId, String status) { return true; }
-                @Override
-                public com.auction.shared.models.Item getFirstOpenItem() { return null; }
-                @Override
-                public java.util.List<com.auction.shared.models.Item> getItemsBySellerId(String sellerId) { return java.util.Collections.emptyList(); }
-                @Override
-                public java.util.List<com.auction.shared.models.Item> getAllItems() { return java.util.Collections.emptyList(); }
+                @Override public Item getItemById(String id) { return null; }
+                @Override public boolean addItem(Item item) { return true; }
+                @Override public boolean updateCurrentPrice(String itemId, double newPrice, String bidderId) { return true; }
+                @Override public boolean updateStatus(String itemId, String status) { return true; }
+                @Override public Item getFirstOpenItem() { return null; }
+                @Override public java.util.List<Item> getItemsBySellerId(String sellerId) { return java.util.Collections.emptyList(); }
+                @Override public java.util.List<Item> getAllItems() { return java.util.Collections.emptyList(); }
+                @Override public int getActiveAuctionCount() { return 0; }
             });
+
+            java.lang.reflect.Field bidDaoField = AuctionService.class.getDeclaredField("bidDAO");
+            bidDaoField.setAccessible(true);
+            bidDaoField.set(manager, new BidTransactionDAO() {
+                @Override public boolean addTransaction(BidTransaction tx) { return true; }
+                @Override public java.util.List<BidTransaction> getHistoryByItem(String itemId) { return java.util.Collections.emptyList(); }
+                @Override public int getTotalBidCount() { return 0; }
+            });
+
+            java.lang.reflect.Field walletDaoField = AuctionService.class.getDeclaredField("walletDAO");
+            walletDaoField.setAccessible(true);
+            walletDaoField.set(manager, new WalletDAO() {
+                @Override public double getBalance(String userId) { return 1000000.0; } // Rich for tests
+                @Override public boolean updateBalance(String userId, double amount) { return true; }
+                @Override public boolean createTopupRequest(String userId, double amount) { return true; }
+                @Override public java.util.List<com.auction.shared.models.TopupRequest> getPendingRequests() { return java.util.Collections.emptyList(); }
+                @Override public java.util.List<com.auction.shared.models.TopupRequest> getHistory(String userId) { return java.util.Collections.emptyList(); }
+                @Override public boolean updateRequestStatus(String requestId, String status) { return true; }
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -101,64 +110,25 @@ public class AuctionServiceTest {
 
     @Test
     void testGetInstance() {
-        AuctionService instance1 = AuctionService.getInstance();
-        AuctionService instance2 = AuctionService.getInstance();
-        assertSame(instance1, instance2, "getInstance should return the same instance");
-    }
-
-    @Test
-    void testBroadcast() {
-        // Simple test without mock
-        manager.broadcast(new Response(MessageType.LOGIN, "SUCCESS", "Test", null));
-        // Assume it works if no exception
-    }
-
-    @Test
-    void testRegisterAutoBidSuccess() {
-        AutoBidSettings settings = new AutoBidSettings("client1", "auction1", 1300.0, 50.0, false);
-        Response response = manager.registerAutoBid(settings);
-        assertEquals("SUCCESS", response.getStatus());
-    }
-
-    @Test
-    void testRegisterAutoBidFailLowMaxPrice() {
-        AutoBidSettings settings = new AutoBidSettings("client1", "auction1", 1200.0, 50.0, false);
-        Response response = manager.registerAutoBid(settings);
-        assertEquals("FAIL", response.getStatus());
-    }
-
-    @Test
-    void testRegisterAutoBidFailLowIncrement() {
-        AutoBidSettings settings = new AutoBidSettings("client1", "auction1", 1300.0, 10.0, false);
-        Response response = manager.registerAutoBid(settings);
-        assertEquals("FAIL", response.getStatus());
+        AuctionService s1 = AuctionService.getInstance();
+        AuctionService s2 = AuctionService.getInstance();
+        assertSame(s1, s2);
+        assertNotNull(s1);
     }
 
     @Test
     void testProcessBidSuccess() {
-        Response response = manager.processBid("client1", 1250.0, "payload");
-        assertEquals("SUCCESS", response.getStatus());
-        // Check currentHighestBid using reflection
-        try {
-            java.lang.reflect.Field field = AuctionService.class.getDeclaredField("currentHighestBid");
-            field.setAccessible(true);
-            double currentHighestBid = (double) field.get(manager);
-            assertEquals(1250.0, currentHighestBid);
-        } catch (Exception e) {
-            fail("Reflection failed");
-        }
+        Response res = manager.processBid("client1", 1250.0, "payload");
+        assertEquals("SUCCESS", res.getStatus());
+        assertEquals(1250.0, manager.getCurrentHighestBid());
+        assertEquals("client1", manager.getCurrentHighestBidder());
     }
 
     @Test
     void testProcessBidFail() {
-        Response response = manager.processBid("client1", 1200.0, "payload");
-        assertEquals("FAIL", response.getStatus());
-    }
-
-    @Test
-    void testShutdown() {
-        manager.shutdown();
-        // Hard to test, but assume it works
+        // AuctionStatus is OPEN, but price is too low
+        Response res = manager.processBid("client1", 1000.0, "payload");
+        assertEquals("FAIL", res.getStatus());
     }
 
     @Test
@@ -191,6 +161,7 @@ public class AuctionServiceTest {
 
     @Test
     void testGetCurrentStatusResponseBeforeAnyBid() {
+        // Initially no bids, starting price is 1240
         Response status = manager.getCurrentStatusResponse();
         assertEquals("SUCCESS", status.getStatus());
         assertNotNull(status.getPayload());
@@ -209,5 +180,40 @@ public class AuctionServiceTest {
         BidTransaction bt = new Gson().fromJson(status.getPayload(), BidTransaction.class);
         assertEquals(1300.0, bt.getBidAmount(), 0.001);
         assertEquals("client1", bt.getBidderId());
+    }
+
+    @Test
+    void testRegisterAutoBidSuccess() {
+        AutoBidSettings settings = new AutoBidSettings("client1", "TEST-ITEM-001", 2000.0, 20.0, false);
+        Response res = manager.registerAutoBid(settings);
+        assertEquals("SUCCESS", res.getStatus());
+    }
+
+    @Test
+    void testRegisterAutoBidFailLowMaxPrice() {
+        // Current highest bid is 0, but starting price is 1240. Max price 1000 is too low.
+        AutoBidSettings settings = new AutoBidSettings("client1", "TEST-ITEM-001", 1000.0, 20.0, false);
+        Response res = manager.registerAutoBid(settings);
+        assertEquals("FAIL", res.getStatus());
+    }
+
+    @Test
+    void testRegisterAutoBidFailLowIncrement() {
+        AutoBidSettings settings = new AutoBidSettings("client1", "TEST-ITEM-001", 2000.0, 5.0, false);
+        Response res = manager.registerAutoBid(settings);
+        assertEquals("FAIL", res.getStatus());
+    }
+
+    @Test
+    void testBroadcast() {
+        // Simply ensure it doesn't crash without connected clients
+        manager.broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Test", null));
+    }
+
+    @Test
+    void testShutdown() {
+        manager.shutdown();
+        // Subsequent calls should be safe
+        manager.shutdown();
     }
 }

@@ -6,12 +6,16 @@ import com.auction.client.utils.UserSession;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
+import com.auction.client.utils.ItemDeserializer;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -28,6 +32,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class HomeController implements Initializable {
+  private static final Logger LOGGER = Logger.getLogger(HomeController.class.getName());
+
 
   private static final double SIDEBAR_WIDTH = 190;
   private static final double SCROLL_PADDING = 54;
@@ -44,6 +50,7 @@ public class HomeController implements Initializable {
   @FXML private Button allCategoriesBtn;
   @FXML private Button electronicsBtn;
   @FXML private Button fashionBtn;
+  @FXML private Button adminBtn;
   @FXML private Button homeGardenBtn;
   @FXML private Button sportsBtn;
   @FXML private Button collectiblesBtn;
@@ -60,11 +67,20 @@ public class HomeController implements Initializable {
 
   private final Map<String, Label> priceLabels = new HashMap<>();
   private final java.util.List<com.auction.shared.models.Item> allAuctionItems = new java.util.ArrayList<>();
+  private final Gson itemGson = new GsonBuilder()
+      .registerTypeAdapter(com.auction.shared.models.Item.class, new ItemDeserializer())
+      .create();
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     activeCategory = allCategoriesBtn;
     userLabel.setText(UserSession.getInstance().getInitials());
+    
+    if (adminBtn != null) {
+      boolean isAdmin = UserSession.getInstance().isAdmin();
+      adminBtn.setVisible(isAdmin);
+      adminBtn.setManaged(isAdmin);
+    }
     
     NetworkClientService.getInstance().addListener(this::handleServerMessage);
     fetchItemsFromServer();
@@ -94,13 +110,15 @@ public class HomeController implements Initializable {
       if (response.getType() == MessageType.GET_ALL_ITEMS_RESPONSE) {
         NetworkClientService.getInstance().removeListener(ref[0]);
         try {
-          final com.auction.shared.models.Item[] items = new Gson().fromJson(response.getPayload(), com.auction.shared.models.Item[].class);
+          final com.auction.shared.models.Item[] items = itemGson.fromJson(response.getPayload(), com.auction.shared.models.Item[].class);
           Platform.runLater(() -> {
             allAuctionItems.clear();
             if (items != null) allAuctionItems.addAll(Arrays.asList(items));
             applyFilters();
           });
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error parsing items from server", e);
+        }
       }
     };
     NetworkClientService.getInstance().addListener(ref[0]);
@@ -118,9 +136,11 @@ public class HomeController implements Initializable {
 
   private void updateCardWidths(final FlowPane grid, final double cardWidth) {
     grid.getChildren().forEach(node -> {
-      if (node instanceof VBox card) {
+      if (node instanceof VBox) {
+        VBox card = (VBox) node;
         card.setPrefWidth(cardWidth);
-        if (!card.getChildren().isEmpty() && card.getChildren().get(0) instanceof StackPane imgBox) {
+        if (!card.getChildren().isEmpty() && card.getChildren().get(0) instanceof StackPane) {
+          StackPane imgBox = (StackPane) card.getChildren().get(0);
           imgBox.setPrefWidth(cardWidth - 20);
           imgBox.setPrefHeight((cardWidth - 20) * IMAGE_RATIO);
         }
@@ -220,6 +240,8 @@ public class HomeController implements Initializable {
     recentGrid.setVisible(!show); recentGrid.setManaged(!show);
   }
 
+  @FXML private void onSeeAllEndingSoon() { /* placeholder — scroll to section or navigate */ }
+  @FXML private void onSeeAllRecent() { /* placeholder — scroll to section or navigate */ }
   @FXML private void onSell() { SceneNavigator.navigateTo(SceneNavigator.View.SELLER); }
   @FXML private void onMyBids() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
   @FXML private void onWatchlist() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
@@ -227,4 +249,5 @@ public class HomeController implements Initializable {
   @FXML private void onLogout() { UserSession.getInstance().clear(); SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
   @FXML private void onToggleTheme() { SceneNavigator.toggleTheme(); }
   @FXML private void onHome() { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
+  @FXML private void onAdmin() { SceneNavigator.navigateTo(SceneNavigator.View.ADMIN); }
 }

@@ -38,10 +38,6 @@ public class ClientApplication extends Application {
     // 1. Register Stage with SceneNavigator first — everything depends on this
     SceneNavigator.init(primaryStage);
     
-    // 1.5 Apply modern AtlantaFX theme globally
-    Application.setUserAgentStylesheet(
-        new atlantafx.base.theme.PrimerLight().getUserAgentStylesheet());
-
     // 2. Stage owns the window dimensions — set once, never changed on navigate
     primaryStage.setTitle("AuctionHub");
     primaryStage.setWidth(DEFAULT_WIDTH);

@@ -109,7 +109,7 @@
                     <!-- Starting price + Increment row -->
                     <HBox spacing="14" style="-fx-padding:0 0 14px 0;">
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="Starting price ($)"
+                            <Label text="Starting price (&#36;)"
                                    style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
                             <TextField fx:id="startPriceField"
                                        promptText="0.00"
@@ -118,7 +118,7 @@
                                    style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="Minimum increment ($)"
+                            <Label text="Minimum increment (&#36;)"
                                    style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
                             <TextField fx:id="incrementField"
                                        promptText="1.00"

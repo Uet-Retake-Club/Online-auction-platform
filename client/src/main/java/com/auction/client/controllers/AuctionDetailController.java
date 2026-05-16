@@ -51,6 +51,7 @@ public class AuctionDetailController implements Initializable {
   @FXML private Label autoBidError;
   @FXML private Button setupAutoBidBtn;
   @FXML private CheckBox aggressiveModeCheckBox;
+  @FXML private Label walletBalanceLabel;
 
   private String currentAuctionId;
   private String currentUserId;
@@ -103,6 +104,9 @@ public class AuctionDetailController implements Initializable {
           noBidsLabel.setManaged(false);
           final int currentTotal = Integer.parseInt(totalBids.getText());
           totalBids.setText(String.valueOf(currentTotal + 1));
+          
+          // Refresh wallet balance because it might have changed (bid placed or refund received)
+          fetchWalletBalance();
         });
 
     BidService.getInstance().setOnAutoBidResult(response -> {
@@ -136,8 +140,20 @@ public class AuctionDetailController implements Initializable {
     currentHighestBidder = "";
     startCountdown();
 
-    // ── 3. Request live status AFTER callbacks are wired ──
+    // ── 3. Request live status and wallet balance AFTER callbacks are wired ──
+    BidService.getInstance().setOnWalletBalanceUpdated(this::updateWalletUI);
     BidService.getInstance().requestStatus();
+    fetchWalletBalance();
+  }
+
+  private void fetchWalletBalance() {
+    NetworkClientService.getInstance().sendRequest(
+        new Request(com.auction.shared.dto.MessageType.GET_WALLET_BALANCE,
+            currentUserId, ""));
+  }
+
+  private void updateWalletUI(final double balance) {
+    walletBalanceLabel.setText(String.format("$%,.2f", balance));
   }
 
   private void startCountdown() {

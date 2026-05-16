@@ -29,6 +29,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   private Consumer<BidTransaction> onNewBid;
   private Consumer<Response> onAutoBidResult;
   private Consumer<String> onBidError;
+  private Consumer<Double> onWalletBalanceUpdated;
 
   private BidService() {
     NetworkClientService.getInstance().addListener(this);
@@ -83,6 +84,15 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   }
 
   /**
+   * Sets the callback for wallet balance updates.
+   *
+   * @param callback balance callback
+   */
+  public void setOnWalletBalanceUpdated(final Consumer<Double> callback) {
+    this.onWalletBalanceUpdated = callback;
+  }
+
+  /**
    * Returns the current highest bid amount.
    *
    * @return current bid amount
@@ -112,6 +122,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     this.onNewBid = null;
     this.onAutoBidResult = null;
     this.onBidError = null;
+    this.onWalletBalanceUpdated = null;
   }
 
   /**
@@ -234,6 +245,14 @@ public class BidService implements NetworkClientService.ServerMessageListener {
       Platform.runLater(() -> {
         if (onBidError != null) {
           onBidError.accept(response.getMessage());
+        }
+      });
+    } else if (response.getType() == MessageType.WALLET_BALANCE_RESPONSE) {
+      Platform.runLater(() -> {
+        if (onWalletBalanceUpdated != null) {
+          try {
+            onWalletBalanceUpdated.accept(Double.parseDouble(response.getPayload()));
+          } catch (Exception ignored) {}
         }
       });
     }

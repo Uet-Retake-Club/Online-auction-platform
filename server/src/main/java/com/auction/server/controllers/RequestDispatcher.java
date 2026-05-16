@@ -29,8 +29,16 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.GET_WATCHLIST, new WatchlistHandler());
         handlerRegistry.put(MessageType.GET_WALLET_BALANCE, new WalletHandler());
         handlerRegistry.put(MessageType.WALLET_TOPUP_REQUEST, new WalletHandler());
-        handlerRegistry.put(MessageType.WALLET_TOPUP_APPROVE, new AdminWalletHandler());
+        handlerRegistry.put(MessageType.GET_WALLET_HISTORY, new WalletHandler());
+        AdminHandler adminHandler = new AdminHandler();
+        handlerRegistry.put(MessageType.ADMIN_GET_PENDING_TOPUPS, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_APPROVE_TOPUP, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_REJECT_TOPUP, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_GET_STATS, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_GET_USERS, adminHandler);
+        handlerRegistry.put(MessageType.ADMIN_GET_AUCTIONS, adminHandler);
     }
+
 
     public Response dispatch(Request request, ClientHandler clientHandler) {
         CommandHandler handler = handlerRegistry.get(request.getType());

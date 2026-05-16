@@ -11,6 +11,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * LoginController — handles LoginView.fxml.
@@ -19,6 +23,8 @@ import javafx.scene.layout.HBox;
  * Pressing Enter in the password field (or clicking Sign in) submits the form.
  */
 public class LoginController implements Initializable {
+  private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
+
 
   /** Root pane injected by FXML. */
   @FXML
@@ -103,11 +109,24 @@ public class LoginController implements Initializable {
           || type == com.auction.shared.dto.MessageType.LOGIN_FAIL) {
         com.auction.client.services.NetworkClientService.getInstance().removeListener(ref[0]);
         if (type == com.auction.shared.dto.MessageType.LOGIN_SUCCESS) {
-          final String userId = response.getPayload();
+          final String payload = response.getPayload();
           javafx.application.Platform.runLater(() -> {
-            com.auction.client.utils.UserSession.getInstance()
-                .signIn(userId, "User", "", usernameInput, usernameInput, "BIDDER");
-            SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+            try {
+              JsonObject userJson = new Gson().fromJson(payload, JsonObject.class);
+              String userId = userJson.get("id").getAsString();
+              String username = userJson.get("username").getAsString();
+              String email = userJson.get("email").getAsString();
+              String role = userJson.get("role").getAsString();
+              
+              LOGGER.log(Level.INFO, "User logged in with role: {0}", role);
+              
+              com.auction.client.utils.UserSession.getInstance()
+                  .signIn(userId, username, "", username, email, role);
+              SceneNavigator.navigateAfterLogin();
+            } catch (Exception e) {
+              LOGGER.log(Level.SEVERE, "Error processing login data", e);
+              showGeneralError("Error processing login data");
+            }
           });
         } else {
           javafx.application.Platform.runLater(() -> showGeneralError(response.getMessage()));

@@ -9,4 +9,5 @@ public interface InvoiceDAO {
     Invoice getInvoiceById(String id);
     List<Invoice> getInvoicesByUserId(String userId); // Xem hóa đơn của 1 người (cả mua và bán)
     boolean updateInvoiceStatus(String invoiceId, String status);
-}
+    double getTotalRevenue();
+}

@@ -17,4 +17,5 @@ public interface ItemDAO {
 
     List<Item> getItemsBySellerId(String sellerId);
     List<Item> getAllItems();
-}
+    int getActiveAuctionCount();
+}
