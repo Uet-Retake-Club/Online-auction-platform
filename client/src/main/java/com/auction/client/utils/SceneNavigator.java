@@ -1,5 +1,8 @@
 package com.auction.client.utils;
 
+import java.net.URL;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -8,81 +11,157 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * SceneNavigator.java
- * ─────────────────────────────────────────────
- * Trung tâm điều hướng toàn bộ ứng dụng.
- * Gọi SceneNavigator.navigateTo(View.HOME) từ bất kỳ controller nào.
+ * SceneNavigator is the central hub for screen navigation.
  *
- * Cách dùng:
- *   1. Trong ClientApplication.java  →  SceneNavigator.init(primaryStage);
- *   2. Trong bất kỳ controller nào   →  SceneNavigator.navigateTo(View.HOME);
+ * <p>Key design decisions:
+ * <ul>
+ * <li>{@code sizeToScene()} is intentionally not called.</li>
+ * <li>{@code centerOnScreen()} is intentionally not called.</li>
+ * <li>Stage size is preserved while FXML roots fill the available window.
+ * </ul>
+ *
+ * <p>Usage from any controller:
+ * <pre>
+ * SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+ * </pre>
  */
-public class SceneNavigator {
+public final class SceneNavigator {
 
-    /** Danh sách toàn bộ màn hình của ứng dụng */
-    public enum View {
-        LOGIN          ("/com/auction/client/views/LoginView.fxml"),
-        SIGNUP         ("/com/auction/client/views/SignUpView.fxml"),
-        HOME           ("/com/auction/client/views/HomeView.fxml"),
-        AUCTION_DETAIL ("/com/auction/client/views/AuctionDetailView.fxml"),
-        CREATE_LISTING ("/com/auction/client/views/CreateListingView.fxml"),
-        MY_BIDS        ("/com/auction/client/views/MyBidsView.fxml"),
-        PROFILE        ("/com/auction/client/views/ProfileView.fxml"),
-        ADMIN          ("/com/auction/client/views/AdminView.fxml");
+  private static final Logger LOGGER = Logger.getLogger(SceneNavigator.class.getName());
+  private static final int FADE_OUT_MS = 120;
+  private static final int FADE_IN_MS = 150;
+  private static Stage stage;
 
-        public final String path;
-        View(String path) { this.path = path; }
+  private SceneNavigator() { }
+
+  /** All navigable screens in the application. */
+  public enum View {
+    /** Login screen. */
+    LOGIN("/com/auction/client/views/LoginView.fxml"),
+    /** Sign-up screen. */
+    SIGNUP("/com/auction/client/views/SignUpView.fxml"),
+    /** Home / browse screen. */
+    HOME("/com/auction/client/views/HomeView.fxml"),
+    /** Auction detail + bidding screen. */
+    AUCTION_DETAIL("/com/auction/client/views/AuctionDetailView.fxml"),
+    /** Create listing screen (Seller). */
+    CREATE_LISTING("/com/auction/client/views/CreateListingView.fxml"),
+    /** My bids history screen. */
+    MY_BIDS("/com/auction/client/views/MyBidsView.fxml"),
+    /** Admin dashboard. */
+    ADMIN("/com/auction/client/views/AdminView.fxml"),
+    /** Seller dashboard. */
+    SELLER("/com/auction/client/views/SellerView.fxml"),
+    /** User profile screen. */
+    PROFILE("/com/auction/client/views/ProfileView.fxml");
+
+    public final String path;
+
+    View(final String fxmlPath) {
+      this.path = fxmlPath;
     }
+  }
 
-    private static Stage stage;
+  /**
+   * Initialises the navigator with the application's primary Stage.
+   * Must be called once in {@code ClientApplication.start()} before
+   * any call to {@link #navigateTo(View)}.
+   *
+   * @param primaryStage the JavaFX primary stage
+   */
+  public static void init(final Stage primaryStage) {
+    stage = primaryStage;
+  }
 
-    /** Gọi một lần trong ClientApplication.start() */
-    public static void init(Stage primaryStage) {
-        stage = primaryStage;
+  private static boolean isDarkMode = false;
+
+  /**
+   * Toggles the global theme between light and dark mode.
+   */
+  public static void toggleTheme() {
+    isDarkMode = !isDarkMode;
+    if (stage.getScene() != null && stage.getScene().getRoot() != null) {
+      applyTheme(stage.getScene().getRoot());
     }
+  }
 
-    /**
-     * Chuyển màn hình với hiệu ứng fade mượt 120ms → 150ms.
-     * An toàn khi gọi từ bất kỳ controller nào.
-     */
-    public static void navigateTo(View view) {
-        try {
-            Parent root = FXMLLoader.load(
-                SceneNavigator.class.getResource(view.path)
-            );
-
-            if (stage.getScene() == null) {
-                // Tạo Scene lần đầu — gắn main.css toàn cục
-                Scene scene = new Scene(root);
-                scene.getStylesheets().add(
-                    SceneNavigator.class
-                        .getResource("/com/auction/client/styles/main.css")
-                        .toExternalForm()
-                );
-                stage.setScene(scene);
-            } else {
-                // Fade out → swap root → fade in
-                Parent oldRoot = stage.getScene().getRoot();
-                FadeTransition fadeOut = new FadeTransition(Duration.millis(120), oldRoot);
-                fadeOut.setFromValue(1.0);
-                fadeOut.setToValue(0.0);
-                fadeOut.setOnFinished(e -> {
-                    stage.getScene().setRoot(root);
-                    root.setOpacity(0);
-                    FadeTransition fadeIn = new FadeTransition(Duration.millis(150), root);
-                    fadeIn.setFromValue(0.0);
-                    fadeIn.setToValue(1.0);
-                    fadeIn.play();
-                });
-                fadeOut.play();
-            }
-
-            stage.sizeToScene();
-            stage.centerOnScreen();
-
-        } catch (Exception e) {
-            System.err.println("Lỗi điều hướng → " + view.path);
-            e.printStackTrace();
-        }
+  /**
+   * Applies the current theme to the given root node.
+   *
+   * @param root the node to apply the theme to
+   */
+  private static void applyTheme(final Parent root) {
+    if (isDarkMode) {
+      if (!root.getStyleClass().contains("dark-theme")) {
+        root.getStyleClass().add("dark-theme");
+      }
+    } else {
+      root.getStyleClass().remove("dark-theme");
     }
+  }
+
+  /**
+   * Navigates to the given screen with a smooth fade transition.
+   *
+   * @param view the target screen to navigate to
+   */
+  public static void navigateTo(final View view) {
+    System.out.println("NAVIGATING TO: " + view.name() + " (" + view.path + ")");
+    try {
+      final URL fxmlUrl = SceneNavigator.class.getResource(view.path);
+      if (fxmlUrl == null) {
+        System.err.println("FATAL: FXML file not found at path: " + view.path);
+        return;
+      }
+      
+      final FXMLLoader loader = new FXMLLoader(fxmlUrl);
+      final Parent root = loader.load();
+      
+      final String css = SceneNavigator.class.getResource("/com/auction/client/styles/main.css").toExternalForm();
+      root.getStylesheets().add(css);
+      applyTheme(root);
+
+      if (stage.getScene() == null) {
+        final Scene scene = new Scene(root);
+        stage.setScene(scene);
+      } else {
+        final Parent oldRoot = stage.getScene().getRoot();
+        final FadeTransition fadeOut = 
+            new FadeTransition(Duration.millis(FADE_OUT_MS), oldRoot);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(e -> {
+          stage.getScene().setRoot(root);
+          root.setOpacity(0);
+          final FadeTransition fadeIn = 
+              new FadeTransition(Duration.millis(FADE_IN_MS), root);
+          fadeIn.setFromValue(0.0);
+          fadeIn.setToValue(1.0);
+          fadeIn.play();
+        });
+        fadeOut.play();
+      }
+
+    } catch (Exception ex) {
+      System.err.println("Navigation error -> " + view.path);
+      ex.printStackTrace();
+      if (ex.getCause() != null) {
+        System.err.println("Caused by:");
+        ex.getCause().printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Navigates to the correct home screen based on the logged-in user's role.
+   */
+  public static void navigateAfterLogin() {
+    if (UserSession.getInstance().isAdmin()) {
+      navigateTo(View.ADMIN);
+    } else if (UserSession.getInstance().isSeller()) {
+      navigateTo(View.SELLER);
+    } else {
+      navigateTo(View.HOME);
+    }
+  }
 }

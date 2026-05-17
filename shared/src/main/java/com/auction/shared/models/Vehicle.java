@@ -1,18 +1,35 @@
 package com.auction.shared.models;
 
+/** Represents a vehicle item in the auction. */
 public class Vehicle extends Item {
-    private String ownerName;
+    private String brand;
+    private String model;
+    private String color;
 
-    public Vehicle(String id, String name, String description, double startingPrice, long startTime, long endTime, String ownerName) {
-        super(id, name, description, startingPrice, startTime, endTime);
-        this.ownerName = ownerName;
+    public Vehicle() {
+        super("", "", "", ItemCategory.VEHICLE, 0.0, 0L, 0L, "");
     }
 
-    public String getOwnerName() { return ownerName; }
-    public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
+    public Vehicle(String id, String name, String description, double startingPrice,
+         long startTime, long endTime, String brand, String model, String color, String sellerId) {
+        super(id, name, description, ItemCategory.VEHICLE, startingPrice, startTime, endTime, sellerId);
+        this.brand = brand;
+        this.model = model;
+        this.color = color;
+    }
+
+    public String getBrand() { return brand; }
+    public void setBrand(String brand) { this.brand = brand; }
+
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
+
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
 
     @Override
     public void printInfo() {
-        System.out.println("Vehicle: " + name + " - Owner: " + ownerName);
+        System.out.println("Vehicle: " + name + " - Brand: " + brand + ", Model: " + model + ", Color: " + color);
     }
+
 }

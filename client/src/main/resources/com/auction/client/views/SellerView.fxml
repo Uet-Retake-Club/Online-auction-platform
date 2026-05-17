@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    SellerView.fxml
+    Controller : com.auction.client.controllers.SellerController
+    Seller Dashboard — displays all created auctions with their statuses.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.auction.client.controllers.SellerController"
+            fx:id="rootPane"
+            maxWidth="Infinity" maxHeight="Infinity">
+
+    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
+            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
+                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
+                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox alignment="CENTER" spacing="10">
+                <Button text="Browse" onAction="#onHome" styleClass="btn-ghost"/>
+                <Button text="+ Add Listing" onAction="#onCreateListing" styleClass="button, btn-primary" style="-fx-padding: 8px 20px;"/>
+                
+                <Separator orientation="VERTICAL" style="-fx-padding: 0 10px;"/>
+                
+                <Button text="☀/🌙" onAction="#onToggleTheme" styleClass="btn-ghost" style="-fx-font-size: 16px;"/>
+                
+                <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
+                       styleClass="badge"
+                       style="-fx-background-color: -primary-light; -fx-text-fill: -primary; -fx-padding: 8px 14px; -fx-background-radius: 20px; -fx-cursor: hand;"/>
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
+    <left>
+        <VBox prefWidth="220" spacing="4" styleClass="sidebar">
+            <Label text="MY LISTINGS" styleClass="body-small" style="-fx-font-weight: bold; -fx-padding: 0 12px 10px 12px;"/>
+            
+            <Button fx:id="filterAll"    text="All listings" maxWidth="Infinity" onAction="#onFilterAll"    styleClass="nav-item-active"/>
+            <Button fx:id="filterActive" text="Active"       maxWidth="Infinity" onAction="#onFilterActive" styleClass="nav-item"/>
+            <Button fx:id="filterSold"   text="Sold"         maxWidth="Infinity" onAction="#onFilterSold"   styleClass="nav-item"/>
+            <Button fx:id="filterUnsold" text="Unsold"       maxWidth="Infinity" onAction="#onFilterUnsold" styleClass="nav-item"/>
+            <Button fx:id="filterDraft"  text="Draft"        maxWidth="Infinity" onAction="#onFilterDraft"  styleClass="nav-item"/>
+            
+            <Region VBox.vgrow="ALWAYS"/>
+            
+            <Separator style="-fx-opacity: 0.3; -fx-padding: 10px 0;"/>
+            
+            <Button text="Home"     maxWidth="Infinity" onAction="#onHome"   styleClass="nav-item"/>
+            <Button text="Sign out" maxWidth="Infinity" onAction="#onLogout" styleClass="nav-item"/>
+        </VBox>
+    </left>
+
+    <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+    <center>
+        <VBox style="-fx-padding: 30px;" spacing="24" VBox.vgrow="ALWAYS">
+
+            <!-- Header row -->
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Label text="Seller Dashboard" styleClass="heading-1" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="listingCountLabel" text="0 listings" styleClass="body-text" style="-fx-text-fill: -text-muted;"/>
+            </HBox>
+
+            <!-- Listings table card -->
+            <VBox styleClass="card" style="-fx-padding: 0;" VBox.vgrow="ALWAYS">
+
+                <!-- Table header -->
+                <HBox styleClass="card-img-placeholder" style="-fx-background-radius: 8px 8px 0 0; -fx-padding: 12px 20px; -fx-border-width: 0 0 1px 0;">
+                    <Label text="Item" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                    <Label text="Current Bid" prefWidth="120" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                    <Label text="Buy Now Price" prefWidth="140" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                    <Label text="Time left" prefWidth="120" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                    <Label text="Status" prefWidth="100" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                    <Label text="" prefWidth="100" styleClass="label-bold" style="-fx-font-size: 11px;"/>
+                </HBox>
+
+                <!-- Rows — populated by SellerController -->
+                <VBox fx:id="listingsContainer" VBox.vgrow="ALWAYS"/>
+
+                <!-- Empty state -->
+                <VBox fx:id="emptyState" alignment="CENTER" spacing="15"
+                      style="-fx-padding: 80px 0;" visible="false" managed="false">
+                    <Label text="No listings found" styleClass="heading-2" style="-fx-text-fill: -text-muted;"/>
+                    <Label text="You don't have any listings yet." styleClass="body-text" style="-fx-text-fill: -text-muted;"/>
+                    <Button text="Create Listing" onAction="#onCreateListing" styleClass="button, btn-primary" style="-fx-padding: 10px 24px;"/>
+                </VBox>
+
+            </VBox>
+        </VBox>
+    </center>
+
+</BorderPane>

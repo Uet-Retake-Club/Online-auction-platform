@@ -1,15 +1,35 @@
-# Ignore Gradle project-specific cache directory
-.gradle
+# Ignore IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
 
-# Ignore Gradle build output directory
-build
-
-# Ignore Kotlin plugin data
-.kotlin
-# Bỏ qua tất cả các file đã compile của Java
-*.class
-
-# Bỏ qua các thư mục build khác của IDE
+# Ignore Gradle and Maven
+.gradle/
+build/
 target/
 bin/
 out/
+pom.xml.versionsBackup
+
+# Ignore compiled Java
+*.class
+
+# Ignore Kotlin plugin data
+.kotlin/
+
+# Ignore Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore Node.js
+node_modules/
+
+# Ignore local databases (but keep schema.sql)
+database/*.db
+database/*.sqlite
+*.sqlite3
+
+# Ignore Logs
+*.log

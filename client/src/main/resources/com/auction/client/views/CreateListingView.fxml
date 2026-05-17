@@ -7,175 +7,140 @@
 <!--
     CreateListingView.fxml
     Controller : com.auction.client.controllers.CreateListingController
-    Màn hình Seller đăng sản phẩm đấu giá mới.
-    Gồm: tiêu đề, danh mục, mô tả, giá khởi điểm, bước giá, thời gian.
+    Screen for sellers to create a new auction listing.
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.CreateListingController"
             fx:id="rootPane"
-            prefWidth="1100" prefHeight="700"
-            style="-fx-background-color: #F4F4F4;">
+            maxWidth="Infinity" maxHeight="Infinity">
 
     <!-- ══ TOP NAV ══════════════════════════════════════════ -->
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12"
-              style="-fx-background-color:white;-fx-border-color:transparent transparent #EBEBEB transparent;-fx-border-width:0 0 1px 0;-fx-padding:10px 20px;">
-            <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
-                <Label text="Hub"     style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
+            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
+                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
+                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="My listings" onAction="#onMyListings"
-                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
-            <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
-                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;-fx-cursor:hand;"/>
+            
+            <HBox alignment="CENTER" spacing="8">
+                <Button text="My listings" onAction="#onMyListings" styleClass="btn-ghost"/>
+                
+                <Separator orientation="VERTICAL" style="-fx-padding: 0 10px;"/>
+                
+                <Button text="☀/🌙" onAction="#onToggleTheme" styleClass="btn-ghost" style="-fx-font-size: 16px;"/>
+                
+                <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
+                       styleClass="badge"
+                       style="-fx-background-color: -primary-light; -fx-text-fill: -primary; -fx-padding: 8px 14px; -fx-background-radius: 20px; -fx-cursor: hand;"/>
+            </HBox>
         </HBox>
     </top>
 
     <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
     <left>
-        <VBox prefWidth="190" spacing="3"
-              style="-fx-background-color:white;-fx-border-color:transparent #EBEBEB transparent transparent;-fx-border-width:0 1px 0 0;-fx-padding:18px 10px;">
-            <Label text="SELLER MENU"
-                   style="-fx-font-size:10px;-fx-font-weight:bold;-fx-text-fill:#AAAAAA;-fx-padding:0 8px 8px 8px;"/>
-            <Button text="My listings"    maxWidth="Infinity" onAction="#onMyListings"
-                    styleClass="nav-item" style="-fx-effect:null;"/>
-            <Button text="Active auctions" maxWidth="Infinity" onAction="#onActiveAuctions"
-                    styleClass="nav-item" style="-fx-effect:null;"/>
-            <Button text="Drafts"          maxWidth="Infinity" onAction="#onDrafts"
-                    styleClass="nav-item" style="-fx-effect:null;"/>
-            <Button text="Completed"       maxWidth="Infinity" onAction="#onCompleted"
-                    styleClass="nav-item" style="-fx-effect:null;"/>
+        <VBox prefWidth="220" spacing="4" styleClass="sidebar">
+            <Label text="SELLER MENU" styleClass="body-small" style="-fx-font-weight: bold; -fx-padding: 0 12px 10px 12px;"/>
+            
+            <Button text="My listings"    maxWidth="Infinity" onAction="#onMyListings"    styleClass="nav-item"/>
+            <Button text="Active auctions" maxWidth="Infinity" onAction="#onActiveAuctions" styleClass="nav-item"/>
+            <Button text="Drafts"          maxWidth="Infinity" onAction="#onDrafts"         styleClass="nav-item"/>
+            <Button text="Completed"       maxWidth="Infinity" onAction="#onCompleted"      styleClass="nav-item"/>
+            
             <Region VBox.vgrow="ALWAYS"/>
-            <Separator style="-fx-opacity:0.5;"/>
-            <Button text="Home"     maxWidth="Infinity" onAction="#onHome"
-                    styleClass="nav-item" style="-fx-effect:null;"/>
-            <Button text="Sign out" maxWidth="Infinity" onAction="#onLogout"
-                    styleClass="nav-item" style="-fx-effect:null;"/>
+            
+            <Separator style="-fx-opacity: 0.3; -fx-padding: 10px 0;"/>
+            
+            <Button text="Home"     maxWidth="Infinity" onAction="#onHome"   styleClass="nav-item"/>
+            <Button text="Sign out" maxWidth="Infinity" onAction="#onLogout" styleClass="nav-item"/>
         </VBox>
     </left>
 
     <!-- ══ MAIN FORM ════════════════════════════════════════ -->
     <center>
         <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-            <VBox spacing="0" style="-fx-padding:24px;">
+            <VBox spacing="30" style="-fx-padding: 30px;">
 
-                <Label text="Create new listing"
-                       style="-fx-font-size:18px;-fx-font-weight:bold;-fx-text-fill:#111;-fx-font-family:'Segoe UI';-fx-padding:0 0 16px 0;"/>
+                <Label text="Create new listing" styleClass="heading-2"/>
 
                 <!-- Form card -->
-                <VBox maxWidth="640" spacing="0"
-                      style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-width:1px;-fx-border-radius:8px;-fx-background-radius:8px;-fx-padding:24px;">
+                <VBox maxWidth="800" spacing="0" styleClass="card" style="-fx-padding: 30px;">
 
                     <!-- Title + Category row -->
-                    <HBox spacing="14" style="-fx-padding:0 0 14px 0;">
+                    <HBox spacing="20" style="-fx-padding: 0 0 20px 0;">
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="Item title"
-                                   style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="titleField"
-                                       promptText="e.g. Vintage Rolex Watch"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
-                            <Label fx:id="titleError" text="" styleClass="field-error"
-                                   style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                            <Label text="Item title" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
+                            <TextField fx:id="titleField" promptText="e.g. Vintage Rolex Watch" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <Label fx:id="titleError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
-                        <VBox prefWidth="180" spacing="0">
-                            <Label text="Category"
-                                   style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <ComboBox fx:id="categoryCombo"
-                                      promptText="Select category"
-                                      maxWidth="Infinity"
-                                      style="-fx-font-size:13px;"/>
-                            <Label fx:id="categoryError" text="" styleClass="field-error"
-                                   style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                        <VBox prefWidth="240" spacing="0">
+                            <Label text="Category" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
+                            <ComboBox fx:id="categoryCombo" promptText="Select category" maxWidth="Infinity" styleClass="combo-box-base"/>
+                            <Label fx:id="categoryError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                     </HBox>
 
                     <!-- Description -->
-                    <VBox spacing="0" style="-fx-padding:0 0 14px 0;">
-                        <Label text="Description"
-                               style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
+                    <VBox spacing="0" style="-fx-padding: 0 0 20px 0;">
+                        <Label text="Description" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
                         <TextArea fx:id="descriptionField"
                                   promptText="Describe your item in detail — condition, history, dimensions..."
-                                  prefRowCount="4"
+                                  prefRowCount="6"
                                   maxWidth="Infinity"
-                                  style="-fx-font-size:13px;-fx-border-color:#E0E0E0;-fx-border-width:1.5px;-fx-border-radius:6px;-fx-background-radius:6px;-fx-font-family:'Segoe UI';"/>
-                        <Label fx:id="descriptionError" text="" styleClass="field-error"
-                               style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                                  styleClass="text-area-base"/>
+                        <Label fx:id="descriptionError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                     </VBox>
 
                     <!-- Starting price + Increment row -->
-                    <HBox spacing="14" style="-fx-padding:0 0 14px 0;">
+                    <HBox spacing="20" style="-fx-padding: 0 0 20px 0;">
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="Starting price ($)"
-                                   style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="startPriceField"
-                                       promptText="0.00"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
-                            <Label fx:id="startPriceError" text="" styleClass="field-error"
-                                   style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                            <Label text="Starting price (&#36;)" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
+                            <TextField fx:id="startPriceField" promptText="0.00" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <Label fx:id="startPriceError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="Minimum increment ($)"
-                                   style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="incrementField"
-                                       promptText="1.00"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
-                            <Label fx:id="incrementError" text="" styleClass="field-error"
-                                   style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                            <Label text="Minimum increment (&#36;)" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
+                            <TextField fx:id="incrementField" promptText="1.00" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <Label fx:id="incrementError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                     </HBox>
 
                     <!-- Start time + End time row -->
-                    <HBox spacing="14" style="-fx-padding:0 0 14px 0;">
+                    <HBox spacing="20" style="-fx-padding: 0 0 20px 0;">
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="Start date &amp; time"
-                                   style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="startTimeField"
-                                       promptText="YYYY-MM-DD HH:mm"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
-                            <Label fx:id="startTimeError" text="" styleClass="field-error"
-                                   style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                            <Label text="Start date &amp; time" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
+                            <TextField fx:id="startTimeField" promptText="YYYY-MM-DD HH:mm" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <Label fx:id="startTimeError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
-                            <Label text="End date &amp; time"
-                                   style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="endTimeField"
-                                       promptText="YYYY-MM-DD HH:mm"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
-                            <Label fx:id="endTimeError" text="" styleClass="field-error"
-                                   style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
+                            <Label text="End date &amp; time" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
+                            <TextField fx:id="endTimeField" promptText="YYYY-MM-DD HH:mm" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <Label fx:id="endTimeError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                     </HBox>
 
                     <!-- Image upload placeholder -->
-                    <VBox spacing="0" style="-fx-padding:0 0 20px 0;">
-                        <Label text="Item image"
-                               style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
+                    <VBox spacing="0" style="-fx-padding: 0 0 30px 0;">
+                        <Label text="Item image" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
                         <VBox fx:id="imageDropZone"
-                              alignment="CENTER" prefHeight="80"
+                              alignment="CENTER" prefHeight="120"
                               onMouseClicked="#onSelectImage"
-                              style="-fx-border-color:#E0E0E0;-fx-border-width:1.5px;-fx-border-style:dashed;-fx-border-radius:6px;-fx-background-radius:6px;-fx-cursor:hand;">
-                            <Label fx:id="imageLabel" text="Click to upload image"
-                                   style="-fx-text-fill:#AAAAAA;-fx-font-size:13px;-fx-font-family:'Segoe UI';"/>
+                              styleClass="card-img-placeholder"
+                              style="-fx-border-style: dashed; -fx-cursor: hand;">
+                            <Label fx:id="imageLabel" text="Click or drag image here" styleClass="body-text" style="-fx-text-fill: -text-muted;"/>
                         </VBox>
                     </VBox>
 
                     <!-- General error -->
-                    <Label fx:id="generalError" text=""
-                           style="-fx-text-fill:#E53238;-fx-font-size:12px;-fx-min-height:16px;-fx-padding:0 0 10px 0;"/>
+                    <Label fx:id="generalError" text="" styleClass="field-error" style="-fx-min-height: 20px; -fx-padding: 0 0 15px 0;"/>
 
                     <!-- Action buttons -->
-                    <HBox spacing="12">
-                        <Button fx:id="publishBtn" text="Publish listing"
-                                onAction="#onPublish"
-                                style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:14px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:10px 24px;-fx-cursor:hand;-fx-effect:null;"/>
-                        <Button fx:id="draftBtn" text="Save draft"
-                                onAction="#onSaveDraft"
-                                style="-fx-background-color:white;-fx-text-fill:#333;-fx-border-color:#E0E0E0;-fx-border-width:1.5px;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:10px 24px;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;"/>
-                        <Button text="Cancel"
-                                onAction="#onCancel"
-                                style="-fx-background-color:transparent;-fx-text-fill:#888;-fx-border-color:transparent;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:10px 12px;"/>
+                    <HBox spacing="16">
+                        <Button fx:id="publishBtn" text="Publish listing" onAction="#onPublish" styleClass="button, btn-primary" style="-fx-padding: 12px 32px;"/>
+                        <Button fx:id="draftBtn"   text="Save draft"      onAction="#onSaveDraft" styleClass="button, btn-outline" style="-fx-padding: 12px 32px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Cancel" onAction="#onCancel" styleClass="btn-ghost" style="-fx-padding: 12px 24px;"/>
                     </HBox>
 
                 </VBox>

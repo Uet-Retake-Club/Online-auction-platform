@@ -1,8 +1,7 @@
 package com.auction.server;
 
 import com.auction.server.network.ClientHandler;
-import com.auction.server.services.AuctionManager;
-
+import com.auction.server.services.AuctionService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,14 +15,15 @@ public class ServerApplication {
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public static void main(String[] args) {
-        System.out.println("[SERVER] Khởi động Online Auction Server...");
+        System.out.println("[SERVER] Starting Online Auction Server...");
+        com.auction.server.database.DatabaseConnection.initDatabase();
 
         // Giup tat Pool khi dot nhien tat may
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\n[SERVER] Nhận lệnh tắt máy. Đang dọn dẹp...");
+            System.out.println("\n[SERVER] Shutdown signal received. Cleaning up...");
             threadPool.shutdown();
             // goi lenh tat AutoBidThread
-            AuctionManager.getInstance().shutdown();
+            AuctionService.getInstance().shutdown();
 
             try {
                 if (!threadPool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
@@ -32,23 +32,23 @@ public class ServerApplication {
             } catch (InterruptedException e) {
                 threadPool.shutdownNow();
             }
-            System.out.println("[SERVER] Đã đóng cửa an toàn.");
+            System.out.println("[SERVER] Shutdown safely completed.");
         }));
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("[SERVER] Đang lắng nghe kết nối tại cổng " + PORT);
+            System.out.println("[SERVER] Listening for connections on port " + PORT);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("[NETWORK] Khách hàng mới kết nối: " + clientSocket.getInetAddress());
+                System.out.println("[NETWORK] New client connected: " + clientSocket.getInetAddress());
 
                 // Ném nhiệm vụ xử lý Client này vào Thread Pool
                 threadPool.execute(new ClientHandler(clientSocket));
             }
         } catch (IOException e) {
-            System.err.println("[SERVER ERROR] Lỗi cổng mạng: " + e.getMessage());
+            System.err.println("[SERVER ERROR] Network port error: " + e.getMessage());
         } finally {
-            System.out.println("[SERVER] Luồng chính đã dừng do lỗi mạng. Đang ép buộc hệ thống tắt...");
+            System.out.println("[SERVER] Main thread stopped due to network error. Forcing shutdown...");
 
             // Lệnh này bắt buộc JVM phải tắt ngay lập tức.
             // Và ngay khi JVM chuẩn bị tắt, nó SẼ TỰ ĐỘNG GỌI CÁI SHUTDOWN HOOK mà bạn đã

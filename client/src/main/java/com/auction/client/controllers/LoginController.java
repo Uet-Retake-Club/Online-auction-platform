@@ -1,14 +1,8 @@
 package com.auction.client.controllers;
 
+import com.auction.client.utils.SceneNavigator;
 import java.net.URL;
 import java.util.ResourceBundle;
-
-import com.auction.client.services.NetworkClientService;
-import com.auction.client.utils.SceneNavigator;
-import com.auction.client.utils.UserSession;
-import com.auction.shared.dto.MessageType;
-import com.auction.shared.dto.Request;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -17,129 +11,213 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
- * LoginController.java
+ * LoginController — handles LoginView.fxml.
  *
- * THAY ĐỔI SO VỚI PHIÊN BẢN CŨ:
- *  - Thêm method onFocusPassword() → khi nhấn Enter ở emailField,
- *    focus tự chuyển xuống passwordField
- *  - PasswordField đã có onAction="#onLogin" trong FXML
- *    → nhấn Enter ở password = nhấn nút Sign in
+ * <p>Pressing Enter in the email field moves focus to the password field.
+ * Pressing Enter in the password field (or clicking Sign in) submits the form.
  */
 public class LoginController implements Initializable {
+  private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
 
-    @FXML private HBox          rootPane;
-    @FXML private TextField     emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private Label         emailError;
-    @FXML private Label         passwordError;
-    @FXML private Label         generalError;
-    @FXML private Button        loginButton;
-    @FXML private Label         signUpLabel;
-    @FXML private Label         forgotPasswordLabel;
 
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        // Xóa lỗi khi người dùng bắt đầu gõ lại
-        emailField.textProperty().addListener(
-            (obs, old, val) -> clearFieldError(emailError, emailField));
-        passwordField.textProperty().addListener(
-            (obs, old, val) -> clearFieldError(passwordError, passwordField));
+  /** Root pane injected by FXML. */
+  @FXML
+  private HBox rootPane;
+
+  /** Email input field. */
+  @FXML
+  private TextField emailField;
+
+  /** Password input field. */
+  @FXML
+  private PasswordField passwordField;
+
+  /** Inline error label for email. */
+  @FXML
+  private Label emailError;
+
+  /** Inline error label for password. */
+  @FXML
+  private Label passwordError;
+
+  /** General error label (e.g. wrong credentials). */
+  @FXML
+  private Label generalError;
+
+  /** Sign-in button. */
+  @FXML
+  private Button loginButton;
+
+  /** Link to sign-up screen. */
+  @FXML
+  private Label signUpLabel;
+
+  /** Forgot-password link. */
+  @FXML
+  private Label forgotPasswordLabel;
+
+  @Override
+  public void initialize(final URL url, final ResourceBundle rb) {
+    emailField.textProperty().addListener(
+        (obs, old, val) -> clearFieldError(emailError, emailField));
+    passwordField.textProperty().addListener(
+        (obs, old, val) -> clearFieldError(passwordError, passwordField));
+  }
+
+  /**
+   * Called when Enter is pressed in the email field.
+   * Moves focus to the password field.
+   */
+  @FXML
+  private void onFocusPassword() {
+    passwordField.requestFocus();
+  }
+
+  /**
+   * Called when the Sign in button is clicked or Enter is pressed
+   * in the password field.
+   */
+  @FXML
+  private void onLogin() {
+    if (!validateFields()) {
+      return;
     }
 
-    // ── MỚI: Enter ở emailField → focus xuống passwordField ──
-    /**
-     * Được gọi khi nhấn Enter trong ô Email.
-     * Chuyển focus xuống ô Password thay vì submit ngay.
-     * Đây là UX chuẩn của mọi login form.
-     */
-    @FXML
-    private void onFocusPassword() {
-        passwordField.requestFocus();
-    }
+    com.auction.client.services.NetworkClientService.getInstance().ensureConnected();
 
-    // ── Sign in (gọi từ nút Sign in VÀ từ Enter ở passwordField) ──
-    @FXML
-    private void onLogin() {
-        if (!validateFields()) return;
+    final String usernameInput = emailField.getText().trim();
+    final String password = passwordField.getText();
 
-        String email = emailField.getText().trim();
-        // THIẾT LẬP SESSION (Giả lập user ID từ email)
-        String username = email.split("@")[0];
-        UserSession.getInstance().setUsername(username);
+    final com.auction.shared.dto.AuthPayload auth =
+        new com.auction.shared.dto.AuthPayload(usernameInput, null, password, "BIDDER");
+    final com.auction.shared.dto.Request loginReq = new com.auction.shared.dto.Request(
+        com.auction.shared.dto.MessageType.LOGIN, "Pending",
+        new com.google.gson.Gson().toJson(auth));
 
-        // ĐẢM BẢO KẾT NỐI SOCKET ĐÃ SẴN SÀNG (retry nếu cần)
-        NetworkClientService.getInstance().ensureConnected();
-
-        // Khởi tạo BidService sớm để đăng ký listener trước khi nhận message
-        com.auction.client.services.BidService.getInstance();
-
-        // GỬI LỆNH LOGIN QUA SOCKET ĐỂ SERVER BIẾT AI ĐANG ONLINE
-        // Chờ 500ms cho kết nối ổn định nếu vừa mới retry
-        new Thread(() -> {
-            try { Thread.sleep(500); } catch (InterruptedException ignored) {}
-            Request loginReq = new Request(MessageType.LOGIN, username, "");
-            NetworkClientService.getInstance().sendRequest(loginReq);
-        }).start();
-
-        SceneNavigator.navigateTo(SceneNavigator.View.HOME);
-    }
-
-    @FXML
-    private void onGoToSignUp() {
-        SceneNavigator.navigateTo(SceneNavigator.View.SIGNUP);
-    }
-
-    @FXML
-    private void onForgotPassword() {
-        showGeneralError("Chức năng này chưa được triển khai.");
-    }
-
-    // ── Validation ────────────────────────────────────────────
-
-    private boolean validateFields() {
-        boolean ok = true;
-
-        String email = emailField.getText().trim();
-        if (email.isEmpty()) {
-            showFieldError(emailError, emailField, "Email là bắt buộc");
-            ok = false;
-        } else if (!email.contains("@")) {
-            showFieldError(emailError, emailField, "Email không hợp lệ");
-            ok = false;
+    // One-shot listener — removes itself after receiving auth response
+    final com.auction.client.services.NetworkClientService.ServerMessageListener[] ref =
+        new com.auction.client.services.NetworkClientService.ServerMessageListener[1];
+    ref[0] = response -> {
+      final com.auction.shared.dto.MessageType type = response.getType();
+      if (type == com.auction.shared.dto.MessageType.LOGIN_SUCCESS
+          || type == com.auction.shared.dto.MessageType.LOGIN_FAIL) {
+        com.auction.client.services.NetworkClientService.getInstance().removeListener(ref[0]);
+        if (type == com.auction.shared.dto.MessageType.LOGIN_SUCCESS) {
+          final String payload = response.getPayload();
+          javafx.application.Platform.runLater(() -> {
+            try {
+              JsonObject userJson = new Gson().fromJson(payload, JsonObject.class);
+              String userId = userJson.get("id").getAsString();
+              String username = userJson.get("username").getAsString();
+              String email = userJson.get("email").getAsString();
+              String role = userJson.get("role").getAsString();
+              
+              LOGGER.log(Level.INFO, "User logged in with role: {0}", role);
+              
+              com.auction.client.utils.UserSession.getInstance()
+                  .signIn(userId, username, "", username, email, role);
+              SceneNavigator.navigateAfterLogin();
+            } catch (Exception e) {
+              LOGGER.log(Level.SEVERE, "Error processing login data", e);
+              showGeneralError("Error processing login data");
+            }
+          });
+        } else {
+          javafx.application.Platform.runLater(() -> showGeneralError(response.getMessage()));
         }
+      }
+    };
+    com.auction.client.services.NetworkClientService.getInstance().addListener(ref[0]);
+    com.auction.client.services.NetworkClientService.getInstance().sendRequest(loginReq);
+  }
 
-        String password = passwordField.getText();
-        if (password.isEmpty()) {
-            showFieldError(passwordError, passwordField, "Mật khẩu là bắt buộc");
-            ok = false;
-        } else if (password.length() < 4) {
-            showFieldError(passwordError, passwordField, "Mật khẩu quá ngắn");
-            ok = false;
-        }
+  /** Navigates to the sign-up screen. */
+  @FXML
+  private void onGoToSignUp() {
+    SceneNavigator.navigateTo(SceneNavigator.View.SIGNUP);
+  }
 
-        return ok;
+  /** Placeholder for forgot-password flow. */
+  @FXML
+  private void onForgotPassword() {
+    showGeneralError("Chức năng này chưa được triển khai.");
+  }
+
+  // ── Validation ────────────────────────────────────────────
+
+  /**
+   * Validates the email and password fields.
+   *
+   * @return true if all inputs are valid
+   */
+  private boolean validateFields() {
+    boolean ok = true;
+    final String username = emailField.getText().trim();
+    if (username.isEmpty()) {
+      showFieldError(emailError, emailField, "Username is required");
+      ok = false;
     }
-
-    // ── Helpers ───────────────────────────────────────────────
-
-    private void showFieldError(Label label, Control field, String msg) {
-        label.setText(msg);
-        label.setVisible(true);
-        field.getStyleClass().remove("error");
-        field.getStyleClass().add("error");
-        generalError.setText("");
+    final String password = passwordField.getText();
+    if (password.isEmpty()) {
+      showFieldError(passwordError, passwordField, "Password is required");
+      ok = false;
+    } else if (password.length() < 4) {
+      showFieldError(passwordError, passwordField, "Password too short");
+      ok = false;
     }
+    return ok;
+  }
 
-    private void clearFieldError(Label label, Control field) {
-        label.setText("");
-        label.setVisible(false);
-        field.getStyleClass().remove("error");
-    }
+  /**
+   * Displays an inline error on a field.
+   *
+   * @param label the error label to populate
+   * @param field the control to mark with error styling
+   * @param msg   the error message
+   */
+  private void showFieldError(
+      final Label label, final Control field, final String msg) {
+    label.setText(msg);
+    label.setVisible(true);
+    field.getStyleClass().remove("error");
+    field.getStyleClass().add("error");
+    generalError.setText("");
+  }
 
-    private void showGeneralError(String msg) {
-        generalError.setText(msg);
-        generalError.setVisible(true);
-    }
+  /**
+   * Clears the inline error from a field.
+   *
+   * @param label the error label to clear
+   * @param field the control to remove error styling from
+   */
+  private void clearFieldError(final Label label, final Control field) {
+    label.setText("");
+    label.setVisible(false);
+    field.getStyleClass().remove("error");
+  }
+
+  /**
+   * Displays a general error message above the submit button.
+   *
+   * @param msg the error message
+   */
+  private void showGeneralError(final String msg) {
+    generalError.setText(msg);
+    generalError.setVisible(true);
+  }
+  
+  @FXML
+  private void onHome() {
+  }
+
+  @FXML
+  private void onToggleTheme() {
+    SceneNavigator.toggleTheme();
+  }
 }

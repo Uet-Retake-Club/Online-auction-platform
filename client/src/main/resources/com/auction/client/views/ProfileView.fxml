@@ -4,71 +4,132 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<!--
+    ProfileView.fxml
+    Controller : com.auction.client.controllers.ProfileController
+    Shows user profile details + wallet balance with top-up
+-->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.ProfileController"
-            prefWidth="1100" prefHeight="700"
-            style="-fx-background-color: #F4F4F4;">
+            maxWidth="Infinity" maxHeight="Infinity">
 
+    <!-- ═══════════════════════════════════ TOP NAV ═══════════════════════════════════ -->
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12"
-              style="-fx-background-color: white; -fx-border-color: transparent transparent #EBEBEB transparent; -fx-border-width: 0 0 1px 0; -fx-padding: 12px 20px;">
-            <Label text="Auction" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#E53238;"/>
-            <Label text="Hub" style="-fx-font-size:20px;-fx-font-weight:bold;-fx-text-fill:#111111;"/>
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
+            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
+                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
+                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
+            </HBox>
+
             <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="userLabel" text="JD"
-                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:7px 13px;-fx-background-radius:20px;"/>
-            <Button text="Sign out" onAction="#onLogout"
-                    style="-fx-background-color:transparent;-fx-text-fill:#555;-fx-border-color:transparent;-fx-font-size:13px;-fx-cursor:hand;"/>
+
+            <Button text="☀/🌙" onAction="#onToggleTheme" styleClass="btn-ghost" style="-fx-font-size: 16px;"/>
+
+            <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
+                   styleClass="badge"
+                   style="-fx-background-color: -primary-light; -fx-text-fill: -primary; -fx-padding: 8px 14px; -fx-background-radius: 20px; -fx-cursor: hand;"/>
+
+            <Button text="Sign out" onAction="#onLogout" styleClass="btn-ghost"/>
         </HBox>
     </top>
 
+    <!-- ═══════════════════════════════ CENTER CONTENT ═══════════════════════════════ -->
     <center>
         <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-            <VBox spacing="22" style="-fx-padding: 24px;">
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="← Back" onMouseClicked="#onBack"
-                           style="-fx-text-fill:#1A73E8;-fx-font-size:13px;-fx-cursor:hand;"/>
-                    <Label fx:id="userTitle" text="My Profile"
-                           style="-fx-font-size:24px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+            <VBox spacing="30" alignment="TOP_CENTER" style="-fx-padding: 30px;">
+
+                <!-- Back + page title -->
+                <HBox alignment="CENTER_LEFT" spacing="15">
+                    <Label text="← Back" onMouseClicked="#onBack" styleClass="body-small" style="-fx-text-fill: -info; -fx-cursor: hand; -fx-font-weight: bold;"/>
+                    <Label fx:id="userTitle" text="My Profile" styleClass="heading-1"/>
                 </HBox>
 
-                <VBox spacing="18" style="-fx-background-color:white;-fx-border-color:#EBEBEB;-fx-border-radius:10px;-fx-background-radius:10px;-fx-padding:24px;">
-                    <Label text="Your account details"
-                           style="-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#111;"/>
+                <!-- ───────────── Wallet Card ───────────── -->
+                <VBox spacing="0" styleClass="auth-left-panel" style="-fx-padding: 0; -fx-background-radius: 20px;" maxWidth="850">
+                    <HBox alignment="CENTER_LEFT" spacing="0">
+                        <!-- Left: Balance Info -->
+                        <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-padding: 30px;">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <StackPane style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 12px; -fx-min-width: 44px; -fx-min-height: 44px;">
+                                    <Label text="💳" style="-fx-font-size: 20px;"/>
+                                </StackPane>
+                                <Label text="MY WALLET" styleClass="body-small" style="-fx-text-fill: rgba(255,255,255,0.7); -fx-font-weight: bold; -fx-letter-spacing: 1px;"/>
+                            </HBox>
+                            
+                            <VBox spacing="2">
+                                <Label fx:id="walletBalanceLabel" text="Loading..." styleClass="heading-1" style="-fx-text-fill: white; -fx-font-size: 38px;"/>
+                                <Label text="Available balance" styleClass="body-small" style="-fx-text-fill: rgba(255,255,255,0.5);"/>
+                            </VBox>
+                            
+                            <Button text="⟳ Refresh" onAction="#onRefreshWallet" styleClass="button" style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-border-color: rgba(255,255,255,0.2); -fx-border-radius: 20px; -fx-background-radius: 20px; -fx-padding: 6px 14px; -fx-font-size: 12px;"/>
+                        </VBox>
 
-                    <GridPane hgap="20" vgap="16">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="30"/>
-                            <ColumnConstraints percentWidth="70"/>
-                        </columnConstraints>
+                        <Separator orientation="VERTICAL" style="-fx-opacity: 0.1;"/>
 
-                        <Label text="First name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <TextField fx:id="firstNameField" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="text-field-base"/>
-
-                        <Label text="Last name:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                        <TextField fx:id="lastNameField" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="text-field-base"/>
-
-                        <Label text="Username:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <TextField fx:id="usernameField" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="text-field-base"/>
-
-                        <Label text="Email address:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <TextField fx:id="emailField" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="text-field-base"/>
-
-                        <Label text="Role:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <TextField fx:id="roleField" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="text-field-base" editable="false"/>
-                    </GridPane>
-
-                    <Label fx:id="statusLabel" text="" style="-fx-font-size:12px;"/>
-
-                    <HBox spacing="12" alignment="CENTER_LEFT">
-                        <Button fx:id="saveBtn" text="Save changes" onAction="#onSave"
-                                style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:14px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:10px 18px;-fx-cursor:hand;"/>
-                        <Button text="Cancel" onAction="#onBack"
-                                style="-fx-background-color:white;-fx-text-fill:#555;-fx-border-color:#E0E0E0;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:10px 18px;-fx-cursor:hand;"/>
+                        <!-- Right: Top-up Section -->
+                        <VBox spacing="15" prefWidth="320" style="-fx-padding: 30px;">
+                            <Label text="Quick Top-up" styleClass="label-bold" style="-fx-text-fill: white;"/>
+                            <VBox spacing="8">
+                                <TextField fx:id="topUpField" promptText="Enter amount" styleClass="text-field-base" style="-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-border-color: rgba(255,255,255,0.2); -fx-pref-height: 45px;"/>
+                                <Button text="Request Top-up" onAction="#onTopUp" maxWidth="Infinity" styleClass="button, btn-primary" style="-fx-pref-height: 45px;"/>
+                            </VBox>
+                            <Label fx:id="walletStatusLabel" text="" styleClass="body-small" wrapText="true" style="-fx-text-fill: rgba(255,255,255,0.7);"/>
+                        </VBox>
                     </HBox>
                 </VBox>
+
+                <!-- ───────────── Profile Details Card ───────────── -->
+                <VBox spacing="24" styleClass="card" style="-fx-padding: 30px;">
+                    <Label text="Account Details" styleClass="heading-2"/>
+
+                    <GridPane hgap="30" vgap="20">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="120"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <Label text="First name" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="label-bold"/>
+                        <TextField fx:id="firstNameField" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="text-field-base"/>
+
+                        <Label text="Last name" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="label-bold"/>
+                        <TextField fx:id="lastNameField" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="text-field-base"/>
+
+                        <Label text="Username" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="label-bold"/>
+                        <TextField fx:id="usernameField" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="text-field-base"/>
+
+                        <Label text="Email" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="label-bold"/>
+                        <TextField fx:id="emailField" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="text-field-base"/>
+
+                        <Label text="Role" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="label-bold"/>
+                        <TextField fx:id="roleField" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="text-field-base" editable="false" style="-fx-opacity: 0.6;"/>
+                    </GridPane>
+
+                    <Label fx:id="statusLabel" text="" styleClass="body-small"/>
+
+                    <HBox spacing="15">
+                        <Button fx:id="saveBtn" text="Save changes" onAction="#onSave" styleClass="button, btn-primary" style="-fx-padding: 12px 32px;"/>
+                        <Button text="Cancel" onAction="#onBack" styleClass="button, btn-outline" style="-fx-padding: 12px 32px;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- ───────────── Wallet History Card ───────────── -->
+                <VBox spacing="24" styleClass="card" style="-fx-padding: 30px;">
+                    <Label text="Transaction History" styleClass="heading-2"/>
+                    <TableView fx:id="historyTable" prefHeight="300" styleClass="table-view">
+                        <columns>
+                            <TableColumn fx:id="colDate"   text="Date"   prefWidth="200"/>
+                            <TableColumn fx:id="colAmount" text="Amount" prefWidth="150"/>
+                            <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                        </columnResizePolicy>
+                    </TableView>
+                </VBox>
+
             </VBox>
         </ScrollPane>
     </center>
+
 </BorderPane>

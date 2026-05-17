@@ -1,12 +1,50 @@
 package com.auction.shared.dto;
 
+/** Enum for message types between client and server. */
 public enum MessageType {
-    LOGIN,
-    PLACE_BID,          // Yêu cầu đặt giá
-    SETUP_AUTO_BID,     // Cài đặt auto-bid
-    BID_SUCCESS,        // Server xác nhận đặt giá hợp lệ
-    BID_ERROR,          // Lỗi (giá thấp, phiên đã đóng...)
-    NEW_BID_BROADCAST,  // Cập nhật giá realtime cho tất cả (Observer)
-    AUCTION_ENDED,      // Thông báo kết thúc phiên
-    GET_STATUS          // Yêu cầu lấy trạng thái hiện tại (giá + người dẫn đầu)
-}
+  LOGIN,
+  LOGIN_SUCCESS,
+  LOGIN_FAIL,
+  REGISTER,
+  REGISTER_SUCCESS,
+  REGISTER_FAIL,
+  PLACE_BID,
+  SETUP_AUTO_BID,
+  BID_SUCCESS,
+  BID_ERROR,
+  NEW_BID_BROADCAST,
+  AUCTION_ENDED,
+  GET_STATUS,
+  CREATE_ITEM,
+  CREATE_ITEM_SUCCESS,
+  CREATE_ITEM_FAIL,
+  GET_SELLER_ITEMS,
+  GET_SELLER_ITEMS_RESPONSE,
+  GET_WALLET_BALANCE,
+  WALLET_BALANCE_RESPONSE,
+  WALLET_TOPUP_REQUEST,
+  WALLET_TOPUP_APPROVE,
+  NEW_ITEM_BROADCAST,
+  WATCHLIST_ADD,
+  WATCHLIST_REMOVE,
+  GET_WATCHLIST,
+  WATCHLIST_RESPONSE,
+  GET_ALL_ITEMS,
+  GET_ALL_ITEMS_RESPONSE,
+  ADMIN_GET_PENDING_TOPUPS,
+  ADMIN_APPROVE_TOPUP,
+  ADMIN_REJECT_TOPUP,
+  ADMIN_PENDING_TOPUPS_RESPONSE,
+  ADMIN_GET_STATS,
+  ADMIN_STATS_RESPONSE,
+  ADMIN_GET_USERS,
+  ADMIN_USERS_RESPONSE,
+  ADMIN_GET_AUCTIONS,
+  ADMIN_AUCTIONS_RESPONSE,
+  ADMIN_BAN_USER,
+  ADMIN_UNBAN_USER,
+  ADMIN_GET_BIDS,
+  ADMIN_BIDS_RESPONSE,
+  GET_WALLET_HISTORY,
+  WALLET_HISTORY_RESPONSE
+}

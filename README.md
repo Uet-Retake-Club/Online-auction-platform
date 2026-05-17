@@ -1,6 +1,7 @@
 # Nền tảng Đấu giá Trực tuyến (Online Auction Platform)
 
-[![CI - Build & Test](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Uet-Retake-Club/Online-auction-platform/actions/workflows/ci.yml)
+
+*(Lần cập nhật cuối cùng - Final Update)*
 
 ## 1. Mô tả bài toán và Phạm vi hệ thống
 Dự án xây dựng một hệ thống đấu giá trực tuyến thời gian thực, cho phép nhiều người dùng tham gia đấu giá cùng một lúc. Hệ thống tập trung vào việc đảm bảo tính đồng bộ, hiệu năng cao và trải nghiệm người dùng mượt mà.
@@ -19,6 +20,7 @@ Dự án xây dựng một hệ thống đấu giá trực tuyến thời gian t
 - **Giao diện (Client):** JavaFX, AtlantaFX (UI Theme), Ikonli (Icons).
 - **Truyền tin:** Socket (TCP), Gson (JSON Serialization).
 - **Kiểm thử:** JUnit 5.
+- **Cơ sở dữ liệu:** SQLite.
 
 ### Yêu cầu môi trường:
 - **JDK:** Java Development Kit 17 hoặc mới hơn.
@@ -68,14 +70,18 @@ java -jar build/auction-client.jar
 ```
 
 ## 6. Danh sách chức năng đã hoàn thành
-- [x] **Đăng nhập:** Xác thực người dùng và tham gia phiên đấu giá.
-- [x] **Đấu giá thời gian thực:** Cập nhật giá và lịch sử thầu tức thì.
-- [x] **Đặt giá thủ công:** Người dùng tự nhập giá thầu mới.
-- [x] **Auto-Bid (Tự động nâng giá):** Thiết lập mức tối đa và bước nhảy.
-- [x] **Chiến thuật Aggressive:** Tự động nâng giá dựa trên giá đối thủ + bước nhảy.
-- [x] **Đồng bộ trạng thái:** Tự động lấy giá hiện tại khi Client mới tham gia.
-- [x] **Giao diện hiện đại:** Tích hợp CSS theme AtlantaFX cực đẹp.
-- [x] **CI/CD:** Tự động build và test trên Windows/Linux/macOS qua GitHub Actions.
+- [x] **Đăng ký và Đăng nhập bảo mật:** Xác thực tài khoản dựa trên cơ sở dữ liệu, kiểm tra trạng thái hoạt động của tài khoản và thông báo lỗi chi tiết khi tài khoản bị khóa (Banned).
+- [x] **Đấu giá thời gian thực:** Đồng bộ hóa giá hiện tại, thời gian đếm ngược và lịch sử đặt giá (Bid History) tức thì giữa Server và tất cả Client đang kết nối.
+- [x] **Lưu trữ dữ liệu bền vững (Persistence):** Lưu trữ toàn bộ dữ liệu (người dùng, vật phẩm, phiên đấu giá, lịch sử đặt giá, ví tiền, hóa đơn) trực tiếp vào cơ sở dữ liệu SQLite, đảm bảo khôi phục nguyên vẹn trạng thái khi Server khởi động lại.
+- [x] **Đặt giá thủ công:** Người dùng nhập trực tiếp mức giá thầu mong muốn để tham gia phiên đấu giá một cách trực quan.
+- [x] **Auto-Bid (Tự động nâng giá):** Thiết lập mức giá tối đa và bước nhảy của giá thầu để Server tự động đấu giá thay người dùng khi có đối thủ cạnh tranh.
+- [x] **Chiến thuật Aggressive Auto-Bid:** Thuật toán tự động nâng giá thông minh, tự động tính toán dựa trên mức giá của đối thủ cộng thêm bước nhảy tối thiểu để duy trì vị thế dẫn đầu.
+- [x] **Danh sách theo dõi (Watchlist):** Cho phép người dùng theo dõi và lưu trữ danh sách các sản phẩm đang quan tâm để cập nhật trạng thái nhanh chóng.
+- [x] **Ví tiền và Giao dịch (Wallet):** Tích hợp ví điện tử cá nhân để quản lý số dư, tạo yêu cầu nạp tiền (Top-up) chờ Admin phê duyệt và tự động trừ tiền thanh toán hóa đơn khi thắng đấu giá.
+- [x] **Quản lý danh sách bán (Seller Dashboard):** Công cụ cho phép người bán đăng tải sản phẩm đấu giá mới với các thuộc tính chi tiết theo danh mục (Electronics, Vehicles, Sports, Fashion, Collectibles, v.v.) và quản lý hóa đơn (Invoice).
+- [x] **Trang quản trị (Admin Dashboard):** Giao diện Admin hiển thị số liệu thống kê thời gian thực từ cơ sở dữ liệu (tổng số người dùng, vật phẩm, doanh thu), quản lý khóa/mở khóa tài khoản (Ban/Unban) và hiển thị bảng log đặt giá theo thời gian thực.
+- [x] **Giao diện hiện đại:** Thiết kế UI/UX tinh tế, đồng bộ bằng CSS kết hợp với thư viện AtlantaFX hiện đại, hỗ trợ chuyển đổi chủ đề màu sắc (Dark Mode / Light Mode) mượt mà.
+- [x] **CI/CD:** Tự động hóa quá trình build và chạy test trên Windows, Linux và macOS thông qua GitHub Actions.
 
 ---
 
@@ -96,4 +102,15 @@ Maven sẽ biên dịch code và đóng gói tất cả các dependencies (thư 
 ```bash
 java -jar build/auction-server.jar
 java -jar build/auction-client.jar
+```
+
+### Checkstyle
+```bash
+mvn clean install
+
+# checkstyle
+mvn checkstyle:check -pl shared
+
+# fixstyle
+mvn checkstyle:check -pl shared -Dcheckstyle.fixHarmlessViolations
 ```

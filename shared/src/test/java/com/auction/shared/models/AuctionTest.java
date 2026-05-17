@@ -8,15 +8,16 @@ import org.junit.jupiter.api.Test;
  */
 public class AuctionTest {
 
-    // Dùng Art làm concrete Item để tạo Auction
-    private Art createSampleItem() {
-        return new Art("ITEM-001", "Starry Night", "Van Gogh painting", 1000.0,
-                System.currentTimeMillis(), System.currentTimeMillis() + 3600000, "Van Gogh");
+    // Dùng Collectibles làm concrete Item để tạo Auction
+    private Collectibles createSampleItem() {
+        return new Collectibles("ITEM-001", "Starry Night", "Van Gogh painting", 1000.0,
+                System.currentTimeMillis(), System.currentTimeMillis() + 3600000, 
+                "Painting", "Rare", "Good", "S001");
     }
 
     @Test
     void testAuctionConstructor() {
-        Art item = createSampleItem();
+        Collectibles item = createSampleItem();
         Seller seller = new Seller("S001", "Gallery", "gallery@mail.com");
         Auction auction = new Auction("AUC-001", item, seller);
 
@@ -29,7 +30,7 @@ public class AuctionTest {
 
     @Test
     void testAddBid() {
-        Art item = createSampleItem();
+        Collectibles item = createSampleItem();
         Seller seller = new Seller("S001", "Gallery", "gallery@mail.com");
         Auction auction = new Auction("AUC-001", item, seller);
 
@@ -42,7 +43,7 @@ public class AuctionTest {
 
     @Test
     void testMultipleBids() {
-        Art item = createSampleItem();
+        Collectibles item = createSampleItem();
         Seller seller = new Seller("S001", "Gallery", "gallery@mail.com");
         Auction auction = new Auction("AUC-001", item, seller);
 
@@ -55,9 +56,10 @@ public class AuctionTest {
 
     @Test
     void testSetItem() {
-        Art item1 = createSampleItem();
-        Art item2 = new Art("ITEM-002", "Mona Lisa", "Da Vinci", 5000.0,
-                System.currentTimeMillis(), System.currentTimeMillis() + 3600000, "Da Vinci");
+        Collectibles item1 = createSampleItem();
+        Collectibles item2 = new Collectibles("ITEM-002", "Mona Lisa", "Da Vinci", 5000.0,
+                System.currentTimeMillis(), System.currentTimeMillis() + 3600000, 
+                "Painting", "Ultra Rare", "Perfect", "S001");
         Seller seller = new Seller("S001", "Gallery", "gallery@mail.com");
         Auction auction = new Auction("AUC-001", item1, seller);
 
