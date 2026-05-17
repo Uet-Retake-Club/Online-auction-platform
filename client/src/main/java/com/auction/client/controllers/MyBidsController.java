@@ -1,9 +1,17 @@
 package com.auction.client.controllers;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.MyBidItemDTO;
+import com.auction.shared.dto.Request;
+import com.google.gson.Gson;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -14,6 +22,7 @@ import javafx.scene.layout.VBox;
 
 /**
  * MyBidsController handles the My Bids view.
+ * Fetches the user's bids and watchlist items from the server and displays them live.
  */
 public class MyBidsController implements Initializable {
 
@@ -28,32 +37,65 @@ public class MyBidsController implements Initializable {
   @FXML private Button filterWatchlist;
 
   private Button activeFilter;
-
-  private static final String[][] ALL_BIDS = {
-    {"Vintage Rolex Watch", "$1,240.00", "$1,240.00", "1h 47m", "winning"},
-    {"iPhone 15 Pro Max", "$720.00", "$780.00", "32m", "outbid"},
-    {"Nike Air Jordan 1", "$210.00", "$210.00", "Ended", "won"},
-    {"Sony WH-1000XM5", "$170.00", "$190.00", "Ended", "lost"},
-    {"MacBook Air M2", "$820.00", "$820.00", "4d 2h", "watching"}
-  };
+  private final Gson gson = new Gson();
+  private final List<MyBidItemDTO> allMyBids = new ArrayList<>();
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
-    
-    final String pending = UserSession.getInstance().getPendingMyBidsFilter();
-    if ("watching".equals(pending)) {
-      UserSession.getInstance().setPendingMyBidsFilter("");
-      onFilterWatchlist();
-    } else {
-      activeFilter = filterAll;
-      populateRows(ALL_BIDS);
-    }
+    fetchMyBidsFromServer();
+  }
+
+  /**
+   * Fetches real user bid transactions and watchlist records from the server.
+   */
+  private void fetchMyBidsFromServer() {
+    bidsListContainer.getChildren().clear();
+    bidCountLabel.setText("Loading...");
+
+    final Request req = new Request(MessageType.GET_MY_BIDS,
+        UserSession.getInstance().getUserId(), "");
+
+    // One-shot listener to receive the user's bids
+    final NetworkClientService.ServerMessageListener[] ref =
+        new NetworkClientService.ServerMessageListener[1];
+    ref[0] = response -> {
+      if (response.getType() == MessageType.GET_MY_BIDS_RESPONSE) {
+        NetworkClientService.getInstance().removeListener(ref[0]);
+
+        final List<MyBidItemDTO> items = new ArrayList<>();
+        try {
+          final MyBidItemDTO[] arr = gson.fromJson(response.getPayload(), MyBidItemDTO[].class);
+          if (arr != null) {
+            for (final MyBidItemDTO el : arr) {
+              items.add(el);
+            }
+          }
+        } catch (Exception ignored) { }
+
+        Platform.runLater(() -> {
+          allMyBids.clear();
+          allMyBids.addAll(items);
+          
+          final String pending = UserSession.getInstance().getPendingMyBidsFilter();
+          if ("watching".equals(pending)) {
+            UserSession.getInstance().setPendingMyBidsFilter("");
+            switchFilter(filterWatchlist);
+            populateRows(filterBy("watching"));
+          } else {
+            switchFilter(filterAll);
+            populateRows(allMyBids);
+          }
+        });
+      }
+    };
+    NetworkClientService.getInstance().addListener(ref[0]);
+    NetworkClientService.getInstance().sendRequest(req);
   }
 
   @FXML private void onFilterAll() {
     switchFilter(filterAll);
-    populateRows(ALL_BIDS);
+    populateRows(allMyBids);
   }
 
   @FXML private void onFilterWinning() {
@@ -86,10 +128,10 @@ public class MyBidsController implements Initializable {
     activeFilter = btn;
   }
 
-  private String[][] filterBy(final String status) {
-    return java.util.Arrays.stream(ALL_BIDS)
-        .filter(b -> b[4].equals(status))
-        .toArray(String[][]::new);
+  private List<MyBidItemDTO> filterBy(final String status) {
+    return allMyBids.stream()
+        .filter(b -> b.status.equalsIgnoreCase(status))
+        .toList();
   }
 
   @FXML
@@ -113,9 +155,9 @@ public class MyBidsController implements Initializable {
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
   }
 
-  private void populateRows(final String[][] data) {
+  private void populateRows(final List<MyBidItemDTO> data) {
     bidsListContainer.getChildren().clear();
-    if (data.length == 0) {
+    if (data.isEmpty()) {
       emptyState.setVisible(true);
       emptyState.setManaged(true);
       bidCountLabel.setText("0 bids");
@@ -123,50 +165,61 @@ public class MyBidsController implements Initializable {
     }
     emptyState.setVisible(false);
     emptyState.setManaged(false);
-    bidCountLabel.setText(data.length + " bid" + (data.length == 1 ? "" : "s"));
-    for (String[] bid : data) {
-      bidsListContainer.getChildren().add(
-          buildRow(bid[0], bid[1], bid[2], bid[3], bid[4]));
+    bidCountLabel.setText(data.size() + " bid" + (data.size() == 1 ? "" : "s"));
+    for (MyBidItemDTO bid : data) {
+      bidsListContainer.getChildren().add(buildRow(bid));
     }
   }
 
-  private HBox buildRow(final String title, final String myBid, 
-      final String curPrice, final String timeLeft, final String status) {
+  private HBox buildRow(final MyBidItemDTO bid) {
     final HBox row = new HBox();
     row.getStyleClass().add("table-row");
 
-    final Label titleLbl = new Label(title);
+    final Label titleLbl = new Label(bid.name);
     titleLbl.getStyleClass().add("label-bold");
     HBox.setHgrow(titleLbl, Priority.ALWAYS);
     titleLbl.setMaxWidth(Double.MAX_VALUE);
 
-    final Label myBidLbl = new Label(myBid);
+    final String myBidStr = bid.myBidAmount > 0 ? String.format("$%,.2f", bid.myBidAmount) : "-";
+    final Label myBidLbl = new Label(myBidStr);
     myBidLbl.getStyleClass().add("body-text");
     myBidLbl.setPrefWidth(120);
 
-    final Label curPriceLbl = new Label(curPrice);
+    final String curPriceStr = String.format("$%,.2f", bid.currentPrice);
+    final Label curPriceLbl = new Label(curPriceStr);
     curPriceLbl.getStyleClass().addAll("label-bold", "price-tag");
     curPriceLbl.setPrefWidth(140);
-    curPriceLbl.setStyle("-fx-font-size: 14px;"); // Slight adjustment for emphasis
+    curPriceLbl.setStyle("-fx-font-size: 14px;");
 
-    final Label timeLbl = new Label(timeLeft);
+    final Label timeLbl = new Label(formatTimeLeft(bid.endTime));
     timeLbl.getStyleClass().add("body-small");
     timeLbl.setPrefWidth(120);
 
-    final Label badge = buildBadge(status);
+    final Label badge = buildBadge(bid.status);
     badge.setPrefWidth(100);
     
-    final Button action = buildActionButton(status);
+    final Button action = buildActionButton(bid);
     action.setPrefWidth(100);
 
     row.getChildren().addAll(titleLbl, myBidLbl, curPriceLbl, timeLbl, badge, action);
     return row;
   }
 
+  private String formatTimeLeft(final long endTime) {
+    final long now = System.currentTimeMillis();
+    final long diff = endTime - now;
+    if (diff <= 0) return "Ended";
+    final long hours = diff / (3600 * 1000);
+    final long days = hours / 24;
+    if (days > 0) return days + "d " + (hours % 24) + "h";
+    final long minutes = (diff % (3600 * 1000)) / (60 * 1000);
+    return hours + "h " + minutes + "m";
+  }
+
   private Label buildBadge(final String status) {
     final Label b = new Label();
     b.getStyleClass().add("badge");
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "winning" -> {
         b.setText("Winning");
         b.getStyleClass().add("badge-success");
@@ -192,16 +245,22 @@ public class MyBidsController implements Initializable {
     return b;
   }
 
-
-  private Button buildActionButton(final String status) {
+  private Button buildActionButton(final MyBidItemDTO bid) {
     final Button btn = new Button();
     btn.getStyleClass().add("btn-outline");
     btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
     
-    switch (status) {
+    switch (bid.status.toLowerCase()) {
       case "outbid" -> {
         btn.setText("Bid again");
-        btn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+        btn.setOnAction(e -> {
+          UserSession.getInstance().setSelectedItemId(bid.itemId);
+          UserSession.getInstance().setSelectedAuctionTitle(bid.name);
+          UserSession.getInstance().setSelectedAuctionCategory(bid.category);
+          UserSession.getInstance().setSelectedItemDescription(bid.description);
+          UserSession.getInstance().setSelectedItemPrice(bid.currentPrice);
+          SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
+        });
       }
       case "won" -> {
         btn.setText("Pay now");
@@ -211,7 +270,14 @@ public class MyBidsController implements Initializable {
       }
       default -> {
         btn.setText("View");
-        btn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+        btn.setOnAction(e -> {
+          UserSession.getInstance().setSelectedItemId(bid.itemId);
+          UserSession.getInstance().setSelectedAuctionTitle(bid.name);
+          UserSession.getInstance().setSelectedAuctionCategory(bid.category);
+          UserSession.getInstance().setSelectedItemDescription(bid.description);
+          UserSession.getInstance().setSelectedItemPrice(bid.currentPrice);
+          SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
+        });
       }
     }
     return btn;

@@ -11,7 +11,7 @@ public class MessageTypeTest {
     @Test
     void testAllValuesExist() {
         MessageType[] values = MessageType.values();
-        assertEquals(45, values.length, "MessageType must have exactly 45 values");
+        assertEquals(47, values.length, "MessageType must have exactly 47 values");
     }
 
     @Test
@@ -61,6 +61,8 @@ public class MessageTypeTest {
         assertEquals(MessageType.ADMIN_UNBAN_USER, MessageType.valueOf("ADMIN_UNBAN_USER"));
         assertEquals(MessageType.ADMIN_GET_BIDS, MessageType.valueOf("ADMIN_GET_BIDS"));
         assertEquals(MessageType.ADMIN_BIDS_RESPONSE, MessageType.valueOf("ADMIN_BIDS_RESPONSE"));
+        assertEquals(MessageType.GET_MY_BIDS, MessageType.valueOf("GET_MY_BIDS"));
+        assertEquals(MessageType.GET_MY_BIDS_RESPONSE, MessageType.valueOf("GET_MY_BIDS_RESPONSE"));
     }
 
 
