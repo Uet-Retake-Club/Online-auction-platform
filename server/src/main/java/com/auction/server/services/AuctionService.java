@@ -28,6 +28,8 @@ public class AuctionService {
     private final ItemDAO itemDAO = new ItemDAOImpl();
     private final BidTransactionDAO bidDAO = new BidTransactionDAOImpl();
     private final com.auction.server.dao.WalletDAO walletDAO = new com.auction.server.dao.WalletDAOImpl();
+    private final com.auction.server.dao.AuctionDAO auctionDAO = new com.auction.server.dao.AuctionDAOImpl();
+    private final com.auction.server.dao.UserDAO userDAO = new com.auction.server.dao.UserDAOImpl();
     
     private String currentAuctionItemId = null;
     private double startingPrice = 1240.00;
@@ -64,10 +66,18 @@ public class AuctionService {
             this.startingPrice = item.getStartingPrice();
             this.currentHighestBid = item.getCurrentHighestBid();
             this.currentHighestBidder = item.getHighestBidderId();
-            System.out.println(" [DATABASE] State restored for item " + currentAuctionItemId + " : $" + currentHighestBid + " from SQLite.");
             
-            // Nếu có dữ liệu endTime, kích hoạt đồng hồ luôn:
-            // auctionTimer.scheduleAuctionEnd(item.getEndTime());
+            // Persist Auction session if not exists
+            String auctionId = "AUC-" + item.getId();
+            if (auctionDAO.getAuctionById(auctionId) == null) {
+                com.auction.shared.models.Seller seller = (com.auction.shared.models.Seller) userDAO.getUserById(item.getSellerId());
+                if (seller != null) {
+                    auctionDAO.addAuction(new com.auction.shared.models.Auction(auctionId, item, seller));
+                    System.out.println(" [DATABASE] Created new persistent auction record: " + auctionId);
+                }
+            }
+
+            System.out.println(" [DATABASE] State restored for item " + currentAuctionItemId + " : $" + currentHighestBid + " from SQLite.");
         } else {
             System.out.println(" [DATABASE] No OPEN items found. Waiting for items to be added.");
         }
@@ -141,16 +151,16 @@ public class AuctionService {
             System.out.println("[WALLET] Cumulative Stake: Deducted additional $" + deductionNeeded + " from " + bidderId + " (Total: $" + amount + ")");
 
             // Log transaction to DB
-            BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
+            String txId = "BID-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            BidTransaction tx = new BidTransaction(txId, currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
             bidDAO.addTransaction(tx);
 
             currentHighestBid = amount;
             currentHighestBidder = bidderId;
-            System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId
-                + " on item " + targetItemId);
-            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
+            String responsePayload = new Gson().toJson(tx);
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", responsePayload));
             autoBidEngine.triggerEvaluation();
-            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", payload);
+            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", responsePayload);
         } else {
             // ── Non-active item: read current price from DB ──
             Item item = itemDAO.getItemById(targetItemId);
@@ -179,13 +189,13 @@ public class AuctionService {
             System.out.println("[WALLET] Cumulative Stake: Deducted additional $" + deductionNeeded + " from " + bidderId + " (Total: $" + amount + ")");
 
             // Log transaction to DB
-            BidTransaction tx = new BidTransaction("BID-" + System.currentTimeMillis(), targetItemId, bidderId, amount, System.currentTimeMillis());
+            String txId = "BID-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            BidTransaction tx = new BidTransaction(txId, targetItemId, bidderId, amount, System.currentTimeMillis());
             bidDAO.addTransaction(tx);
 
-            System.out.println("[MANAGER] New price: $" + amount + " from " + bidderId
-                + " on item " + targetItemId);
-            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", payload));
-            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", payload);
+            String responsePayload = new Gson().toJson(tx);
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "New bid placed", responsePayload));
+            return new Response(MessageType.BID_SUCCESS, "SUCCESS", "Bid placed successfully!", responsePayload);
         }
     }
 
@@ -215,7 +225,8 @@ public class AuctionService {
             System.out.println("[AUTO-BID] Auto-bid placed: $" + currentHighestBid + " for " + bidderId);
 
             // Log transaction to DB
-            BidTransaction autoBidTx = new BidTransaction("AUTO-" + System.currentTimeMillis(), currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
+            String txId = "AUTO-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            BidTransaction autoBidTx = new BidTransaction(txId, currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
             bidDAO.addTransaction(autoBidTx);
 
             String autoBidPayload = new Gson().toJson(autoBidTx);
@@ -263,10 +274,8 @@ public class AuctionService {
     }
 
     public Response getCurrentStatusResponse() {
-        double displayPrice = (currentHighestBid > 0) ? currentHighestBid : startingPrice;
-        String bidder = (currentHighestBidder != null) ? currentHighestBidder : "None";
-        String payload = new Gson().toJson(new BidTransaction(
-            "STATUS", currentAuctionItemId, bidder, displayPrice, System.currentTimeMillis()));
+        List<BidTransaction> history = bidDAO.getHistoryByItem(currentAuctionItemId);
+        String payload = new Gson().toJson(history);
         return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Status", payload);
     }
 
@@ -284,11 +293,8 @@ public class AuctionService {
         if (item == null) {
             return new Response(MessageType.BID_ERROR, "FAIL", "Item not found: " + itemId, null);
         }
-        double displayPrice = item.getCurrentHighestBid() > 0
-            ? item.getCurrentHighestBid() : item.getStartingPrice();
-        String bidder = item.getHighestBidderId() != null ? item.getHighestBidderId() : "None";
-        String payload = new Gson().toJson(new BidTransaction(
-            "STATUS", itemId, bidder, displayPrice, System.currentTimeMillis()));
+        List<BidTransaction> history = bidDAO.getHistoryByItem(itemId);
+        String payload = new Gson().toJson(history);
         return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Item Status", payload);
     }
 

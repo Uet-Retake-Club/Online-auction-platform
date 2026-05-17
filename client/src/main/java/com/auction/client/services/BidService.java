@@ -25,6 +25,12 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   private final List<BidTransaction> bidHistory = new ArrayList<>();
   private final Gson gson = new Gson();
 
+  public List<BidTransaction> getBidHistory() {
+    synchronized (bidHistory) {
+      return new ArrayList<>(bidHistory);
+    }
+  }
+
   private Consumer<Double> onPriceUpdated;
   private Consumer<BidTransaction> onNewBid;
   private Consumer<Response> onAutoBidResult;
@@ -204,32 +210,85 @@ public class BidService implements NetworkClientService.ServerMessageListener {
         return;
       }
 
-      final BidTransaction newBid;
-      try {
-        newBid = gson.fromJson(response.getPayload(), BidTransaction.class);
-      } catch (Exception e) {
-        return; // malformed payload
-      }
-      if (newBid == null) return;
-
-      // Only update UI if this bid is for the item currently being viewed
-      final String viewingId = UserSession.getInstance().getSelectedItemId();
-      if (viewingId != null && newBid.getItemId() != null
-          && !viewingId.equals(newBid.getItemId())) {
-        return;
-      }
-
-      this.currentBidAmount = newBid.getBidAmount();
-      bidHistory.add(newBid);
-
-      Platform.runLater(() -> {
-        if (onPriceUpdated != null) {
-          onPriceUpdated.accept(currentBidAmount);
+      final String payload = response.getPayload();
+      if (payload.startsWith("[")) {
+        // Handle history array
+        try {
+          final BidTransaction[] history = gson.fromJson(payload, BidTransaction[].class);
+          if (history != null && history.length > 0) {
+            this.bidHistory.clear();
+            for (BidTransaction tx : history) {
+              bidHistory.add(tx);
+            }
+            final BidTransaction latest = history[history.length - 1];
+            this.currentBidAmount = latest.getBidAmount();
+            
+            Platform.runLater(() -> {
+              if (onPriceUpdated != null) {
+                onPriceUpdated.accept(currentBidAmount);
+              }
+              if (onNewBid != null) {
+                // For initial load, we might want to notify about all bids or just the latest
+                // The AuctionDetailController usually adds one row at a time.
+                // Let's notify listeners about each bid in the history so they show up.
+                for (BidTransaction tx : history) {
+                  onNewBid.accept(tx);
+                }
+              }
+            });
+          } else {
+            this.currentBidAmount = UserSession.getInstance().getSelectedItemPrice();
+            Platform.runLater(() -> {
+              if (onPriceUpdated != null) {
+                onPriceUpdated.accept(currentBidAmount);
+              }
+            });
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
         }
-        if (onNewBid != null) {
-          onNewBid.accept(newBid);
+      } else {
+        // Handle single bid
+        final BidTransaction newBid;
+        try {
+          newBid = gson.fromJson(payload, BidTransaction.class);
+        } catch (Exception e) {
+          return;
         }
-      });
+        if (newBid == null) return;
+
+        final String viewingId = UserSession.getInstance().getSelectedItemId();
+        if (viewingId != null && newBid.getItemId() != null
+            && !viewingId.equals(newBid.getItemId())) {
+          return;
+        }
+
+        synchronized (bidHistory) {
+          boolean alreadyExists = false;
+          if (newBid.getId() != null && !newBid.getId().isEmpty()) {
+            for (BidTransaction existing : bidHistory) {
+              if (newBid.getId().equals(existing.getId())) {
+                alreadyExists = true;
+                break;
+              }
+            }
+          }
+          if (alreadyExists) {
+            return;
+          }
+          this.currentBidAmount = newBid.getBidAmount();
+          bidHistory.add(newBid);
+        }
+
+        Platform.runLater(() -> {
+          if (onPriceUpdated != null) {
+            onPriceUpdated.accept(currentBidAmount);
+          }
+          if (onNewBid != null) {
+            onNewBid.accept(newBid);
+          }
+        });
+      }
 
     } else if (response.getType() == MessageType.SETUP_AUTO_BID) {
       Platform.runLater(() -> {

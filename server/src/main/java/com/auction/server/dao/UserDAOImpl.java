@@ -45,18 +45,49 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public boolean addUser(User user, String password) {
-        String sql = "INSERT INTO users (id, username, email, password, role) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, user.getId());
-            pstmt.setString(2, user.getUsername());
-            pstmt.setString(3, user.getEmail());
-            pstmt.setString(4, password);
-            pstmt.setString(5, user.getRole());
-            return pstmt.executeUpdate() > 0;
+        String sqlUser = "INSERT INTO users (id, username, email, password, role) VALUES (?, ?, ?, ?, ?)";
+        String sqlWallet = "INSERT INTO wallets (user_id, balance) VALUES (?, 0.0)";
+
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlUser)) {
+                pstmt.setString(1, user.getId());
+                pstmt.setString(2, user.getUsername());
+                pstmt.setString(3, user.getEmail());
+                pstmt.setString(4, password);
+                pstmt.setString(5, user.getRole());
+                pstmt.executeUpdate();
+            }
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sqlWallet)) {
+                pstmt.setString(1, user.getId());
+                pstmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
             e.printStackTrace();
             return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

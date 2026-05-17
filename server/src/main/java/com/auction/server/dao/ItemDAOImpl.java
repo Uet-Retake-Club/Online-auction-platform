@@ -22,8 +22,8 @@ public class ItemDAOImpl implements ItemDAO {
 
     @Override
     public boolean updateCurrentPrice(String itemId, double newPrice, String bidderId) {
-        // SQL: Chỉ cập nhật nếu giá mới (tham số thứ 4) THỰC SỰ lớn hơn giá hiện tại trong DB
-        String sql = "UPDATE items SET current_price = ?, highest_bidder_id = ? WHERE id = ? AND ? > current_price";
+        // SQL: Chỉ cập nhật nếu giá mới (tham số thứ 4) lớn hơn hoặc bằng giá hiện tại trong DB
+        String sql = "UPDATE items SET current_price = ?, highest_bidder_id = ? WHERE id = ? AND ? >= current_price";
 
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {

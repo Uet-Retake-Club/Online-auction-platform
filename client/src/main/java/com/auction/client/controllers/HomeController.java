@@ -230,6 +230,7 @@ public class HomeController implements Initializable {
       UserSession.getInstance().setSelectedAuctionCategory(category);
       UserSession.getInstance().setSelectedItemId(itemId);
       UserSession.getInstance().setSelectedItemDescription(item.getDescription());
+      UserSession.getInstance().setSelectedItemPrice(item.getCurrentHighestBid());
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
     return card;

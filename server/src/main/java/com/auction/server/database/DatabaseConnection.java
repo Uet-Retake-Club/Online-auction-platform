@@ -27,21 +27,24 @@ public class DatabaseConnection {
             }
             System.out.println("[DATABASE] Successfully initialized from schema.sql");
 
-            // Migration: add email column to users if it doesn't exist yet (SQLite doesn't
-            // support IF NOT EXISTS for ALTER TABLE, so we catch the error silently)
+            // Migration: add email column to users
             try {
                 stmt.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE");
                 System.out.println("[DATABASE] Migration: added 'email' column to users.");
-            } catch (SQLException ignored) {
-                // Column already exists — safe to ignore
-            }
+            } catch (SQLException ignored) {}
 
-            // Migration: add status column to users if it doesn't exist
+            // Migration: add status column to users
             try {
                 stmt.execute("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'ACTIVE'");
                 System.out.println("[DATABASE] Migration: added 'status' column to users.");
-            } catch (SQLException ignored) {
-                // Column already exists — safe to ignore
+            } catch (SQLException ignored) {}
+
+            // Migration: ensure all users have wallets
+            try {
+                stmt.execute("INSERT OR IGNORE INTO wallets (user_id, balance) SELECT id, 0.0 FROM users");
+                System.out.println("[DATABASE] Migration: ensured all users have wallets.");
+            } catch (SQLException e) {
+                System.err.println("[DATABASE] Migration Error: " + e.getMessage());
             }
             
         } catch (SQLException | IOException e) {

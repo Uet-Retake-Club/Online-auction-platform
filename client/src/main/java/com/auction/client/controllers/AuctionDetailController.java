@@ -84,27 +84,27 @@ public class AuctionDetailController implements Initializable {
     BidService.getInstance().setCallbacks(
         this::updatePrice,
         transaction -> {
-          final String priceStr = String.format("$%.2f", transaction.getBidAmount());
-          final boolean isWinning = transaction.getBidderId().equals(currentUserId);
+          rebuildBidHistoryUI();
 
-          if (isWinning) {
-            ToastNotification.show(userLabel,
-                "🎉 Bid placed! You are now the highest bidder at " + priceStr,
-                ToastNotification.Type.SUCCESS);
-          } else if (currentHighestBidder.equals(currentUserId)) {
-            ToastNotification.show(userLabel,
-                "⚠️ You've been outbid! New price: " + priceStr,
-                ToastNotification.Type.WARNING);
+          final String priceStr = String.format("$%.2f", transaction.getBidAmount());
+          final boolean isMyBid = transaction.getBidderId().equals(currentUserId)
+              || transaction.getBidderId().equals(UserSession.getInstance().getUsername());
+
+          if (transaction.getTimestamp() > 0) {
+              long diff = System.currentTimeMillis() - transaction.getTimestamp();
+              boolean isFresh = diff < 5000; // Less than 5 seconds old
+
+              if (isMyBid && isFresh) {
+                ToastNotification.show(userLabel,
+                    "🎉 Bid placed! You are now the highest bidder at " + priceStr,
+                    ToastNotification.Type.SUCCESS);
+              } else if (currentHighestBidder.equals(currentUserId) && isFresh) {
+                ToastNotification.show(userLabel,
+                    "⚠️ You've been outbid! New price: " + priceStr,
+                    ToastNotification.Type.WARNING);
+              }
           }
           currentHighestBidder = transaction.getBidderId();
-          final String displayName = transaction.getBidderId().equals(currentUserId)
-              ? UserSession.getInstance().getUsername() : transaction.getBidderId();
-          final String badge = isWinning ? "winning" : "";
-          addBidRowToHistory(displayName, priceStr, "just now", badge);
-          noBidsLabel.setVisible(false);
-          noBidsLabel.setManaged(false);
-          final int currentTotal = Integer.parseInt(totalBids.getText());
-          totalBids.setText(String.valueOf(currentTotal + 1));
           
           // Refresh wallet balance because it might have changed (bid placed or refund received)
           fetchWalletBalance();
@@ -307,6 +307,52 @@ public class AuctionDetailController implements Initializable {
     minBidHint.setText(String.format("Minimum bid: $%.2f", nextMin));
   }
 
+  private void rebuildBidHistoryUI() {
+    bidHistoryList.getChildren().clear();
+    final java.util.List<com.auction.shared.models.BidTransaction> history = BidService.getInstance().getBidHistory();
+    if (history.isEmpty()) {
+      noBidsLabel.setVisible(true);
+      noBidsLabel.setManaged(true);
+      totalBids.setText("0");
+      return;
+    }
+    noBidsLabel.setVisible(false);
+    noBidsLabel.setManaged(false);
+    totalBids.setText(String.valueOf(history.size()));
+
+    // Find the highest overall bid in history to mark as winning
+    com.auction.shared.models.BidTransaction highestBid = null;
+    for (final com.auction.shared.models.BidTransaction tx : history) {
+      if (highestBid == null || tx.getBidAmount() > highestBid.getBidAmount()) {
+        highestBid = tx;
+      }
+    }
+
+    // Populate rows (earliest first, which gets added at index 0, pushing them down so latest ends up at the top)
+    for (final com.auction.shared.models.BidTransaction tx : history) {
+      final String priceStr = String.format("$%.2f", tx.getBidAmount());
+      final boolean isHighest = (highestBid != null && tx.getId().equals(highestBid.getId()));
+      final boolean isMyBid = tx.getBidderId().equals(currentUserId) 
+          || tx.getBidderId().equals(UserSession.getInstance().getUsername());
+      
+      // Winning badge is shown ONLY on the highest bid if it belongs to the current user
+      final String badge = (isHighest && isMyBid) ? "winning" : "";
+
+      final String displayName = isMyBid ? UserSession.getInstance().getUsername() : tx.getBidderId();
+
+      String timeStr = "just now";
+      if (tx.getTimestamp() > 0) {
+          long diff = System.currentTimeMillis() - tx.getTimestamp();
+          if (diff > 3600000) {
+              timeStr = (diff / 3600000) + "h ago";
+          } else if (diff > 60000) {
+              timeStr = (diff / 60000) + "m ago";
+          }
+      }
+
+      addBidRowToHistory(displayName, priceStr, timeStr, badge);
+    }
+  }
 
   private void addBidRowToHistory(final String name, final String price,
       final String time, final String badge) {

@@ -489,6 +489,7 @@ public class AdminController implements Initializable {
       UserSession.getInstance().setSelectedAuctionTitle(item.name);
       UserSession.getInstance().setSelectedAuctionCategory(item.category != null ? item.category : "");
       UserSession.getInstance().setSelectedItemDescription(item.description);
+      UserSession.getInstance().setSelectedItemPrice(item.currentHighestBid);
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
 

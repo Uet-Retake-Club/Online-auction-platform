@@ -60,12 +60,50 @@ public class AuctionServiceTest {
             java.lang.reflect.Field bidDaoField = AuctionService.class.getDeclaredField("bidDAO");
             bidDaoField.setAccessible(true);
             bidDaoField.set(manager, new BidTransactionDAO() {
-                @Override public boolean addTransaction(BidTransaction tx) { return true; }
-                @Override public java.util.List<BidTransaction> getHistoryByItem(String itemId) { return java.util.Collections.emptyList(); }
-                @Override public java.util.List<BidTransaction> getAllTransactions() { return java.util.Collections.emptyList(); }
-                @Override public int getTotalBidCount() { return 0; }
-                @Override public double getMaxBidAmount(String userId, String itemId) { return 0.0; }
-                @Override public java.util.List<String> getBiddersForItem(String itemId) { return java.util.Collections.emptyList(); }
+                private final java.util.List<BidTransaction> mockBids = new java.util.ArrayList<>();
+
+                @Override
+                public boolean addTransaction(BidTransaction tx) {
+                    mockBids.add(tx);
+                    return true;
+                }
+
+                @Override
+                public java.util.List<BidTransaction> getHistoryByItem(String itemId) {
+                    return mockBids;
+                }
+
+                @Override
+                public java.util.List<BidTransaction> getAllTransactions() {
+                    return mockBids;
+                }
+
+                @Override
+                public int getTotalBidCount() {
+                    return mockBids.size();
+                }
+
+                @Override
+                public double getMaxBidAmount(String userId, String itemId) {
+                    double max = 0.0;
+                    for (BidTransaction tx : mockBids) {
+                        if (tx.getBidderId().equals(userId) && tx.getItemId().equals(itemId)) {
+                            if (tx.getBidAmount() > max) max = tx.getBidAmount();
+                        }
+                    }
+                    return max;
+                }
+
+                @Override
+                public java.util.List<String> getBiddersForItem(String itemId) {
+                    java.util.List<String> bidders = new java.util.ArrayList<>();
+                    for (BidTransaction tx : mockBids) {
+                        if (tx.getItemId().equals(itemId) && !bidders.contains(tx.getBidderId())) {
+                            bidders.add(tx.getBidderId());
+                        }
+                    }
+                    return bidders;
+                }
             });
 
             java.lang.reflect.Field walletDaoField = AuctionService.class.getDeclaredField("walletDAO");
@@ -164,14 +202,13 @@ public class AuctionServiceTest {
 
     @Test
     void testGetCurrentStatusResponseBeforeAnyBid() {
-        // Initially no bids, starting price is 1240
+        // Initially no bids, empty history returned
         Response status = manager.getCurrentStatusResponse();
         assertEquals("SUCCESS", status.getStatus());
         assertNotNull(status.getPayload());
         
-        BidTransaction bt = new Gson().fromJson(status.getPayload(), BidTransaction.class);
-        assertEquals(1240.0, bt.getBidAmount(), 0.001);
-        assertEquals("None", bt.getBidderId());
+        BidTransaction[] history = new Gson().fromJson(status.getPayload(), BidTransaction[].class);
+        assertEquals(0, history.length);
     }
 
     @Test
@@ -180,9 +217,10 @@ public class AuctionServiceTest {
         Response status = manager.getCurrentStatusResponse();
         assertEquals("SUCCESS", status.getStatus());
         
-        BidTransaction bt = new Gson().fromJson(status.getPayload(), BidTransaction.class);
-        assertEquals(1300.0, bt.getBidAmount(), 0.001);
-        assertEquals("client1", bt.getBidderId());
+        BidTransaction[] history = new Gson().fromJson(status.getPayload(), BidTransaction[].class);
+        assertEquals(1, history.length);
+        assertEquals(1300.0, history[0].getBidAmount(), 0.001);
+        assertEquals("client1", history[0].getBidderId());
     }
 
     @Test
