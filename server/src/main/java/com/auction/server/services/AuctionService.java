@@ -4,6 +4,8 @@ import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.BidTransactionDAOImpl;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
+import com.auction.server.dao.InvoiceDAO;
+import com.auction.server.dao.InvoiceDAOImpl;
 import com.auction.server.network.ClientHandler;
 import com.auction.server.services.core.AuctionTimer;
 import com.auction.server.services.core.AutoBidEngine;
@@ -30,6 +32,7 @@ public class AuctionService {
     private final com.auction.server.dao.WalletDAO walletDAO = new com.auction.server.dao.WalletDAOImpl();
     private final com.auction.server.dao.AuctionDAO auctionDAO = new com.auction.server.dao.AuctionDAOImpl();
     private final com.auction.server.dao.UserDAO userDAO = new com.auction.server.dao.UserDAOImpl();
+    private final com.auction.server.dao.InvoiceDAO invoiceDAO = new com.auction.server.dao.InvoiceDAOImpl();
     
     private String currentAuctionItemId = null;
     private double startingPrice = 1240.00;
@@ -263,13 +266,28 @@ public class AuctionService {
             }
 
             // 4. Xác định người thắng và thông báo
-            String winnerMsg = (currentHighestBidder != null) 
-                ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
-                : "Phiên kết thúc mà không có ai đặt giá.";
+            String winnerMsg;
+            if (currentHighestBidder != null) {
+                winnerMsg = "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")";
                 
-            broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
-        } else {
-            System.err.println(" [ERROR] Database rejected auction closure!");
+                Item item = itemDAO.getItemById(currentAuctionItemId);
+                String sellerId = (item != null) ? item.getSellerId() : "UNKNOWN_SELLER";
+                String invoiceId = "INV-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+                String auctionId = "AUC-" + currentAuctionItemId; 
+                
+                // Initialize a PENDING invoice
+                com.auction.shared.models.Invoice invoice = new com.auction.shared.models.Invoice(
+                    invoiceId, auctionId, currentAuctionItemId,
+                    currentHighestBidder, sellerId, currentHighestBid,
+                    System.currentTimeMillis(), "PENDING"
+                );
+                
+                if (invoiceDAO.createInvoice(invoice)) {
+                    System.out.println("  [INVOICE] Created new invoice: " + invoiceId + " (Status: PENDING)");
+                }
+            } else {
+                winnerMsg = "Phiên kết thúc mà không có ai đặt giá.";
+            }
         }
     }
 
@@ -296,6 +314,46 @@ public class AuctionService {
         List<BidTransaction> history = bidDAO.getHistoryByItem(itemId);
         String payload = new Gson().toJson(history);
         return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Item Status", payload);
+    }
+    // --- PAYMENT PROCESSING ---
+    public synchronized Response processPayment(String invoiceId, String userId) {
+        com.auction.shared.models.Invoice invoice = invoiceDAO.getInvoiceById(invoiceId);
+        if (invoice == null) return new Response(MessageType.BID_ERROR, "FAIL", "Invoice not found!", null);
+        
+        // Authorization check: Only the winning bidder can pay
+        if (!invoice.getBidderId().equals(userId)) return new Response(MessageType.BID_ERROR, "FAIL", "Unauthorized payment attempt!", null);
+        
+        // Prevent double payment
+        if (!invoice.getStatus().equals("PENDING")) return new Response(MessageType.BID_ERROR, "FAIL", "Invoice already processed (" + invoice.getStatus() + ")!", null);
+        
+        // 1. Update DB status to PAID for both Invoice and Item
+        if (invoiceDAO.updateInvoiceStatus(invoiceId, "PAID") && itemDAO.updateStatus(invoice.getItemId(), "PAID")) {
+            // 2. Transfer funds to the Seller's wallet (Bidder's funds were deducted during bidding)
+            walletDAO.updateBalance(invoice.getSellerId(), invoice.getFinalPrice());
+            System.out.println("  [PAYMENT] Transferred $" + invoice.getFinalPrice() + " to Seller: " + invoice.getSellerId());
+            
+            return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Payment successful!", invoiceId);
+        }
+        return new Response(MessageType.BID_ERROR, "ERROR", "Database error during payment!", null);
+    }
+
+    // --- CANCELLATION PROCESSING ---
+    public synchronized Response processCancellation(String invoiceId, String userId) {
+        com.auction.shared.models.Invoice invoice = invoiceDAO.getInvoiceById(invoiceId);
+        if (invoice == null || !invoice.getStatus().equals("PENDING")) {
+            return new Response(MessageType.BID_ERROR, "FAIL", "Cannot cancel this invoice!", null);
+        }
+        
+        // 1. Update DB status to CANCELED
+        invoiceDAO.updateInvoiceStatus(invoiceId, "CANCELED");
+        itemDAO.updateStatus(invoice.getItemId(), "CANCELED");
+        
+        // 2. Refund the escrowed amount to the canceled winner
+        // (If your team's rule is to penalize/forfeit the deposit, remove this updateBalance call)
+        walletDAO.updateBalance(invoice.getBidderId(), invoice.getFinalPrice());
+        System.out.println("  [CANCELLATION] Invoice " + invoiceId + " canceled. Refunded bidder.");
+        
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Invoice canceled successfully!", invoiceId);
     }
 
     // Nhạc trưởng gọi một tiếng, đàn em tự động dọn dẹp (Facade Pattern)

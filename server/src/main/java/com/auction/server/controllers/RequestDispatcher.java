@@ -40,6 +40,10 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.ADMIN_BAN_USER, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_UNBAN_USER, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_GET_BIDS, adminHandler);
+
+        InvoiceHandler invoiceHandler = new InvoiceHandler();
+        handlerRegistry.put(MessageType.valueOf("INVOICE_PAY"), invoiceHandler);
+        handlerRegistry.put(MessageType.valueOf("INVOICE_CANCEL"), invoiceHandler);
     }
 
 
