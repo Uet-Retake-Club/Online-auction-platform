@@ -81,6 +81,18 @@ public class AuctionService {
             }
 
             System.out.println(" [DATABASE] State restored for item " + currentAuctionItemId + " : $" + currentHighestBid + " from SQLite.");
+
+            // khoi phuc time sau khi khoi dong lai
+            long currentTime = System.currentTimeMillis();
+            if (item.getEndTime() > currentTime) {
+                // Nếu thời gian kết thúc vẫn ở trong tương lai, bật lại đồng hồ đếm ngược!
+                System.out.println(" [TIMER] Resuming countdown for item " + currentAuctionItemId);
+                auctionTimer.scheduleAuctionEnd(item.getEndTime());
+            } else {
+                // Nếu server sập mà thời gian đã quá hạn, ép kết thúc luôn để chốt đơn
+                System.out.println(" [TIMER] Item " + currentAuctionItemId + " is past end time. Ending now...");
+                endAuction();
+            }
         } else {
             System.out.println(" [DATABASE] No OPEN items found. Waiting for items to be added.");
         }
