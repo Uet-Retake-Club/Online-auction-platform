@@ -11,12 +11,14 @@
     Size       : 1100 x 700 — full app shell
     Layout     : BorderPane → top nav / left sidebar / center scroll
 -->
-<BorderPane xmlns="http://javafx.com/javafx"
+<StackPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.HomeController"
             fx:id="rootPane"
             maxWidth="Infinity" maxHeight="Infinity"
             style="-fx-background-color: #F4F4F4;">
+    <BorderPane maxWidth="Infinity" maxHeight="Infinity"
+                style="-fx-background-color: #F4F4F4;">
 
     <!-- ════════════════════════════════════════════════════
          TOP NAVIGATION BAR
@@ -87,6 +89,20 @@
             <Button fx:id="myBidsBtn"
                     text="My bids"
                     onAction="#onMyBids"
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #555555;
+                           -fx-font-size: 13px;
+                           -fx-border-color: transparent;
+                           -fx-border-radius: 6px;
+                           -fx-background-radius: 6px;
+                           -fx-padding: 7px 12px;
+                           -fx-cursor: hand;
+                           -fx-effect: null;"/>
+
+            <!-- Wallet balance button -->
+            <Button fx:id="walletBalanceBtn"
+                    text="Wallet: $2,450.00"
+                    onAction="#onWallet"
                     style="-fx-background-color: transparent;
                            -fx-text-fill: #555555;
                            -fx-font-size: 13px;
@@ -293,4 +309,5 @@
         </ScrollPane>
     </center>
 
-</BorderPane>
+    </BorderPane>
+</StackPane>

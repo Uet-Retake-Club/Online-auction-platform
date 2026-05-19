@@ -10,12 +10,14 @@
     Màn hình chi tiết sản phẩm đấu giá — hiển thị giá, đồng hồ đếm ngược,
     lịch sử đặt giá và form đặt giá trực tiếp.
 -->
-<BorderPane xmlns="http://javafx.com/javafx"
+<StackPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.AuctionDetailController"
             fx:id="rootPane"
             maxWidth="Infinity" maxHeight="Infinity"
             style="-fx-background-color: #F4F4F4;">
+    <BorderPane maxWidth="Infinity" maxHeight="Infinity"
+                style="-fx-background-color: #F4F4F4;">
 
     <!-- ══ TOP NAV ══════════════════════════════════════════ -->
     <top>
@@ -31,6 +33,8 @@
             <Button text="Watchlist" onAction="#onWatchlist"
                     style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
             <Button text="My bids"  onAction="#onMyBids"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+            <Button fx:id="walletBalanceBtn" text="Wallet: $2,450.00" onAction="#onWallet"
                     style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
             <Button text="+ Sell"   onAction="#onSell"
                     style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:7px 14px;-fx-cursor:hand;-fx-effect:null;"/>
@@ -111,13 +115,19 @@
 
                         <Region style="-fx-min-height:14px;"/>
 
+                        <!-- Notification box for success/failure -->
+                        <VBox fx:id="notificationBox" visible="false" managed="false" style="-fx-padding:10px;-fx-border-radius:6px;-fx-background-radius:6px;-fx-margin:0 0 10px 0;">
+                            <Label fx:id="notificationLabel" style="-fx-font-size:13px;-fx-font-weight:bold;-fx-wrap-text:true;"/>
+                        </VBox>
+
                         <!-- Bid input -->
                         <Label fx:id="minBidHint" text="Minimum bid: $1,260.00"
                                style="-fx-font-size:12px;-fx-text-fill:#888;-fx-padding:0 0 5px 0;"/>
                         <TextField fx:id="bidAmountField"
                                    promptText="Enter your bid amount"
                                    styleClass="text-field-base"
-                                   maxWidth="Infinity"/>
+                                   maxWidth="Infinity"
+                                   onAction="#onPlaceBid"/>
                         <Label fx:id="bidError" text=""
                                styleClass="field-error"
                                style="-fx-min-height:16px;-fx-padding:3px 0 8px 0;"/>
@@ -186,4 +196,5 @@
         </ScrollPane>
     </center>
 
-</BorderPane>
+    </BorderPane>
+</StackPane>

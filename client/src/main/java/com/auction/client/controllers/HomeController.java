@@ -1,6 +1,7 @@
 package com.auction.client.controllers;
 
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.client.utils.UserSession;
 import java.net.URL;
 import java.util.Arrays;
@@ -11,7 +12,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -40,9 +40,10 @@ public class HomeController implements Initializable {
   private static final double CARD_GAP = 14;
   private static final double IMAGE_RATIO = 0.65;
 
-  @FXML private BorderPane rootPane;
+  @FXML private StackPane rootPane;
   @FXML private TextField searchField;
   @FXML private Label userLabel;
+  @FXML private Button walletBalanceBtn;
   @FXML private Button allCategoriesBtn;
   @FXML private Button electronicsBtn;
   @FXML private Button fashionBtn;
@@ -93,6 +94,7 @@ public class HomeController implements Initializable {
   public void initialize(final URL url, final ResourceBundle rb) {
     activeCategory = allCategoriesBtn;
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.updateWalletBalance(walletBalanceBtn);
     applyFilters();
 
     rootPane.widthProperty().addListener(
@@ -324,6 +326,7 @@ public class HomeController implements Initializable {
     card.setOnMouseClicked(e -> {
       UserSession.getInstance().setSelectedAuctionTitle(title);
       UserSession.getInstance().setSelectedAuctionCategory(category);
+      UserSession.getInstance().setSelectedAuctionPrice(price);
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
 
@@ -347,5 +350,10 @@ public class HomeController implements Initializable {
   @FXML
   private void onHome() {
     SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+  }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
   }
 }

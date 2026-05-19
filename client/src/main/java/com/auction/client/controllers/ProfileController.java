@@ -100,4 +100,9 @@ public class ProfileController implements Initializable {
   private void onHome() {
     SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
+  }
 }

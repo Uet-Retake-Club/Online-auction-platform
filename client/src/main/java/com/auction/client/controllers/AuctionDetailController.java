@@ -1,9 +1,9 @@
 package com.auction.client.controllers;
 
 import com.auction.client.services.BidService;
-import com.auction.client.utils.ConfirmBidDialog;
+import com.auction.client.utils.InlineNotification;
 import com.auction.client.utils.SceneNavigator;
-import com.auction.client.utils.ToastNotification;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.client.utils.UserSession;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -28,6 +28,7 @@ import javafx.util.Duration;
 public class AuctionDetailController implements Initializable {
 
   @FXML private Label userLabel;
+  @FXML private Button walletBalanceBtn;
   @FXML private Label backLabel;
   @FXML private Label itemTitle;
   @FXML private Label itemMeta;
@@ -49,6 +50,8 @@ public class AuctionDetailController implements Initializable {
   @FXML private Label autoBidError;
   @FXML private Button setupAutoBidBtn;
   @FXML private CheckBox aggressiveModeCheckBox;
+  @FXML private VBox notificationBox;
+  @FXML private Label notificationLabel;
 
   private final String currentAuctionId = "auction_123";
   private String currentUserId;
@@ -66,6 +69,7 @@ public class AuctionDetailController implements Initializable {
   public void initialize(final URL url, final ResourceBundle rb) {
     currentUserId = UserSession.getInstance().getUsername();
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.updateWalletBalance(walletBalanceBtn);
 
     final String clickedTitle = UserSession.getInstance().getSelectedAuctionTitle();
     final String clickedCategory = UserSession.getInstance().getSelectedAuctionCategory();
@@ -77,7 +81,17 @@ public class AuctionDetailController implements Initializable {
         + "Original bracelet, box, and papers included. Serviced in 2022. "
         + "Running perfectly with minor surface scratches.");
     
-    updatePrice(BidService.getInstance().getCurrentBidAmount());
+    final String clickedPrice = UserSession.getInstance().getSelectedAuctionPrice();
+    double parsedPrice = 0.0;
+    if (clickedPrice != null && !clickedPrice.isEmpty()) {
+      try {
+        parsedPrice = Double.parseDouble(
+            clickedPrice.replace("$", "").replace(",", ""));
+      } catch (NumberFormatException ex) {
+        parsedPrice = 0.0;
+      }
+    }
+    updatePrice(parsedPrice);
     BidService.getInstance().requestStatus();
     totalBids.setText("14");
     totalBidders.setText("7");
@@ -94,13 +108,13 @@ public class AuctionDetailController implements Initializable {
           final boolean isWinning = transaction.getBidderId().equals(currentUserId);
           
           if (isWinning) {
-            ToastNotification.show(userLabel, "Your bid was placed successfully.", 
-                ToastNotification.Type.SUCCESS);
+            InlineNotification.show(notificationBox, notificationLabel,
+                "Your bid was placed successfully.", true);
           } else if (currentHighestBidder.equals(currentUserId)) {
-            ToastNotification.show(userLabel, 
-                "You were outbid by " + transaction.getBidderId() + ".",
-                ToastNotification.Type.WARNING);
+            InlineNotification.show(notificationBox, notificationLabel,
+                "You were outbid by " + transaction.getBidderId() + ".", false);
           }
+          InlineNotification.show(notificationBox, notificationLabel, "Bid recorded", true);
           currentHighestBidder = transaction.getBidderId();
           final String badge = isWinning ? "winning" : "";
           addBidRowToHistory(transaction.getBidderId(), priceStr, "just now", badge);
@@ -117,23 +131,23 @@ public class AuctionDetailController implements Initializable {
     autoBidIncrementField.textProperty().addListener((o, old, val) -> autoBidError.setText(""));
 
     BidService.getInstance().setOnPriceChangeNotification(msg -> 
-        ToastNotification.show(userLabel, msg, ToastNotification.Type.INFO));
+        InlineNotification.show(notificationBox, notificationLabel, msg, true));
 
     BidService.getInstance().setOnAutoBidResult(response -> {
       if ("SUCCESS".equals(response.getStatus())) {
         setupAutoBidBtn.setText("Auto-Bid Active ✓");
         setupAutoBidBtn.setStyle("-fx-background-color:#5BA55B;-fx-text-fill:white;"
             + "-fx-font-weight:bold;-fx-font-size:12px;-fx-padding:8px;");
-        ToastNotification.show(userLabel, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
+        InlineNotification.show(notificationBox, notificationLabel, "Auto-Bid activated!", true);
       } else {
         autoBidError.setText(response.getMessage());
-        ToastNotification.show(userLabel, response.getMessage(), ToastNotification.Type.DANGER);
+        InlineNotification.show(notificationBox, notificationLabel, response.getMessage(), false);
       }
     });
 
     BidService.getInstance().setOnBidError(msg -> {
       bidError.setText(msg);
-      ToastNotification.show(userLabel, msg, ToastNotification.Type.DANGER);
+      InlineNotification.show(notificationBox, notificationLabel, msg, false);
     });
   }
 
@@ -193,10 +207,6 @@ public class AuctionDetailController implements Initializable {
       return;
     }
 
-    if (!ConfirmBidDialog.show("Confirm bid", String.format("Place bid of $%.2f?", amount))) {
-      return;
-    }
-
     final String errorMsg = BidService.getInstance()
         .placeBid(currentUserId, currentAuctionId, amount);
 
@@ -241,7 +251,7 @@ public class AuctionDetailController implements Initializable {
   private void onAddWatchlist() {
     watchlistBtn.setText("Added to watchlist");
     watchlistBtn.setDisable(true);
-    ToastNotification.show(userLabel, "Added to watchlist.", ToastNotification.Type.INFO);
+    InlineNotification.show(notificationBox, notificationLabel, "Added to watchlist.", true);
   }
 
   @FXML
@@ -267,6 +277,11 @@ public class AuctionDetailController implements Initializable {
   @FXML
   private void onSell() {
     SceneNavigator.navigateTo(SceneNavigator.View.CREATE_LISTING);
+  }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
   }
 
   @FXML

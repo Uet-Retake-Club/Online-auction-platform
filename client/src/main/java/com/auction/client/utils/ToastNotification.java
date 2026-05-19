@@ -4,18 +4,27 @@ import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.stage.Popup;
-import javafx.stage.Window;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 /**
- * ToastNotification displays short transient messages near the current window.
+ * Utility for showing transient toast-style notifications inside the active JavaFX scene.
+ * <p>
+ * The notification is rendered as a temporary overlay inside the nearest {@link StackPane}
+ * ancestor of the given {@code anchor} node. This keeps the message within the current window
+ * and avoids creating separate pop-up windows.
+ * </p>
  */
 public final class ToastNotification {
 
-  /** Toast message types. */
+  /**
+   * Notification appearance variants.
+   */
   public enum Type {
     SUCCESS, WARNING, DANGER, INFO
   }
@@ -23,50 +32,48 @@ public final class ToastNotification {
   private ToastNotification() { }
 
   /**
-   * Shows a toast message anchored to the provided node.
+   * Shows a brief toast message anchored to the current scene.
    *
-   * @param anchor view node used to locate the toast window
-   * @param message text to display
-   * @param type visual style of the toast
+   * @param anchor the node from which the scene is resolved; used to locate the root overlay pane
+   * @param message the message text to display inside the toast
+   * @param type the visual style variant for the toast notification
    */
   public static void show(final Node anchor, final String message, final Type type) {
     if (anchor == null || anchor.getScene() == null) {
       return;
     }
     Platform.runLater(() -> {
-      Window window = anchor.getScene().getWindow();
-      if (window == null) {
+      final StackPane root = findStackPane(anchor.getScene().getRoot());
+      if (root == null) {
         return;
       }
 
-      Label toast = new Label(message);
+      final Label toast = new Label(message);
       toast.setWrapText(true);
       toast.setMaxWidth(320);
       toast.setPadding(new Insets(12, 18, 12, 18));
       toast.setStyle(getToastStyle(type));
       toast.setOpacity(0);
 
-      Popup popup = new Popup();
-      popup.setAutoFix(true);
-      popup.setAutoHide(true);
-      popup.setHideOnEscape(true);
-      popup.getContent().add(toast);
+      final VBox container = new VBox(toast);
+      container.setAlignment(Pos.TOP_RIGHT);
+      container.setMouseTransparent(true);
+      container.setPadding(new Insets(18, 20, 0, 0));
+      container.setOpacity(0);
 
-      double x = window.getX() + window.getWidth() - 360;
-      double y = window.getY() + 24;
-      popup.show(window, x, y);
+      root.getChildren().add(container);
 
-      FadeTransition fadeIn = new FadeTransition(Duration.millis(180), toast);
+      final FadeTransition fadeIn = new FadeTransition(Duration.millis(180), container);
       fadeIn.setFromValue(0);
       fadeIn.setToValue(1);
       fadeIn.play();
 
-      PauseTransition pause = new PauseTransition(Duration.seconds(2.5));
+      final PauseTransition pause = new PauseTransition(Duration.seconds(2.5));
       pause.setOnFinished(event -> {
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(180), toast);
+        final FadeTransition fadeOut = new FadeTransition(Duration.millis(180), container);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
-        fadeOut.setOnFinished(e -> popup.hide());
+        fadeOut.setOnFinished(e -> root.getChildren().remove(container));
         fadeOut.play();
       });
       pause.play();
@@ -74,13 +81,34 @@ public final class ToastNotification {
   }
 
   /**
-   * Returns the style string for the toast message.
+   * Walks the scene graph to find the first {@link StackPane} ancestor.
    *
-   * @param type toast type
-   * @return inline CSS style
+   * @param parent the parent node to search
+   * @return the first {@link StackPane} found, or {@code null} when none exists
+   */
+  private static StackPane findStackPane(final Parent parent) {
+    if (parent instanceof StackPane stack) {
+      return stack;
+    }
+    for (final javafx.scene.Node child : parent.getChildrenUnmodifiable()) {
+      if (child instanceof Parent nested) {
+        final StackPane found = findStackPane(nested);
+        if (found != null) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the CSS style string for the toast container based on type.
+   *
+   * @param type the toast notification style variant
+   * @return CSS style data used to render the toast background and text
    */
   private static String getToastStyle(final Type type) {
-    String background;
+    final String background;
     switch (type) {
       case SUCCESS -> background = "#5BA55B";
       case WARNING -> background = "#F5A623";
@@ -88,9 +116,9 @@ public final class ToastNotification {
       default      -> background = "#323232";
     }
     return "-fx-background-color: " + background + ";"
-       + "-fx-text-fill: white;"
-       + "-fx-font-size: 13px;"
-       + "-fx-background-radius: 10px;"
-       + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.22), 8, 0, 0, 2);";
+        + "-fx-text-fill: white;"
+        + "-fx-font-size: 13px;"
+        + "-fx-background-radius: 10px;"
+        + "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.22), 8, 0, 0, 2);";
   }
 }

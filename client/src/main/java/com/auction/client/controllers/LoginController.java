@@ -3,6 +3,7 @@ package com.auction.client.controllers;
 import com.auction.client.utils.SceneNavigator;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -85,14 +86,47 @@ public class LoginController implements Initializable {
     
     // Mock login session since AuthService is not yet implemented
     final String email = emailField.getText().trim();
-    final String username = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
-    com.auction.client.utils.UserSession.getInstance()
-        .signIn("Test", "User", username, email, "BIDDER");
+    final String username = email.contains("@")
+        ? email.substring(0, email.indexOf("@")) : email;
+    final com.auction.client.utils.UserSession session =
+        com.auction.client.utils.UserSession.getInstance();
+    session.signIn("Test", "User", username, email, "BIDDER");
+    session.setWalletBalance(2450.00);
     
     // Connect the socket to the server so bidding works
-    com.auction.client.services.NetworkClientService.getInstance().connect("localhost", 8080);
-    
-    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
+    final com.auction.client.services.NetworkClientService network =
+        com.auction.client.services.NetworkClientService.getInstance();
+    network.connect("localhost", 8080);
+
+    // Send LOGIN handshake after socket is established
+    new Thread(() -> {
+      final int maxWait = 20;
+      for (int i = 0; i < maxWait; i++) {
+        if (network.isConnected()) {
+          break;
+        }
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException ignored) {
+          Thread.currentThread().interrupt();
+          return;
+        }
+      }
+
+      if (network.isConnected()) {
+        final com.auction.shared.dto.Request loginReq =
+            new com.auction.shared.dto.Request(
+                com.auction.shared.dto.MessageType.LOGIN,
+                username, "");
+        network.sendRequest(loginReq);
+        System.out.println("[CLIENT] LOGIN request sent to server.");
+        Platform.runLater(() -> SceneNavigator.navigateAfterLogin());
+      } else {
+        Platform.runLater(() -> showGeneralError(
+            "Không thể kết nối tới Server. Vui lòng thử lại sau."));
+        System.err.println("[CLIENT] Could not send LOGIN — not connected.");
+      }
+    }, "Client-Login-Thread").start();
   }
 
   /** Navigates to the sign-up screen. */

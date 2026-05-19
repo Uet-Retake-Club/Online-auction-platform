@@ -1,8 +1,13 @@
 package com.auction.client.controllers;
 
 import com.auction.client.utils.SceneNavigator;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.client.utils.UserSession;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -25,13 +30,18 @@ import javafx.scene.layout.VBox;
 public class CreateListingController implements Initializable {
 
   @FXML private Label userLabel;
+  @FXML private Button walletBalanceBtn;
   @FXML private TextField titleField;
   @FXML private ComboBox<String> categoryCombo;
   @FXML private TextArea descriptionField;
   @FXML private TextField startPriceField;
   @FXML private TextField incrementField;
-  @FXML private TextField startTimeField;
-  @FXML private TextField endTimeField;
+  @FXML private javafx.scene.control.DatePicker startDatePicker;
+  @FXML private ComboBox<String> startHourCombo;
+  @FXML private ComboBox<String> startMinuteCombo;
+  @FXML private javafx.scene.control.DatePicker endDatePicker;
+  @FXML private ComboBox<String> endHourCombo;
+  @FXML private ComboBox<String> endMinuteCombo;
   @FXML private VBox imageDropZone;
   @FXML private Label imageLabel;
   @FXML private Label titleError;
@@ -48,6 +58,7 @@ public class CreateListingController implements Initializable {
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.updateWalletBalance(walletBalanceBtn);
 
     categoryCombo.getItems().addAll(
         "Electronics", "Fashion", "Home & Garden",
@@ -60,10 +71,12 @@ public class CreateListingController implements Initializable {
         (o, v, n) -> clearError(startPriceError, startPriceField));
     incrementField.textProperty().addListener(
         (o, v, n) -> clearError(incrementError, incrementField));
-    startTimeField.textProperty().addListener(
-        (o, v, n) -> clearError(startTimeError, startTimeField));
-    endTimeField.textProperty().addListener(
-        (o, v, n) -> clearError(endTimeError, endTimeField));
+    startDatePicker.valueProperty().addListener((o, v, n) -> clearDateError(startTimeError));
+    endDatePicker.valueProperty().addListener((o, v, n) -> clearDateError(endTimeError));
+    startHourCombo.getItems().addAll(buildHourOptions());
+    startMinuteCombo.getItems().addAll(buildMinuteOptions());
+    endHourCombo.getItems().addAll(buildHourOptions());
+    endMinuteCombo.getItems().addAll(buildMinuteOptions());
   }
 
   @FXML
@@ -72,13 +85,13 @@ public class CreateListingController implements Initializable {
       return;
     }
 
-    // TODO: AuctionService.createAuction(...)
-    // AuctionService.create(title, category, description,
-    //         startPrice, increment, startTime, endTime)
-    //         .onSuccess(auction -> SceneNavigator.navigateTo(View.HOME))
-    //         .onFailure(err -> showGeneralError(err.getMessage()));
-    
-    System.out.println("Publish: " + titleField.getText());
+    final String startTimestamp = getDateTimeString(
+        startDatePicker, startHourCombo, startMinuteCombo);
+    final String endTimestamp = getDateTimeString(
+        endDatePicker, endHourCombo, endMinuteCombo);
+
+    System.out.println("Publish: " + titleField.getText()
+        + " | " + startTimestamp + " -> " + endTimestamp);
     SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
 
@@ -191,13 +204,19 @@ public class CreateListingController implements Initializable {
       }
     }
 
-    if (startTimeField.getText().trim().isEmpty()) {
-      showError(startTimeError, startTimeField, "Start time is required");
+    if (startDatePicker.getValue() == null
+        || startHourCombo.getValue() == null
+        || startMinuteCombo.getValue() == null) {
+      startTimeError.setText("Start date and time are required");
+      startTimeError.setVisible(true);
       ok = false;
     }
 
-    if (endTimeField.getText().trim().isEmpty()) {
-      showError(endTimeError, endTimeField, "End time is required");
+    if (endDatePicker.getValue() == null
+        || endHourCombo.getValue() == null
+        || endMinuteCombo.getValue() == null) {
+      endTimeError.setText("End date and time are required");
+      endTimeError.setVisible(true);
       ok = false;
     }
 
@@ -218,6 +237,41 @@ public class CreateListingController implements Initializable {
     field.getStyleClass().remove("error");
   }
 
+  private void clearDateError(final Label label) {
+    label.setText("");
+    label.setVisible(false);
+  }
+
+  private String[] buildHourOptions() {
+    final String[] hours = new String[24];
+    for (int i = 0; i < 24; i++) {
+      hours[i] = String.format("%02d", i);
+    }
+    return hours;
+  }
+
+  private String[] buildMinuteOptions() {
+    return new String[]{"00", "15", "30", "45"};
+  }
+
+  private String getDateTimeString(final javafx.scene.control.DatePicker datePicker,
+      final ComboBox<String> hourCombo, final ComboBox<String> minuteCombo) {
+    if (datePicker.getValue() == null
+        || hourCombo.getValue() == null
+        || minuteCombo.getValue() == null) {
+      return null;
+    }
+    try {
+      final int hour = Integer.parseInt(hourCombo.getValue());
+      final int minute = Integer.parseInt(minuteCombo.getValue());
+      final LocalDate date = datePicker.getValue();
+      final LocalTime time = LocalTime.of(hour, minute);
+      return date.atTime(time).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+    } catch (DateTimeParseException | NumberFormatException ex) {
+      return null;
+    }
+  }
+
   private void showGeneralError(final String msg) {
     generalError.setStyle("-fx-text-fill:#E53238;-fx-font-size:12px;");
     generalError.setText(msg);
@@ -226,5 +280,10 @@ public class CreateListingController implements Initializable {
   @FXML
   private void onToggleTheme() {
     SceneNavigator.toggleTheme();
+  }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
   }
 }

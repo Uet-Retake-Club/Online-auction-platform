@@ -48,6 +48,8 @@ public final class SceneNavigator {
     ADMIN("/com/auction/client/views/AdminView.fxml"),
     /** Seller dashboard. */
     SELLER("/com/auction/client/views/SellerView.fxml"),
+    /** Wallet screen. */
+    WALLET("/com/auction/client/views/WalletView.fxml"),
     /** User profile screen. */
     PROFILE("/com/auction/client/views/ProfileView.fxml");
 

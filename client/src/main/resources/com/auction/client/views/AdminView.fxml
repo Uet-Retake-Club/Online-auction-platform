@@ -31,6 +31,8 @@
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="adminLabel" text="Admin"
                    style="-fx-font-size:13px;-fx-text-fill:#555;-fx-font-family:'Segoe UI';"/>
+            <Button text="Wallet" onAction="#onWallet"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
             <Button text="Sign out" onAction="#onLogout"
                     style="-fx-background-color:#E53238;-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13px;-fx-border-color:transparent;-fx-border-radius:6px;-fx-background-radius:6px;-fx-padding:7px 14px;-fx-cursor:hand;-fx-effect:null;"/>
         </HBox>

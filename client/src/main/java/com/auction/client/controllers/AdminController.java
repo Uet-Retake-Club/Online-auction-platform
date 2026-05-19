@@ -257,4 +257,9 @@ public class AdminController implements Initializable {
   private void onHome() {
     SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
+  }
 }

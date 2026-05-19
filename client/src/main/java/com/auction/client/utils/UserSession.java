@@ -48,6 +48,9 @@ public final class UserSession {
    */
   private String role;
 
+  /** Current available wallet balance in USD. */
+  private double walletBalance = 2450.00;
+
   /** Title of the currently selected auction. */
   private String selectedAuctionTitle = "Vintage Rolex Submariner 1969";
 
@@ -66,8 +69,34 @@ public final class UserSession {
     return selectedAuctionCategory;
   }
 
+  /**
+   * Sets the category of the currently selected auction.
+   *
+   * @param category the auction category
+   */
   public void setSelectedAuctionCategory(final String category) {
     this.selectedAuctionCategory = category;
+  }
+
+  /** Current price of the currently selected auction. */
+  private String selectedAuctionPrice = "$0.00";
+
+  /**
+   * Returns the price of the currently selected auction.
+   *
+   * @return formatted price string, e.g. "$1,240.00"
+   */
+  public String getSelectedAuctionPrice() {
+    return selectedAuctionPrice;
+  }
+
+  /**
+   * Sets the price of the currently selected auction.
+   *
+   * @param price formatted price string, e.g. "$1,240.00"
+   */
+  public void setSelectedAuctionPrice(final String price) {
+    this.selectedAuctionPrice = price;
   }
 
   /**
@@ -110,6 +139,7 @@ public final class UserSession {
     this.username = userUsername;
     this.email = userEmail;
     this.role = userRole;
+    this.walletBalance = 2450.00;
   }
 
   /**
@@ -168,6 +198,24 @@ public final class UserSession {
    */
   public String getRole() {
     return role != null ? role : "";
+  }
+
+  /**
+   * Returns the current wallet balance.
+   *
+   * @return wallet balance in USD
+   */
+  public double getWalletBalance() {
+    return walletBalance;
+  }
+
+  /**
+   * Sets the current wallet balance.
+   *
+   * @param amount wallet balance in USD
+   */
+  public void setWalletBalance(final double amount) {
+    walletBalance = amount;
   }
 
   // ── Setters (for profile update) ──────────────────────────

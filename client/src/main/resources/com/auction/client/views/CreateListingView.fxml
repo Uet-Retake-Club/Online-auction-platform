@@ -10,12 +10,14 @@
     Màn hình Seller đăng sản phẩm đấu giá mới.
     Gồm: tiêu đề, danh mục, mô tả, giá khởi điểm, bước giá, thời gian.
 -->
-<BorderPane xmlns="http://javafx.com/javafx"
+<StackPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.auction.client.controllers.CreateListingController"
             fx:id="rootPane"
             maxWidth="Infinity" maxHeight="Infinity"
             style="-fx-background-color: #F4F4F4;">
+    <BorderPane maxWidth="Infinity" maxHeight="Infinity"
+                style="-fx-background-color: #F4F4F4;">
 
     <!-- ══ TOP NAV ══════════════════════════════════════════ -->
     <top>
@@ -27,6 +29,8 @@
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="My listings" onAction="#onMyListings"
+                    style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
+            <Button fx:id="walletBalanceBtn" text="Wallet: $2,450.00" onAction="#onWallet"
                     style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;-fx-effect:null;-fx-padding:7px 12px;"/>
                         <Button text="☀/🌙" onAction="#onToggleTheme"
                     style="-fx-background-color:transparent;-fx-border-color:transparent;-fx-text-fill:#555;-fx-font-size:16px;-fx-cursor:hand;-fx-effect:null;-fx-padding:0 8px;"/>
@@ -128,23 +132,35 @@
                         </VBox>
                     </HBox>
 
-                    <!-- Start time + End time row -->
+                    <!-- Start date + time row -->
                     <HBox spacing="14" style="-fx-padding:0 0 14px 0;">
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
                             <Label text="Start date &amp; time"
                                    style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="startTimeField"
-                                       promptText="YYYY-MM-DD HH:mm"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
+                            <HBox spacing="10">
+                                <DatePicker fx:id="startDatePicker"
+                                            maxWidth="Infinity"
+                                            styleClass="text-field-base"/>
+                                <ComboBox fx:id="startHourCombo" promptText="HH"
+                                          prefWidth="88"/>
+                                <ComboBox fx:id="startMinuteCombo" promptText="MM"
+                                          prefWidth="88"/>
+                            </HBox>
                             <Label fx:id="startTimeError" text="" styleClass="field-error"
                                    style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
                             <Label text="End date &amp; time"
                                    style="-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#333;-fx-padding:0 0 5px 0;"/>
-                            <TextField fx:id="endTimeField"
-                                       promptText="YYYY-MM-DD HH:mm"
-                                       styleClass="text-field-base" maxWidth="Infinity"/>
+                            <HBox spacing="10">
+                                <DatePicker fx:id="endDatePicker"
+                                            maxWidth="Infinity"
+                                            styleClass="text-field-base"/>
+                                <ComboBox fx:id="endHourCombo" promptText="HH"
+                                          prefWidth="88"/>
+                                <ComboBox fx:id="endMinuteCombo" promptText="MM"
+                                          prefWidth="88"/>
+                            </HBox>
                             <Label fx:id="endTimeError" text="" styleClass="field-error"
                                    style="-fx-min-height:16px;-fx-padding:3px 0 0 0;"/>
                         </VBox>
@@ -185,4 +201,5 @@
         </ScrollPane>
     </center>
 
-</BorderPane>
+    </BorderPane>
+</StackPane>
