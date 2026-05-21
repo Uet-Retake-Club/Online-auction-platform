@@ -517,4 +517,9 @@ public class AdminController implements Initializable {
     NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
     SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
+  }
 }

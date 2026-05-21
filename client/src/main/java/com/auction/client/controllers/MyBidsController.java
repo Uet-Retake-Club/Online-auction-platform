@@ -221,4 +221,9 @@ public class MyBidsController implements Initializable {
   private void onToggleTheme() {
     SceneNavigator.toggleTheme();
   }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
+  }
 }

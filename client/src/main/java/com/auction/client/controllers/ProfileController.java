@@ -280,4 +280,9 @@ public class ProfileController implements Initializable {
             UserSession.getInstance().getUserId(),
             String.valueOf(amount)));
   }
+
+  @FXML
+  private void onWallet() {
+    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
+  }
 }

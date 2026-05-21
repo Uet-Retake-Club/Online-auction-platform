@@ -175,12 +175,31 @@ public class NetworkClientService {
    * @param request request object to send
    */
   public void sendRequest(final Request request) {
-    if (out != null && isRunning) {
-      final String jsonRequest = gson.toJson(request);
-      out.println(jsonRequest);
-    } else {
-      System.err.println("[CLIENT] Khong the gui, Socket chua ket noi!");
+    if (!isConnected()) {
+      ensureConnected();
+      new Thread(() -> {
+        int retry = 0;
+        while (retry < 12 && !isConnected()) {
+          try {
+            Thread.sleep(250);
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return;
+          }
+          retry++;
+        }
+
+        if (isConnected() && out != null) {
+          out.println(gson.toJson(request));
+        } else {
+          System.err.println("[CLIENT] Khong the gui, Socket chua ket noi!");
+        }
+      }, "Client-Send-Thread").start();
+      return;
     }
+
+    final String jsonRequest = gson.toJson(request);
+    out.println(jsonRequest);
   }
 
   /**
