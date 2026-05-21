@@ -128,4 +128,22 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         }
         return bidders;
     }
+
+    @Override
+    public List<String> getBiddedItemIds(String userId) {
+        List<String> items = new ArrayList<>();
+        String sql = "SELECT DISTINCT item_id FROM bid_transactions WHERE bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    items.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
 }

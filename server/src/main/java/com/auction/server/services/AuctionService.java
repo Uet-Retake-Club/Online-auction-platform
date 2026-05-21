@@ -325,7 +325,14 @@ public class AuctionService {
     public Response getCurrentStatusResponse() {
         List<BidTransaction> history = bidDAO.getHistoryByItem(currentAuctionItemId);
         String payload = new Gson().toJson(history);
-        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Status", payload);
+        long endTime = 0;
+        if (currentAuctionItemId != null) {
+            Item item = itemDAO.getItemById(currentAuctionItemId);
+            if (item != null) {
+                endTime = item.getEndTime();
+            }
+        }
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", String.valueOf(endTime), payload);
     }
 
     /**
@@ -344,7 +351,7 @@ public class AuctionService {
         }
         List<BidTransaction> history = bidDAO.getHistoryByItem(itemId);
         String payload = new Gson().toJson(history);
-        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Item Status", payload);
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", String.valueOf(item.getEndTime()), payload);
     }
     // --- PAYMENT PROCESSING ---
     public synchronized Response processPayment(String invoiceId, String userId) {

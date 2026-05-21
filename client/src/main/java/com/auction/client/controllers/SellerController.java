@@ -204,7 +204,8 @@ public class SellerController implements Initializable {
     final Label badge = buildBadge(status);
     badge.setPrefWidth(100);
 
-    final Button action = buildActionButton(status, itemId, name, category, description, currentPrice, startPrice);
+    final long endTime = item.has("endTime") ? item.get("endTime").getAsLong() : 0L;
+    final Button action = buildActionButton(status, itemId, name, category, description, currentPrice, startPrice, endTime);
     row.getChildren().addAll(titleLbl, currentBidLbl, startPriceLbl, timeLbl, badge, action);
     return row;
   }
@@ -253,7 +254,7 @@ public class SellerController implements Initializable {
 
   private Button buildActionButton(final String status, final String itemId,
       final String name, final String category, final String description,
-      final double currentPrice, final double startPrice) {
+      final double currentPrice, final double startPrice, final long endTime) {
     final Button btn = new Button();
     btn.getStyleClass().add("btn-outline");
     btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
@@ -265,6 +266,7 @@ public class SellerController implements Initializable {
       UserSession.getInstance().setSelectedAuctionCategory(category);
       UserSession.getInstance().setSelectedItemDescription(description);
       UserSession.getInstance().setSelectedItemPrice(currentPrice > 0 ? currentPrice : startPrice);
+      UserSession.getInstance().setSelectedItemEndTime(endTime);
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
     return btn;

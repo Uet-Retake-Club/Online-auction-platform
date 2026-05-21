@@ -71,6 +71,9 @@ public final class UserSession {
   /** Description of the currently selected auction item. */
   private String selectedItemDescription = "";
 
+  /** End time of the currently selected auction item. */
+  private long selectedItemEndTime = 0;
+
   /** Filter to apply when navigating to My Bids view (e.g. "watching"). */
   private String pendingMyBidsFilter = "";
 
@@ -120,6 +123,14 @@ public final class UserSession {
 
   public void setSelectedItemDescription(final String description) {
     this.selectedItemDescription = description;
+  }
+
+  public long getSelectedItemEndTime() {
+    return selectedItemEndTime;
+  }
+
+  public void setSelectedItemEndTime(final long endTime) {
+    this.selectedItemEndTime = endTime;
   }
 
   /**
@@ -178,6 +189,7 @@ public final class UserSession {
     email = null;
     role = null;
     walletBalance = 0.0;
+    selectedItemEndTime = 0;
   }
 
   // ── Getters ───────────────────────────────────────────────

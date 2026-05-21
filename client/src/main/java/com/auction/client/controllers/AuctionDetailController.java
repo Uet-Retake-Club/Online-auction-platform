@@ -128,6 +128,20 @@ public class AuctionDetailController implements Initializable {
       ToastNotification.show(rootPane, msg, ToastNotification.Type.DANGER);
     });
 
+    BidService.getInstance().setOnEndTimeReceived(newEndTime -> {
+      long currentNow = System.currentTimeMillis();
+      secondsRemaining = (newEndTime > currentNow) ? (int) ((newEndTime - currentNow) / 1000) : 0;
+      if (secondsRemaining <= 0) {
+        countdownTimer.setText("ENDED");
+        if (countdownTimeline != null) {
+          countdownTimeline.stop();
+        }
+        onAuctionEnded();
+      } else {
+        updateTimerDisplay();
+      }
+    });
+
     bidAmountField.textProperty().addListener((obs, old, val) -> bidError.setText(""));
     autoBidIncrementField.setText(String.valueOf(BidService.getInstance().getMinimumIncrement()));
     maxPriceField.textProperty().addListener((obs, old, val) -> autoBidError.setText(""));
@@ -140,6 +154,12 @@ public class AuctionDetailController implements Initializable {
     auctionStatus.getStyleClass().add("status-open");
     noBidsLabel.setVisible(true);
     currentHighestBidder = "";
+
+    // Set countdown based on UserSession
+    long initialEndTime = UserSession.getInstance().getSelectedItemEndTime();
+    long now = System.currentTimeMillis();
+    secondsRemaining = (initialEndTime > now) ? (int) ((initialEndTime - now) / 1000) : 0;
+
     startCountdown();
 
     // ── 3. Request live status and wallet balance AFTER callbacks are wired ──
@@ -149,6 +169,14 @@ public class AuctionDetailController implements Initializable {
   }
 
   private void startCountdown() {
+    if (secondsRemaining <= 0) {
+      countdownTimer.setText("ENDED");
+      onAuctionEnded();
+      return;
+    }
+    if (countdownTimeline != null) {
+      countdownTimeline.stop();
+    }
     countdownTimeline = new Timeline(
         new KeyFrame(Duration.seconds(1), e -> {
           if (secondsRemaining > 0) {

@@ -108,6 +108,17 @@ public class AuctionServiceTest {
                     }
                     return bidders;
                 }
+
+                @Override
+                public java.util.List<String> getBiddedItemIds(String userId) {
+                    java.util.List<String> items = new java.util.ArrayList<>();
+                    for (BidTransaction tx : mockBids) {
+                        if (tx.getBidderId().equals(userId) && !items.contains(tx.getItemId())) {
+                            items.add(tx.getItemId());
+                        }
+                    }
+                    return items;
+                }
             });
 
             java.lang.reflect.Field walletDaoField = AuctionService.class.getDeclaredField("walletDAO");

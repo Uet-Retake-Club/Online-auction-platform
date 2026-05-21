@@ -36,6 +36,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   private Consumer<Response> onAutoBidResult;
   private Consumer<String> onBidError;
   private Consumer<Double> onWalletBalanceUpdated;
+  private Consumer<Long> onEndTimeReceived;
   private final List<Consumer<Double>> walletBalanceListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
 
   public void addWalletBalanceListener(final Consumer<Double> listener) {
@@ -111,6 +112,10 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     this.onWalletBalanceUpdated = callback;
   }
 
+  public void setOnEndTimeReceived(final Consumer<Long> callback) {
+    this.onEndTimeReceived = callback;
+  }
+
   /**
    * Returns the current highest bid amount.
    *
@@ -142,6 +147,7 @@ public class BidService implements NetworkClientService.ServerMessageListener {
     this.onAutoBidResult = null;
     this.onBidError = null;
     this.onWalletBalanceUpdated = null;
+    this.onEndTimeReceived = null;
   }
 
   /**
@@ -218,6 +224,20 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   public void onMessageReceived(final Response response) {
     if (response.getType() == MessageType.NEW_BID_BROADCAST
         || response.getType() == MessageType.BID_SUCCESS) {
+
+      final String msg = response.getMessage();
+      if (msg != null && !msg.isEmpty()) {
+        try {
+          final long endTime = Long.parseLong(msg);
+          if (endTime > 0) {
+            Platform.runLater(() -> {
+              if (onEndTimeReceived != null) {
+                onEndTimeReceived.accept(endTime);
+              }
+            });
+          }
+        } catch (NumberFormatException ignored) {}
+      }
 
       if (response.getPayload() == null || response.getPayload().isEmpty()) {
         return;
