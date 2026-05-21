@@ -20,6 +20,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -38,8 +39,12 @@ public class CreateListingController implements Initializable {
   @FXML private TextArea descriptionField;
   @FXML private TextField startPriceField;
   @FXML private TextField incrementField;
-  @FXML private TextField startTimeField;
-  @FXML private TextField endTimeField;
+  @FXML private DatePicker startDatePicker;
+  @FXML private ComboBox<String> startHourCombo;
+  @FXML private ComboBox<String> startMinuteCombo;
+  @FXML private DatePicker endDatePicker;
+  @FXML private ComboBox<String> endHourCombo;
+  @FXML private ComboBox<String> endMinuteCombo;
   @FXML private VBox imageDropZone;
   @FXML private Label imageLabel;
   @FXML private Label titleError;
@@ -53,9 +58,6 @@ public class CreateListingController implements Initializable {
   @FXML private Button publishBtn;
   @FXML private Button draftBtn;
 
-  private static final DateTimeFormatter DT_FMT =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
@@ -65,6 +67,33 @@ public class CreateListingController implements Initializable {
         "Electronics", "Fashion", "Home & Garden",
         "Sports", "Collectibles", "Vehicles", "Art", "Other");
 
+    // Populate hour and minute lists
+    for (int i = 0; i < 24; i++) {
+      String h = String.format("%02d", i);
+      startHourCombo.getItems().add(h);
+      endHourCombo.getItems().add(h);
+    }
+    for (int i = 0; i < 60; i += 5) {
+      String m = String.format("%02d", i);
+      startMinuteCombo.getItems().add(m);
+      endMinuteCombo.getItems().add(m);
+    }
+
+    // Default values (Start: now, End: now + 7 days)
+    LocalDateTime now = LocalDateTime.now();
+    startDatePicker.setValue(now.toLocalDate());
+    startHourCombo.setValue(String.format("%02d", now.getHour()));
+    
+    // Round minute to nearest 5 minutes
+    int minuteRounded = (now.getMinute() / 5) * 5;
+    if (minuteRounded >= 60) minuteRounded = 55;
+    startMinuteCombo.setValue(String.format("%02d", minuteRounded));
+
+    LocalDateTime endDefault = now.plusDays(7);
+    endDatePicker.setValue(endDefault.toLocalDate());
+    endHourCombo.setValue(String.format("%02d", endDefault.getHour()));
+    endMinuteCombo.setValue(String.format("%02d", minuteRounded));
+
     titleField.textProperty().addListener((o, v, n) -> clearError(titleError, titleField));
     descriptionField.textProperty().addListener(
         (o, v, n) -> clearError(descriptionError, descriptionField));
@@ -72,10 +101,30 @@ public class CreateListingController implements Initializable {
         (o, v, n) -> clearError(startPriceError, startPriceField));
     incrementField.textProperty().addListener(
         (o, v, n) -> clearError(incrementError, incrementField));
-    startTimeField.textProperty().addListener(
-        (o, v, n) -> clearError(startTimeError, startTimeField));
-    endTimeField.textProperty().addListener(
-        (o, v, n) -> clearError(endTimeError, endTimeField));
+
+    startDatePicker.valueProperty().addListener((o, v, n) -> clearStartError());
+    startHourCombo.valueProperty().addListener((o, v, n) -> clearStartError());
+    startMinuteCombo.valueProperty().addListener((o, v, n) -> clearStartError());
+
+    endDatePicker.valueProperty().addListener((o, v, n) -> clearEndError());
+    endHourCombo.valueProperty().addListener((o, v, n) -> clearEndError());
+    endMinuteCombo.valueProperty().addListener((o, v, n) -> clearEndError());
+  }
+
+  private void clearStartError() {
+    startTimeError.setText("");
+    startTimeError.setVisible(false);
+    startDatePicker.getStyleClass().remove("error");
+    startHourCombo.getStyleClass().remove("error");
+    startMinuteCombo.getStyleClass().remove("error");
+  }
+
+  private void clearEndError() {
+    endTimeError.setText("");
+    endTimeError.setVisible(false);
+    endDatePicker.getStyleClass().remove("error");
+    endHourCombo.getStyleClass().remove("error");
+    endMinuteCombo.getStyleClass().remove("error");
   }
 
   @FXML
@@ -89,14 +138,25 @@ public class CreateListingController implements Initializable {
     final String description = descriptionField.getText().trim();
     final double startPrice = Double.parseDouble(startPriceField.getText().trim());
 
-    long startTime;
-    long endTime;
+    long startTime = 0;
+    long endTime = 0;
     try {
-      startTime = LocalDateTime.parse(startTimeField.getText().trim(), DT_FMT)
-          .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-      endTime = LocalDateTime.parse(endTimeField.getText().trim(), DT_FMT)
-          .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    } catch (DateTimeParseException e) {
+      startTime = LocalDateTime.of(
+          startDatePicker.getValue(),
+          java.time.LocalTime.of(
+              Integer.parseInt(startHourCombo.getValue()),
+              Integer.parseInt(startMinuteCombo.getValue())
+          )
+      ).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+      endTime = LocalDateTime.of(
+          endDatePicker.getValue(),
+          java.time.LocalTime.of(
+              Integer.parseInt(endHourCombo.getValue()),
+              Integer.parseInt(endMinuteCombo.getValue())
+          )
+      ).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    } catch (Exception e) {
       startTime = System.currentTimeMillis();
       endTime = System.currentTimeMillis() + 7L * 24 * 3600 * 1000;
     }
@@ -248,14 +308,70 @@ public class CreateListingController implements Initializable {
       }
     }
 
-    if (startTimeField.getText().trim().isEmpty()) {
-      showError(startTimeError, startTimeField, "Start time is required");
+    if (startDatePicker.getValue() == null) {
+      showError(startTimeError, startDatePicker, "Start date is required");
       ok = false;
+    } else if (startHourCombo.getValue() == null) {
+      showError(startTimeError, startHourCombo, "Start hour is required");
+      ok = false;
+    } else if (startMinuteCombo.getValue() == null) {
+      showError(startTimeError, startMinuteCombo, "Start minute is required");
+      ok = false;
+    } else {
+      try {
+        LocalDateTime startDt = LocalDateTime.of(
+            startDatePicker.getValue(),
+            java.time.LocalTime.of(
+                Integer.parseInt(startHourCombo.getValue()),
+                Integer.parseInt(startMinuteCombo.getValue())
+            )
+        );
+        if (startDt.isBefore(LocalDateTime.now().minusMinutes(5))) {
+          showError(startTimeError, startDatePicker, "Start time cannot be in the past");
+          ok = false;
+        }
+      } catch (Exception e) {
+        showError(startTimeError, startDatePicker, "Invalid start date & time");
+        ok = false;
+      }
     }
 
-    if (endTimeField.getText().trim().isEmpty()) {
-      showError(endTimeError, endTimeField, "End time is required");
+    if (endDatePicker.getValue() == null) {
+      showError(endTimeError, endDatePicker, "End date is required");
       ok = false;
+    } else if (endHourCombo.getValue() == null) {
+      showError(endTimeError, endHourCombo, "End hour is required");
+      ok = false;
+    } else if (endMinuteCombo.getValue() == null) {
+      showError(endTimeError, endMinuteCombo, "End minute is required");
+      ok = false;
+    } else {
+      try {
+        LocalDateTime startDt = null;
+        if (startDatePicker.getValue() != null && startHourCombo.getValue() != null && startMinuteCombo.getValue() != null) {
+          startDt = LocalDateTime.of(
+              startDatePicker.getValue(),
+              java.time.LocalTime.of(
+                  Integer.parseInt(startHourCombo.getValue()),
+                  Integer.parseInt(startMinuteCombo.getValue())
+              )
+          );
+        }
+        LocalDateTime endDt = LocalDateTime.of(
+            endDatePicker.getValue(),
+            java.time.LocalTime.of(
+                Integer.parseInt(endHourCombo.getValue()),
+                Integer.parseInt(endMinuteCombo.getValue())
+            )
+        );
+        if (startDt != null && !endDt.isAfter(startDt)) {
+          showError(endTimeError, endDatePicker, "End time must be after start time");
+          ok = false;
+        }
+      } catch (Exception e) {
+        showError(endTimeError, endDatePicker, "Invalid end date & time");
+        ok = false;
+      }
     }
 
     return ok;

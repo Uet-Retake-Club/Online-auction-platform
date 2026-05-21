@@ -115,12 +115,22 @@
                     <HBox spacing="20" style="-fx-padding: 0 0 20px 0;">
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
                             <Label text="Start date &amp; time" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
-                            <TextField fx:id="startTimeField" promptText="YYYY-MM-DD HH:mm" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <DatePicker fx:id="startDatePicker" promptText="Select Date" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="date-picker-base"/>
+                                <ComboBox fx:id="startHourCombo" prefWidth="80" styleClass="combo-box-base"/>
+                                <Label text=":" styleClass="body-text"/>
+                                <ComboBox fx:id="startMinuteCombo" prefWidth="80" styleClass="combo-box-base"/>
+                            </HBox>
                             <Label fx:id="startTimeError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
                             <Label text="End date &amp; time" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
-                            <TextField fx:id="endTimeField" promptText="YYYY-MM-DD HH:mm" styleClass="text-field-base" maxWidth="Infinity"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <DatePicker fx:id="endDatePicker" promptText="Select Date" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="date-picker-base"/>
+                                <ComboBox fx:id="endHourCombo" prefWidth="80" styleClass="combo-box-base"/>
+                                <Label text=":" styleClass="body-text"/>
+                                <ComboBox fx:id="endMinuteCombo" prefWidth="80" styleClass="combo-box-base"/>
+                            </HBox>
                             <Label fx:id="endTimeError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                     </HBox>
