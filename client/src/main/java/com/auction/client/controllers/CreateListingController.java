@@ -24,6 +24,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
 /**
@@ -32,8 +33,7 @@ import javafx.scene.layout.VBox;
  */
 public class CreateListingController implements Initializable {
 
-  @FXML private Label userLabel;
-  @FXML private Label navWalletBalanceLabel;
+  @FXML private BorderPane rootPane;
   @FXML private TextField titleField;
   @FXML private ComboBox<String> categoryCombo;
   @FXML private TextArea descriptionField;
@@ -60,9 +60,6 @@ public class CreateListingController implements Initializable {
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    userLabel.setText(UserSession.getInstance().getInitials());
-    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
-
     categoryCombo.getItems().addAll(
         "Electronics", "Fashion", "Home & Garden",
         "Sports", "Collectibles", "Vehicles", "Art", "Other");
@@ -182,7 +179,7 @@ public class CreateListingController implements Initializable {
         NetworkClientService.getInstance().removeListener(ref[0]);
         Platform.runLater(() -> {
           if (type == MessageType.CREATE_ITEM_SUCCESS) {
-            ToastNotification.show(userLabel, "Listing published successfully!",
+            ToastNotification.show(rootPane, "Listing published successfully!",
                 ToastNotification.Type.SUCCESS);
             SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
           } else {
@@ -237,11 +234,6 @@ public class CreateListingController implements Initializable {
   @FXML
   private void onCompleted() {
     SceneNavigator.navigateTo(SceneNavigator.View.SELLER);
-  }
-
-  @FXML
-  private void onProfile() {
-    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
   }
 
   @FXML
@@ -396,8 +388,4 @@ public class CreateListingController implements Initializable {
     generalError.setText(msg);
   }
 
-  @FXML
-  private void onToggleTheme() {
-    SceneNavigator.toggleTheme();
-  }
 }

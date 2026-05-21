@@ -10,6 +10,9 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import javafx.scene.layout.StackPane;
+import com.auction.client.controllers.MainLayoutController;
+
 /**
  * SceneNavigator is the central hub for screen navigation.
  *
@@ -31,6 +34,8 @@ public final class SceneNavigator {
   private static final int FADE_OUT_MS = 120;
   private static final int FADE_IN_MS = 150;
   private static Stage stage;
+  private static Parent mainLayoutRoot;
+  private static MainLayoutController mainLayoutController;
 
   private SceneNavigator() { }
 
@@ -123,25 +128,43 @@ public final class SceneNavigator {
       root.getStylesheets().add(css);
       applyTheme(root);
 
-      if (stage.getScene() == null) {
-        final Scene scene = new Scene(root);
-        stage.setScene(scene);
+      boolean isAuthScreen = view == View.LOGIN || view == View.SIGNUP;
+
+      if (isAuthScreen) {
+        if (stage.getScene() == null) {
+          final Scene scene = new Scene(root);
+          stage.setScene(scene);
+        } else {
+          switchRootWithFade(stage.getScene().getRoot(), root, () -> stage.getScene().setRoot(root));
+        }
       } else {
-        final Parent oldRoot = stage.getScene().getRoot();
-        final FadeTransition fadeOut = 
-            new FadeTransition(Duration.millis(FADE_OUT_MS), oldRoot);
-        fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.0);
-        fadeOut.setOnFinished(e -> {
-          stage.getScene().setRoot(root);
-          root.setOpacity(0);
-          final FadeTransition fadeIn = 
-              new FadeTransition(Duration.millis(FADE_IN_MS), root);
-          fadeIn.setFromValue(0.0);
-          fadeIn.setToValue(1.0);
-          fadeIn.play();
-        });
-        fadeOut.play();
+        if (mainLayoutRoot == null) {
+          FXMLLoader shellLoader = new FXMLLoader(SceneNavigator.class.getResource("/com/auction/client/views/MainLayout.fxml"));
+          mainLayoutRoot = shellLoader.load();
+          mainLayoutRoot.getStylesheets().add(css);
+          mainLayoutController = shellLoader.getController();
+          applyTheme(mainLayoutRoot);
+        }
+
+        if (stage.getScene() == null) {
+          final Scene scene = new Scene(mainLayoutRoot);
+          stage.setScene(scene);
+        } else if (stage.getScene().getRoot() != mainLayoutRoot) {
+          switchRootWithFade(stage.getScene().getRoot(), mainLayoutRoot, () -> stage.getScene().setRoot(mainLayoutRoot));
+        }
+
+        StackPane contentArea = mainLayoutController.getContentArea();
+        mainLayoutController.updateNavigation();
+
+        if (contentArea.getChildren().isEmpty()) {
+            contentArea.getChildren().add(root);
+        } else {
+            Parent oldContent = (Parent) contentArea.getChildren().get(0);
+            switchRootWithFade(oldContent, root, () -> {
+                contentArea.getChildren().clear();
+                contentArea.getChildren().add(root);
+            });
+        }
       }
 
     } catch (Exception ex) {
@@ -154,10 +177,29 @@ public final class SceneNavigator {
     }
   }
 
+  private static void switchRootWithFade(Parent oldNode, Parent newNode, Runnable swapAction) {
+    final FadeTransition fadeOut = new FadeTransition(Duration.millis(FADE_OUT_MS), oldNode);
+    fadeOut.setFromValue(1.0);
+    fadeOut.setToValue(0.0);
+    fadeOut.setOnFinished(e -> {
+      swapAction.run();
+      newNode.setOpacity(0);
+      final FadeTransition fadeIn = new FadeTransition(Duration.millis(FADE_IN_MS), newNode);
+      fadeIn.setFromValue(0.0);
+      fadeIn.setToValue(1.0);
+      fadeIn.play();
+    });
+    fadeOut.play();
+  }
+
   /**
    * Navigates to the correct home screen based on the logged-in user's role.
    */
   public static void navigateAfterLogin() {
+    // Also reset mainLayout so it redraws with new user
+    mainLayoutRoot = null;
+    mainLayoutController = null;
+    
     if (UserSession.getInstance().isAdmin()) {
       navigateTo(View.ADMIN);
     } else if (UserSession.getInstance().isSeller()) {

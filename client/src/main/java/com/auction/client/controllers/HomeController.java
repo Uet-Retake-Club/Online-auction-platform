@@ -47,12 +47,9 @@ public class HomeController implements Initializable {
 
   @FXML private BorderPane rootPane;
   @FXML private TextField searchField;
-  @FXML private Label userLabel;
-  @FXML private Label navWalletBalanceLabel;
   @FXML private Button allCategoriesBtn;
   @FXML private Button electronicsBtn;
   @FXML private Button fashionBtn;
-  @FXML private Button adminBtn;
   @FXML private Button homeGardenBtn;
   @FXML private Button sportsBtn;
   @FXML private Button collectiblesBtn;
@@ -76,14 +73,6 @@ public class HomeController implements Initializable {
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     activeCategory = allCategoriesBtn;
-    userLabel.setText(UserSession.getInstance().getInitials());
-    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
-    
-    if (adminBtn != null) {
-      boolean isAdmin = UserSession.getInstance().isAdmin();
-      adminBtn.setVisible(isAdmin);
-      adminBtn.setManaged(isAdmin);
-    }
     
     NetworkClientService.getInstance().addListener(this::handleServerMessage);
     fetchItemsFromServer();
@@ -247,15 +236,6 @@ public class HomeController implements Initializable {
 
   @FXML private void onSeeAllEndingSoon() { /* placeholder — scroll to section or navigate */ }
   @FXML private void onSeeAllRecent() { /* placeholder — scroll to section or navigate */ }
-  @FXML private void onSell() { SceneNavigator.navigateTo(SceneNavigator.View.SELLER); }
-  @FXML private void onMyBids() { SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS); }
-  @FXML private void onWatchlist() {
-    UserSession.getInstance().setPendingMyBidsFilter("watching");
-    SceneNavigator.navigateTo(SceneNavigator.View.MY_BIDS);
-  }
   @FXML private void onProfile() { SceneNavigator.navigateTo(SceneNavigator.View.PROFILE); }
   @FXML private void onLogout() { UserSession.getInstance().clear(); SceneNavigator.navigateTo(SceneNavigator.View.LOGIN); }
-  @FXML private void onToggleTheme() { SceneNavigator.toggleTheme(); }
-  @FXML private void onHome() { SceneNavigator.navigateTo(SceneNavigator.View.HOME); }
-  @FXML private void onAdmin() { SceneNavigator.navigateTo(SceneNavigator.View.ADMIN); }
 }

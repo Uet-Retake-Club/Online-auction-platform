@@ -18,41 +18,7 @@
     <BorderPane maxWidth="Infinity" maxHeight="Infinity"
                 style="-fx-background-color: transparent;">
 
-    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="12"
-              style="-fx-background-color:white;
-                     -fx-border-color:transparent transparent #EBEBEB transparent;
-                     -fx-border-width:0 0 1px 0; -fx-padding:10px 20px;">
-            <HBox alignment="CENTER_LEFT" spacing="0">
-                <Label text="Auction"
-                       style="-fx-font-size:20px;-fx-font-weight:bold;
-                              -fx-text-fill:#E53238;-fx-font-family:'Segoe UI';"/>
-                <Label text="Hub"
-                       style="-fx-font-size:20px;-fx-font-weight:bold;
-                              -fx-text-fill:#111111;-fx-font-family:'Segoe UI';"/>
-            </HBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="walletBalanceBtn" text="Balance: $0.00"
-                    style="-fx-background-color:#F5F5F5;-fx-border-color:#E0E0E0;
-                           -fx-border-radius:20px;-fx-background-radius:20px;
-                           -fx-text-fill:#111;-fx-font-size:13px;
-                           -fx-padding:7px 16px;"/>
-            <Button text="Home" onAction="#onHome"
-                    style="-fx-background-color:transparent;-fx-border-color:transparent;
-                           -fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;
-                           -fx-effect:null;-fx-padding:7px 12px;"/>
-            <Button text="My bids" onAction="#onMyBids"
-                    style="-fx-background-color:transparent;-fx-border-color:transparent;
-                           -fx-text-fill:#555;-fx-font-size:13px;-fx-cursor:hand;
-                           -fx-effect:null;-fx-padding:7px 12px;"/>
-            <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
-                   style="-fx-background-color:#FDECEA;-fx-text-fill:#E53238;
-                          -fx-font-weight:bold;-fx-font-size:12px;
-                          -fx-padding:7px 13px;-fx-background-radius:20px;
-                          -fx-cursor:hand;"/>
-        </HBox>
-    </top>
+
 
     <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
     <left>

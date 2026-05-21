@@ -15,33 +15,7 @@
             fx:id="rootPane"
             maxWidth="Infinity" maxHeight="Infinity">
 
-    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
-            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
-                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
-                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
-            </HBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            
-            <HBox alignment="CENTER" spacing="8">
-                <Button text="My listings" onAction="#onMyListings" styleClass="btn-ghost"/>
-                
-                <Separator orientation="VERTICAL" style="-fx-padding: 0 10px;"/>
-                
-                <Button text="☀/🌙" onAction="#onToggleTheme" styleClass="btn-ghost" style="-fx-font-size: 16px;"/>
-                
-                <HBox alignment="CENTER" spacing="8" styleClass="badge" style="-fx-background-color: -primary-light; -fx-padding: 8px 16px; -fx-min-width: 140px; -fx-max-width: 220px;">
-                    <Label text="💳" style="-fx-font-size: 14px;"/>
-                    <Label fx:id="navWalletBalanceLabel" text="Loading..." styleClass="label-bold" style="-fx-text-fill: -primary;"/>
-                </HBox>
 
-                <Label fx:id="userLabel" text="JD" onMouseClicked="#onProfile"
-                       styleClass="badge"
-                       style="-fx-background-color: -primary-light; -fx-text-fill: -primary; -fx-padding: 8px 14px; -fx-background-radius: 20px; -fx-cursor: hand;"/>
-            </HBox>
-        </HBox>
-    </top>
 
     <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
     <left>

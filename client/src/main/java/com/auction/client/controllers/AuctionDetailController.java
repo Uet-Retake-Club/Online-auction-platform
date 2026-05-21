@@ -28,9 +28,10 @@ import javafx.util.Duration;
  *
  * <p>Features: Countdown timer, bidding, and dynamic history updates.
  */
+import javafx.scene.layout.BorderPane;
 public class AuctionDetailController implements Initializable {
 
-  @FXML private Label userLabel;
+  @FXML private BorderPane rootPane;
   @FXML private Label backLabel;
   @FXML private Label itemTitle;
   @FXML private Label itemMeta;
@@ -52,7 +53,7 @@ public class AuctionDetailController implements Initializable {
   @FXML private Label autoBidError;
   @FXML private Button setupAutoBidBtn;
   @FXML private CheckBox aggressiveModeCheckBox;
-  @FXML private Label walletBalanceLabel;
+  
 
   private String currentAuctionId;
   private String currentUserId;
@@ -65,7 +66,7 @@ public class AuctionDetailController implements Initializable {
     currentUserId = UserSession.getInstance().getUserId();
     // Read item info set by HomeController on card click
     currentAuctionId = UserSession.getInstance().getSelectedItemId();
-    userLabel.setText(UserSession.getInstance().getInitials());
+    
 
     // ── 0. Reset stale state from any previously viewed item ──
     BidService.getInstance().resetForItem();
@@ -95,11 +96,11 @@ public class AuctionDetailController implements Initializable {
               boolean isFresh = diff < 5000; // Less than 5 seconds old
 
               if (isMyBid && isFresh) {
-                ToastNotification.show(userLabel,
+                ToastNotification.show(rootPane,
                     "🎉 Bid placed! You are now the highest bidder at " + priceStr,
                     ToastNotification.Type.SUCCESS);
               } else if (currentHighestBidder.equals(currentUserId) && isFresh) {
-                ToastNotification.show(userLabel,
+                ToastNotification.show(rootPane,
                     "⚠️ You've been outbid! New price: " + priceStr,
                     ToastNotification.Type.WARNING);
               }
@@ -107,7 +108,7 @@ public class AuctionDetailController implements Initializable {
           currentHighestBidder = transaction.getBidderId();
           
           // Refresh wallet balance because it might have changed (bid placed or refund received)
-          fetchWalletBalance();
+          
         });
 
     BidService.getInstance().setOnAutoBidResult(response -> {
@@ -115,16 +116,16 @@ public class AuctionDetailController implements Initializable {
         setupAutoBidBtn.setText("Auto-Bid Active \u2713");
         setupAutoBidBtn.getStyleClass().removeAll("btn-primary", "btn-secondary");
         setupAutoBidBtn.getStyleClass().add("btn-autobid-active");
-        ToastNotification.show(userLabel, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
+        ToastNotification.show(rootPane, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
       } else {
         autoBidError.setText(response.getMessage());
-        ToastNotification.show(userLabel, response.getMessage(), ToastNotification.Type.DANGER);
+        ToastNotification.show(rootPane, response.getMessage(), ToastNotification.Type.DANGER);
       }
     });
 
     BidService.getInstance().setOnBidError(msg -> {
       bidError.setText(msg);
-      ToastNotification.show(userLabel, msg, ToastNotification.Type.DANGER);
+      ToastNotification.show(rootPane, msg, ToastNotification.Type.DANGER);
     });
 
     bidAmountField.textProperty().addListener((obs, old, val) -> bidError.setText(""));
@@ -142,19 +143,9 @@ public class AuctionDetailController implements Initializable {
     startCountdown();
 
     // ── 3. Request live status and wallet balance AFTER callbacks are wired ──
-    BidService.getInstance().setOnWalletBalanceUpdated(this::updateWalletUI);
+    
     BidService.getInstance().requestStatus();
-    fetchWalletBalance();
-  }
-
-  private void fetchWalletBalance() {
-    NetworkClientService.getInstance().sendRequest(
-        new Request(com.auction.shared.dto.MessageType.GET_WALLET_BALANCE,
-            currentUserId, ""));
-  }
-
-  private void updateWalletUI(final double balance) {
-    walletBalanceLabel.setText(String.format("$%,.2f", balance));
+    
   }
 
   private void startCountdown() {
@@ -267,7 +258,7 @@ public class AuctionDetailController implements Initializable {
         new Request(com.auction.shared.dto.MessageType.WATCHLIST_ADD, currentUserId, currentAuctionId));
     watchlistBtn.setText("Watching \u2713");
     watchlistBtn.setDisable(true);
-    ToastNotification.show(userLabel, "[INFO] Added to Watchlist", ToastNotification.Type.INFO);
+    ToastNotification.show(rootPane, "[INFO] Added to Watchlist", ToastNotification.Type.INFO);
   }
 
   @FXML

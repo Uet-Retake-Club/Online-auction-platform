@@ -50,8 +50,8 @@ public class WalletController implements Initializable {
   private static final String TYPE_REFUND = "refund";
 
   // ── FXML — Top nav ────────────────────────────────────────
-  @FXML private Label userLabel;
-  @FXML private Button walletBalanceBtn;
+  
+  
 
   // ── FXML — Sidebar nav ────────────────────────────────────
   @FXML private Button navOverview;
@@ -110,8 +110,8 @@ public class WalletController implements Initializable {
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    userLabel.setText(UserSession.getInstance().getInitials());
-    TopNavUtils.updateWalletBalance(walletBalanceBtn);
+    
+    
     activeNav = navOverview;
     activeFilter = filterAll;
     setupDepositTab();

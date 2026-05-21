@@ -94,7 +94,6 @@ public class AdminController implements Initializable {
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    adminLabel.setText(UserSession.getInstance().getDisplayName());
     activeNav = navDashboard;
 
     // Reset stats
@@ -374,13 +373,6 @@ public class AdminController implements Initializable {
     activeNav = btn;
   }
 
-  @FXML
-  private void onLogout() {
-    NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
-    UserSession.getInstance().clear();
-    SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
-  }
-
   private void loadUsersTable(final UserStub[] users) {
     usersTableContainer.getChildren().clear();
     if (users == null) return;
@@ -510,12 +502,6 @@ public class AdminController implements Initializable {
   @FXML
   private void onToggleTheme() {
     SceneNavigator.toggleTheme();
-  }
-
-  @FXML
-  private void onHome() {
-    NetworkClientService.getInstance().removeListener(this::handleAdminResponse);
-    SceneNavigator.navigateTo(SceneNavigator.View.HOME);
   }
 
   @FXML

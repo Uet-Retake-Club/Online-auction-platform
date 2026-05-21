@@ -15,22 +15,7 @@
             fx:id="rootPane"
             maxWidth="Infinity" maxHeight="Infinity">
 
-    <!-- ══ TOP NAV ══════════════════════════════════════════ -->
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
-            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
-                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
-                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
-            </HBox>
-            
-            <Label text="ADMIN" styleClass="badge, badge-danger" style="-fx-font-size: 10px; -fx-padding: 4px 10px;"/>
-            
-            <Region HBox.hgrow="ALWAYS"/>
-            
-            <Label fx:id="adminLabel" text="Admin" styleClass="body-text"/>
-            <Button text="Sign out" onAction="#onLogout" styleClass="button, btn-primary"/>
-        </HBox>
-    </top>
+
 
     <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
     <left>

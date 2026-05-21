@@ -29,8 +29,6 @@ import javafx.scene.layout.VBox;
  */
 public class SellerController implements Initializable {
 
-  @FXML private Label userLabel;
-  @FXML private Label navWalletBalanceLabel;
   @FXML private Label listingCountLabel;
   @FXML private VBox listingsContainer;
   @FXML private VBox emptyState;
@@ -49,8 +47,6 @@ public class SellerController implements Initializable {
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    userLabel.setText(UserSession.getInstance().getInitials());
-    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
     activeFilter = filterAll;
     fetchListingsFromServer();
   }
@@ -287,23 +283,8 @@ public class SellerController implements Initializable {
   }
 
   @FXML
-  private void onProfile() {
-    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
-  }
-
-  @FXML
   private void onLogout() {
     UserSession.getInstance().clear();
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
-  }
-
-  @FXML
-  private void onToggleTheme() {
-    SceneNavigator.toggleTheme();
-  }
-
-  @FXML
-  private void onWallet() {
-    SceneNavigator.navigateTo(SceneNavigator.View.WALLET);
   }
 }
