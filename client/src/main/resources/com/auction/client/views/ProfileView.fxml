@@ -19,7 +19,8 @@
     <!-- ═══════════════════════════════ CENTER CONTENT ═══════════════════════════════ -->
     <center>
         <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-            <VBox spacing="30" alignment="TOP_CENTER" style="-fx-padding: 30px;">
+            <StackPane alignment="TOP_CENTER">
+                <VBox spacing="30" alignment="TOP_LEFT" style="-fx-padding: 30px;" maxWidth="800.0">
 
                 <!-- Back + page title -->
                 <HBox alignment="CENTER_LEFT" spacing="15">
@@ -64,7 +65,8 @@
 
 
 
-            </VBox>
+                </VBox>
+            </StackPane>
         </ScrollPane>
     </center>
 

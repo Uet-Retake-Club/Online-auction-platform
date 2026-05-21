@@ -32,11 +32,11 @@ public class MyBidsController implements Initializable {
   private Button activeFilter;
 
   private static final String[][] ALL_BIDS = {
-    {"Vintage Rolex Watch", "$1,240.00", "$1,240.00", "1h 47m", "winning"},
-    {"iPhone 15 Pro Max", "$720.00", "$780.00", "32m", "outbid"},
-    {"Nike Air Jordan 1", "$210.00", "$210.00", "Ended", "won"},
-    {"Sony WH-1000XM5", "$170.00", "$190.00", "Ended", "lost"},
-    {"MacBook Air M2", "$820.00", "$820.00", "4d 2h", "watching"}
+    {"Vintage Rolex Watch", "$4,500.00", "$4,500.00", "1h 47m", "winning", "ITEM-006", "COLLECTIBLES", "Original 1969 Rolex Submariner in excellent condition. Serviced 2022.", "4500.00"},
+    {"iPhone 15 Pro Max", "$780.00", "$780.00", "32m", "outbid", "ITEM-002", "ELECTRONICS", "Brand new iPhone 15 Pro Max, Natural Titanium, sealed box", "780.00"},
+    {"Nike Air Jordan 1", "$1,240.00", "$1,240.00", "Ended", "won", "ITEM-001", "ELECTRONICS", "Asus ROG Strix with RTX 4080, i9, 32GB DDR5", "1240.00"},
+    {"Sony WH-1000XM5", "$190.00", "$190.00", "Ended", "lost", "ITEM-003", "ELECTRONICS", "Industry-leading noise cancelling wireless headphones", "190.00"},
+    {"MacBook Air M2", "$850.00", "$850.00", "4d 2h", "watching", "ITEM-004", "ELECTRONICS", "Apple MacBook Air M2 chip, 8GB RAM, 256GB SSD, Midnight", "850.00"}
   };
 
   @Override
@@ -128,13 +128,17 @@ public class MyBidsController implements Initializable {
     emptyState.setManaged(false);
     bidCountLabel.setText(data.length + " bid" + (data.length == 1 ? "" : "s"));
     for (String[] bid : data) {
-      bidsListContainer.getChildren().add(
-          buildRow(bid[0], bid[1], bid[2], bid[3], bid[4]));
+      bidsListContainer.getChildren().add(buildRow(bid));
     }
   }
 
-  private HBox buildRow(final String title, final String myBid, 
-      final String curPrice, final String timeLeft, final String status) {
+  private HBox buildRow(final String[] bid) {
+    final String title = bid[0];
+    final String myBid = bid[1];
+    final String curPrice = bid[2];
+    final String timeLeft = bid[3];
+    final String status = bid[4];
+
     final HBox row = new HBox();
     row.getStyleClass().add("table-row");
 
@@ -159,7 +163,7 @@ public class MyBidsController implements Initializable {
     final Label badge = buildBadge(status);
     badge.setPrefWidth(100);
     
-    final Button action = buildActionButton(status);
+    final Button action = buildActionButton(bid);
     action.setPrefWidth(100);
 
     row.getChildren().addAll(titleLbl, myBidLbl, curPriceLbl, timeLbl, badge, action);
@@ -196,7 +200,13 @@ public class MyBidsController implements Initializable {
   }
 
 
-  private Button buildActionButton(final String status) {
+  private Button buildActionButton(final String[] bid) {
+    final String status = bid[4];
+    final String itemId = bid[5];
+    final String category = bid[6];
+    final String desc = bid[7];
+    final double price = Double.parseDouble(bid[8]);
+
     final Button btn = new Button();
     btn.getStyleClass().add("btn-outline");
     btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
@@ -204,7 +214,14 @@ public class MyBidsController implements Initializable {
     switch (status) {
       case "outbid" -> {
         btn.setText("Bid again");
-        btn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+        btn.setOnAction(e -> {
+          UserSession.getInstance().setSelectedItemId(itemId);
+          UserSession.getInstance().setSelectedAuctionTitle(bid[0]);
+          UserSession.getInstance().setSelectedAuctionCategory(category);
+          UserSession.getInstance().setSelectedItemDescription(desc);
+          UserSession.getInstance().setSelectedItemPrice(price);
+          SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
+        });
       }
       case "won" -> {
         btn.setText("Pay now");
@@ -214,7 +231,14 @@ public class MyBidsController implements Initializable {
       }
       default -> {
         btn.setText("View");
-        btn.setOnAction(e -> SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL));
+        btn.setOnAction(e -> {
+          UserSession.getInstance().setSelectedItemId(itemId);
+          UserSession.getInstance().setSelectedAuctionTitle(bid[0]);
+          UserSession.getInstance().setSelectedAuctionCategory(category);
+          UserSession.getInstance().setSelectedItemDescription(desc);
+          UserSession.getInstance().setSelectedItemPrice(price);
+          SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
+        });
       }
     }
     return btn;
