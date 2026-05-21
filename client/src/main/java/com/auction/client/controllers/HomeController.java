@@ -3,6 +3,7 @@ package com.auction.client.controllers;
 import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
@@ -47,6 +48,7 @@ public class HomeController implements Initializable {
   @FXML private BorderPane rootPane;
   @FXML private TextField searchField;
   @FXML private Label userLabel;
+  @FXML private Label navWalletBalanceLabel;
   @FXML private Button allCategoriesBtn;
   @FXML private Button electronicsBtn;
   @FXML private Button fashionBtn;
@@ -75,6 +77,7 @@ public class HomeController implements Initializable {
   public void initialize(final URL url, final ResourceBundle rb) {
     activeCategory = allCategoriesBtn;
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
     
     if (adminBtn != null) {
       boolean isAdmin = UserSession.getInstance().isAdmin();

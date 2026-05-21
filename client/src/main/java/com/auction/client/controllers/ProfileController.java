@@ -4,6 +4,7 @@ import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
@@ -33,6 +34,7 @@ public class ProfileController implements Initializable {
 
 
   @FXML private Label userLabel;
+  @FXML private Label navWalletBalanceLabel;
   @FXML private Label userTitle;
   @FXML private TextField firstNameField;
   @FXML private TextField lastNameField;
@@ -59,6 +61,7 @@ public class ProfileController implements Initializable {
     loadUserProfile();
     fetchWalletBalance();
     fetchWalletHistory();
+    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
   }
 
   private void setupHistoryTable() {

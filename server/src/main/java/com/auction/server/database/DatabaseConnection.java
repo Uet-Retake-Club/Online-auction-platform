@@ -46,9 +46,79 @@ public class DatabaseConnection {
             } catch (SQLException e) {
                 System.err.println("[DATABASE] Migration Error: " + e.getMessage());
             }
+
+            // Reset seed items to be active in the future if they are expired or finished
+            resetSeedItems(connection);
             
         } catch (SQLException | IOException e) {
             System.err.println("[DATABASE ERROR] Failed to initialize database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void resetSeedItems(Connection conn) {
+        String[] seedIds = {"ITEM-001", "ITEM-002", "ITEM-003", "ITEM-004", "ITEM-005", "ITEM-006", "ITEM-123"};
+        long[] durations = {
+            30L * 24 * 3600 * 1000, // ITEM-001: 30 days
+            1L * 24 * 3600 * 1000,  // ITEM-002: 1 day
+            2L * 24 * 3600 * 1000,  // ITEM-003: 2 days
+            5L * 24 * 3600 * 1000,  // ITEM-004: 5 days
+            7L * 24 * 3600 * 1000,  // ITEM-005: 7 days
+            3L * 24 * 3600 * 1000,  // ITEM-006: 3 days
+            30L * 24 * 3600 * 1000  // ITEM-123: 30 days
+        };
+
+        long now = System.currentTimeMillis();
+
+        try {
+            String checkSql = "SELECT COUNT(*) FROM items WHERE id = ? AND (end_time <= ? OR status != 'OPEN')";
+            String updateSql = "UPDATE items SET status = 'OPEN', start_time = ?, end_time = ?, current_price = start_price, highest_bidder_id = NULL WHERE id = ?";
+            String deleteBidsSql = "DELETE FROM bid_transactions WHERE item_id = ?";
+            String deleteInvoicesSql = "DELETE FROM invoices WHERE item_id = ?";
+            String deleteAuctionsSql = "DELETE FROM auctions WHERE item_id = ?";
+
+            try (java.sql.PreparedStatement checkPstmt = conn.prepareStatement(checkSql);
+                 java.sql.PreparedStatement updatePstmt = conn.prepareStatement(updateSql);
+                 java.sql.PreparedStatement deleteBidsPstmt = conn.prepareStatement(deleteBidsSql);
+                 java.sql.PreparedStatement deleteInvoicesPstmt = conn.prepareStatement(deleteInvoicesSql);
+                 java.sql.PreparedStatement deleteAuctionsPstmt = conn.prepareStatement(deleteAuctionsSql)) {
+                
+                for (int i = 0; i < seedIds.length; i++) {
+                    String id = seedIds[i];
+                    long duration = durations[i];
+
+                    checkPstmt.setString(1, id);
+                    checkPstmt.setLong(2, now);
+                    boolean needsReset = false;
+                    try (java.sql.ResultSet rs = checkPstmt.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            needsReset = true;
+                        }
+                    }
+
+                    if (needsReset) {
+                        System.out.println("[DATABASE] Resetting expired/finished seed item: " + id);
+                        
+                        // Reset item fields
+                        updatePstmt.setLong(1, now);
+                        updatePstmt.setLong(2, now + duration);
+                        updatePstmt.setString(3, id);
+                        updatePstmt.executeUpdate();
+
+                        // Clean up related tables for this seed item
+                        deleteBidsPstmt.setString(1, id);
+                        deleteBidsPstmt.executeUpdate();
+
+                        deleteInvoicesPstmt.setString(1, id);
+                        deleteInvoicesPstmt.executeUpdate();
+
+                        deleteAuctionsPstmt.setString(1, id);
+                        deleteAuctionsPstmt.executeUpdate();
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[DATABASE ERROR] Failed to reset seed items: " + e.getMessage());
             e.printStackTrace();
         }
     }

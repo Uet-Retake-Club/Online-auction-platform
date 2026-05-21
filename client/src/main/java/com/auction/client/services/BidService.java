@@ -36,6 +36,19 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   private Consumer<Response> onAutoBidResult;
   private Consumer<String> onBidError;
   private Consumer<Double> onWalletBalanceUpdated;
+  private final List<Consumer<Double>> walletBalanceListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+  public void addWalletBalanceListener(final Consumer<Double> listener) {
+    if (listener != null) {
+      walletBalanceListeners.add(listener);
+    }
+  }
+
+  public void removeWalletBalanceListener(final Consumer<Double> listener) {
+    if (listener != null) {
+      walletBalanceListeners.remove(listener);
+    }
+  }
 
   private BidService() {
     NetworkClientService.getInstance().addListener(this);
@@ -311,11 +324,15 @@ public class BidService implements NetworkClientService.ServerMessageListener {
         UserSession.getInstance().setWalletBalance(Double.parseDouble(response.getPayload()));
       } catch (Exception ignored) {}
       Platform.runLater(() -> {
-        if (onWalletBalanceUpdated != null) {
-          try {
-            onWalletBalanceUpdated.accept(Double.parseDouble(response.getPayload()));
-          } catch (Exception ignored) {}
-        }
+        try {
+          final double balance = Double.parseDouble(response.getPayload());
+          if (onWalletBalanceUpdated != null) {
+            onWalletBalanceUpdated.accept(balance);
+          }
+          for (final Consumer<Double> listener : walletBalanceListeners) {
+            listener.accept(balance);
+          }
+        } catch (Exception ignored) {}
       });
     }
   }

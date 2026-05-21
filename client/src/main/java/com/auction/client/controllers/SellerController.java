@@ -3,6 +3,7 @@ package com.auction.client.controllers;
 import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.google.gson.Gson;
@@ -29,6 +30,7 @@ import javafx.scene.layout.VBox;
 public class SellerController implements Initializable {
 
   @FXML private Label userLabel;
+  @FXML private Label navWalletBalanceLabel;
   @FXML private Label listingCountLabel;
   @FXML private VBox listingsContainer;
   @FXML private VBox emptyState;
@@ -48,6 +50,7 @@ public class SellerController implements Initializable {
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
     activeFilter = filterAll;
     fetchListingsFromServer();
   }

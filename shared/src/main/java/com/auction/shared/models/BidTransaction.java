@@ -6,6 +6,7 @@ public class BidTransaction extends Entity {
   private String bidderId;
   private double bidAmount;
   private long timestamp;
+  private String bidderUsername;
 
   /**
    * Constructs a new BidTransaction.
@@ -39,5 +40,13 @@ public class BidTransaction extends Entity {
 
   public long getTimestamp() {
     return timestamp;
+  }
+
+  public String getBidderUsername() {
+    return bidderUsername;
+  }
+
+  public void setBidderUsername(String bidderUsername) {
+    this.bidderUsername = bidderUsername;
   }
 }

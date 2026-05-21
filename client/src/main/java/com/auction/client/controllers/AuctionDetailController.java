@@ -338,7 +338,9 @@ public class AuctionDetailController implements Initializable {
       // Winning badge is shown ONLY on the highest bid if it belongs to the current user
       final String badge = (isHighest && isMyBid) ? "winning" : "";
 
-      final String displayName = isMyBid ? UserSession.getInstance().getUsername() : tx.getBidderId();
+      final String bidderUsername = (tx.getBidderUsername() != null && !tx.getBidderUsername().isEmpty()) 
+          ? tx.getBidderUsername() : tx.getBidderId();
+      final String displayName = isMyBid ? UserSession.getInstance().getUsername() : bidderUsername;
 
       String timeStr = "just now";
       if (tx.getTimestamp() > 0) {

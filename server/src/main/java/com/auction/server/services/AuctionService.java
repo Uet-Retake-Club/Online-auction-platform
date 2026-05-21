@@ -175,6 +175,10 @@ public class AuctionService {
             // Log transaction to DB
             String txId = "BID-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             BidTransaction tx = new BidTransaction(txId, currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
+            com.auction.shared.models.User user = userDAO.getUserById(bidderId);
+            if (user != null) {
+                tx.setBidderUsername(user.getUsername());
+            }
             bidDAO.addTransaction(tx);
 
             currentHighestBid = amount;
@@ -213,6 +217,10 @@ public class AuctionService {
             // Log transaction to DB
             String txId = "BID-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             BidTransaction tx = new BidTransaction(txId, targetItemId, bidderId, amount, System.currentTimeMillis());
+            com.auction.shared.models.User user = userDAO.getUserById(bidderId);
+            if (user != null) {
+                tx.setBidderUsername(user.getUsername());
+            }
             bidDAO.addTransaction(tx);
 
             String responsePayload = new Gson().toJson(tx);
@@ -249,6 +257,10 @@ public class AuctionService {
             // Log transaction to DB
             String txId = "AUTO-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             BidTransaction autoBidTx = new BidTransaction(txId, currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
+            com.auction.shared.models.User user = userDAO.getUserById(bidderId);
+            if (user != null) {
+                autoBidTx.setBidderUsername(user.getUsername());
+            }
             bidDAO.addTransaction(autoBidTx);
 
             String autoBidPayload = new Gson().toJson(autoBidTx);

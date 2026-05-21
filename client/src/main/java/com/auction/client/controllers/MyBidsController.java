@@ -2,6 +2,7 @@ package com.auction.client.controllers;
 
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.client.utils.TopNavUtils;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
@@ -18,6 +19,7 @@ import javafx.scene.layout.VBox;
 public class MyBidsController implements Initializable {
 
   @FXML private Label userLabel;
+  @FXML private Label navWalletBalanceLabel;
   @FXML private Label bidCountLabel;
   @FXML private VBox bidsListContainer;
   @FXML private VBox emptyState;
@@ -40,6 +42,7 @@ public class MyBidsController implements Initializable {
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
     
     final String pending = UserSession.getInstance().getPendingMyBidsFilter();
     if ("watching".equals(pending)) {

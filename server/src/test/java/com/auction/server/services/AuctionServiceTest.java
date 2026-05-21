@@ -261,4 +261,5 @@ public class AuctionServiceTest {
         // Subsequent calls should be safe
         manager.shutdown();
     }
+
 }

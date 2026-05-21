@@ -4,6 +4,7 @@ import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.google.gson.JsonObject;
@@ -31,6 +32,7 @@ import javafx.scene.layout.VBox;
 public class CreateListingController implements Initializable {
 
   @FXML private Label userLabel;
+  @FXML private Label navWalletBalanceLabel;
   @FXML private TextField titleField;
   @FXML private ComboBox<String> categoryCombo;
   @FXML private TextArea descriptionField;
@@ -57,6 +59,7 @@ public class CreateListingController implements Initializable {
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
     userLabel.setText(UserSession.getInstance().getInitials());
+    TopNavUtils.bindWalletBalance(navWalletBalanceLabel);
 
     categoryCombo.getItems().addAll(
         "Electronics", "Fashion", "Home & Garden",
