@@ -295,37 +295,39 @@
 }
 
 /* ComboBox & DatePicker Premium Styling */
-.combo-box-base, .date-picker-base {
+.combo-box, .date-picker {
     -fx-background-color: -bg-surface;
     -fx-border-color: -border-color;
     -fx-border-width: 1.5px;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
-    -fx-padding: 6px 10px;
+    -fx-padding: 4px 8px;
     -fx-text-fill: -text-main;
 }
 
-.combo-box-base:focused, .date-picker-base:focused {
+.combo-box:focused, .date-picker:focused {
     -fx-border-color: -primary;
     -fx-effect: dropshadow(three-pass-box, rgba(229, 50, 56, 0.1), 8, 0, 0, 0);
 }
 
-.combo-box-base > .text-field, .date-picker-base > .text-field {
+.combo-box > .list-cell {
+    -fx-text-fill: -text-main;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.combo-box > .text-field, .date-picker > .text-field {
     -fx-background-color: transparent;
     -fx-text-fill: -text-main;
     -fx-padding: 0;
 }
 
-.combo-box-base > .arrow-button, .date-picker-base > .arrow-button {
+.combo-box > .arrow-button, .date-picker > .arrow-button {
     -fx-background-color: transparent;
     -fx-padding: 0 0 0 10px;
 }
 
-.combo-box-base > .arrow-button > .arrow {
-    -fx-background-color: -text-secondary;
-}
-
-.date-picker-base > .arrow-button > .arrow {
+.combo-box > .arrow-button > .arrow, .date-picker > .arrow-button > .arrow {
     -fx-background-color: -text-secondary;
 }
 

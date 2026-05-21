@@ -81,7 +81,7 @@
                         </VBox>
                         <VBox prefWidth="240" spacing="0">
                             <Label text="Category" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
-                            <ComboBox fx:id="categoryCombo" promptText="Select category" maxWidth="Infinity" styleClass="combo-box-base"/>
+                            <ComboBox fx:id="categoryCombo" promptText="Select category" maxWidth="Infinity"/>
                             <Label fx:id="categoryError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                     </HBox>
@@ -116,20 +116,20 @@
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
                             <Label text="Start date &amp; time" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
                             <HBox spacing="8" alignment="CENTER_LEFT">
-                                <DatePicker fx:id="startDatePicker" promptText="Select Date" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="date-picker-base"/>
-                                <ComboBox fx:id="startHourCombo" prefWidth="80" styleClass="combo-box-base"/>
+                                <DatePicker fx:id="startDatePicker" promptText="Select Date" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <ComboBox fx:id="startHourCombo" prefWidth="80"/>
                                 <Label text=":" styleClass="body-text"/>
-                                <ComboBox fx:id="startMinuteCombo" prefWidth="80" styleClass="combo-box-base"/>
+                                <ComboBox fx:id="startMinuteCombo" prefWidth="80"/>
                             </HBox>
                             <Label fx:id="startTimeError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
                         <VBox HBox.hgrow="ALWAYS" spacing="0">
                             <Label text="End date &amp; time" styleClass="label-bold" style="-fx-padding: 0 0 8px 0;"/>
                             <HBox spacing="8" alignment="CENTER_LEFT">
-                                <DatePicker fx:id="endDatePicker" promptText="Select Date" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="date-picker-base"/>
-                                <ComboBox fx:id="endHourCombo" prefWidth="80" styleClass="combo-box-base"/>
+                                <DatePicker fx:id="endDatePicker" promptText="Select Date" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <ComboBox fx:id="endHourCombo" prefWidth="80"/>
                                 <Label text=":" styleClass="body-text"/>
-                                <ComboBox fx:id="endMinuteCombo" prefWidth="80" styleClass="combo-box-base"/>
+                                <ComboBox fx:id="endMinuteCombo" prefWidth="80"/>
                             </HBox>
                             <Label fx:id="endTimeError" text="" styleClass="field-error" style="-fx-min-height: 18px;"/>
                         </VBox>
