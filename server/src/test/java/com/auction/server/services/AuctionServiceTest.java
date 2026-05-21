@@ -23,6 +23,10 @@ import java.util.concurrent.TimeUnit;
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 public class AuctionServiceTest {
 
+    static {
+        System.setProperty("testMode", "true");
+    }
+
     private AuctionService manager;
 
     @BeforeEach

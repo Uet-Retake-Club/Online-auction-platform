@@ -63,6 +63,10 @@ public class AuctionService {
     public double getMinIncrement() { return minIncrement; }
 
     private void loadAuctionState() {
+        if ("true".equals(System.getProperty("testMode"))) {
+            System.out.println(" [DATABASE] Test mode detected. Skipping loadAuctionState().");
+            return;
+        }
         Item item = itemDAO.getFirstOpenItem();
         if (item != null) {
             this.currentAuctionItemId = item.getId();
@@ -73,8 +77,11 @@ public class AuctionService {
             // Persist Auction session if not exists
             String auctionId = "AUC-" + item.getId();
             if (auctionDAO.getAuctionById(auctionId) == null) {
-                com.auction.shared.models.Seller seller = (com.auction.shared.models.Seller) userDAO.getUserById(item.getSellerId());
-                if (seller != null) {
+                com.auction.shared.models.User user = userDAO.getUserById(item.getSellerId());
+                if (user != null) {
+                    com.auction.shared.models.Seller seller = (user instanceof com.auction.shared.models.Seller)
+                        ? (com.auction.shared.models.Seller) user
+                        : new com.auction.shared.models.Seller(user.getId(), user.getUsername(), user.getEmail(), user.getStatus());
                     auctionDAO.addAuction(new com.auction.shared.models.Auction(auctionId, item, seller));
                     System.out.println(" [DATABASE] Created new persistent auction record: " + auctionId);
                 }

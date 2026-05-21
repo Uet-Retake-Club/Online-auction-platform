@@ -29,6 +29,13 @@ public class AuctionDAOImpl implements AuctionDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    private Seller getSellerFromUser(String userId) {
+        com.auction.shared.models.User user = userDAO.getUserById(userId);
+        if (user == null) return null;
+        if (user instanceof Seller) return (Seller) user;
+        return new Seller(user.getId(), user.getUsername(), user.getEmail(), user.getStatus());
+    }
+
     @Override
     public Auction getAuctionById(String id) {
         String sql = "SELECT * FROM auctions WHERE id = ?";
@@ -38,7 +45,7 @@ public class AuctionDAOImpl implements AuctionDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     Item item = itemDAO.getItemById(rs.getString("item_id"));
-                    Seller seller = (Seller) userDAO.getUserById(rs.getString("seller_id"));
+                    Seller seller = getSellerFromUser(rs.getString("seller_id"));
                     return new Auction(id, item, seller);
                 }
             }
@@ -55,7 +62,7 @@ public class AuctionDAOImpl implements AuctionDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Item item = itemDAO.getItemById(rs.getString("item_id"));
-                Seller seller = (Seller) userDAO.getUserById(rs.getString("seller_id"));
+                Seller seller = getSellerFromUser(rs.getString("seller_id"));
                 list.add(new Auction(rs.getString("id"), item, seller));
             }
         } catch (SQLException e) { e.printStackTrace(); }

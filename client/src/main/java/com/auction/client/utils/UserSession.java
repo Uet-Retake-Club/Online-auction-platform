@@ -53,6 +53,9 @@ public final class UserSession {
    */
   private String role;
 
+  /** Wallet balance of the logged-in user. */
+  private double walletBalance = 0.0;
+
   /** Title of the currently selected auction. */
   private String selectedAuctionTitle = "";
 
@@ -174,6 +177,7 @@ public final class UserSession {
     username = null;
     email = null;
     role = null;
+    walletBalance = 0.0;
   }
 
   // ── Getters ───────────────────────────────────────────────
@@ -359,5 +363,23 @@ public final class UserSession {
       return first;
     }
     return first + " " + last;
+  }
+
+  /**
+   * Returns the wallet balance.
+   *
+   * @return the wallet balance
+   */
+  public double getWalletBalance() {
+    return walletBalance;
+  }
+
+  /**
+   * Sets the wallet balance.
+   *
+   * @param balance the new wallet balance
+   */
+  public void setWalletBalance(final double balance) {
+    this.walletBalance = balance;
   }
 }

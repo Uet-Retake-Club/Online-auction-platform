@@ -307,6 +307,9 @@ public class BidService implements NetworkClientService.ServerMessageListener {
         }
       });
     } else if (response.getType() == MessageType.WALLET_BALANCE_RESPONSE) {
+      try {
+        UserSession.getInstance().setWalletBalance(Double.parseDouble(response.getPayload()));
+      } catch (Exception ignored) {}
       Platform.runLater(() -> {
         if (onWalletBalanceUpdated != null) {
           try {
