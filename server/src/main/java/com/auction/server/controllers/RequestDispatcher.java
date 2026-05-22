@@ -24,13 +24,13 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.CREATE_ITEM, new CreateItemHandler());
         handlerRegistry.put(MessageType.GET_SELLER_ITEMS, new GetSellerItemsHandler());
         handlerRegistry.put(MessageType.GET_ALL_ITEMS, new GetAllItemsHandler());
-        handlerRegistry.put(MessageType.GET_MY_BIDS, new GetMyBidsHandler());
         handlerRegistry.put(MessageType.WATCHLIST_ADD, new WatchlistHandler());
         handlerRegistry.put(MessageType.WATCHLIST_REMOVE, new WatchlistHandler());
         handlerRegistry.put(MessageType.GET_WATCHLIST, new WatchlistHandler());
         handlerRegistry.put(MessageType.GET_WALLET_BALANCE, new WalletHandler());
         handlerRegistry.put(MessageType.WALLET_TOPUP_REQUEST, new WalletHandler());
         handlerRegistry.put(MessageType.GET_WALLET_HISTORY, new WalletHandler());
+        handlerRegistry.put(MessageType.GET_MY_INVOICES, new GetMyInvoicesHandler());
         AdminHandler adminHandler = new AdminHandler();
         handlerRegistry.put(MessageType.ADMIN_GET_PENDING_TOPUPS, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_APPROVE_TOPUP, adminHandler);
