@@ -376,22 +376,33 @@ public class AuctionService {
     }
 
     // --- CANCELLATION PROCESSING ---
+   // --- CANCELLATION PROCESSING (PENALTY & RE-AUCTION) ---
     public synchronized Response processCancellation(String invoiceId, String userId) {
         com.auction.shared.models.Invoice invoice = invoiceDAO.getInvoiceById(invoiceId);
         if (invoice == null || !invoice.getStatus().equals("PENDING")) {
             return new Response(MessageType.BID_ERROR, "FAIL", "Cannot cancel this invoice!", null);
         }
         
-        // 1. Update DB status to CANCELED
+        // 1. Update Invoice status to CANCELED
         invoiceDAO.updateInvoiceStatus(invoiceId, "CANCELED");
-        itemDAO.updateStatus(invoice.getItemId(), "CANCELED");
         
-        // 2. Refund the escrowed amount to the canceled winner
-        // (If your team's rule is to penalize/forfeit the deposit, remove this updateBalance call)
-        walletDAO.updateBalance(invoice.getBidderId(), invoice.getFinalPrice());
-        System.out.println("  [CANCELLATION] Invoice " + invoiceId + " canceled. Refunded bidder.");
+        // 2. PENALTY: Transfer the escrowed funds to the Seller as compensation
+        // (Do NOT refund the Bidder. The Seller receives the forfeited deposit)
+        walletDAO.updateBalance(invoice.getSellerId(), invoice.getFinalPrice());
+        System.out.println(" [PENALTY] Bidder forfeited deposit. Transferred $" + invoice.getFinalPrice() + " to Seller: " + invoice.getSellerId());
         
-        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Invoice canceled successfully!", invoiceId);
+        // 3. RE-AUCTION: Reset the item's price and set status back to OPEN
+        if (itemDAO.resetItemForReauction(invoice.getItemId())) {
+            System.out.println(" [RE-AUCTION] Item " + invoice.getItemId() + " has been reset and is OPEN for bidding again.");
+            
+            // Broadcast to all clients that a new item is available on the floor
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "INFO", "A canceled item has returned to the auction floor!", invoice.getItemId()));
+        } else {
+            // Fallback if reset fails
+            itemDAO.updateStatus(invoice.getItemId(), "CANCELED");
+        }
+        
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Invoice canceled. Penalty applied and item re-auctioned!", invoiceId);
     }
 
     // Nhạc trưởng gọi một tiếng, đàn em tự động dọn dẹp (Facade Pattern)

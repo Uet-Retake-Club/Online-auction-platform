@@ -15,7 +15,9 @@ public interface ItemDAO {
 
     boolean updateStatus(String itemId, String status);
 
+    boolean resetItemForReauction(String itemId);
+
     List<Item> getItemsBySellerId(String sellerId);
     List<Item> getAllItems();
     int getActiveAuctionCount();
-}
+}

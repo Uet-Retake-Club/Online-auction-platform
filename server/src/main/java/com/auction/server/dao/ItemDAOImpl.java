@@ -398,4 +398,20 @@ public class ItemDAOImpl implements ItemDAO {
         }
         return 0;
     }
-}
+
+    @Override
+    public boolean resetItemForReauction(String itemId) {
+        // Đưa trạng thái về OPEN, reset giá hiện tại về giá khởi điểm, và xóa người thắng cũ
+        String sql = "UPDATE items SET status = 'OPEN', current_price = start_price, highest_bidder_id = NULL WHERE id = ?";
+        try (java.sql.Connection conn = com.auction.server.database.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, itemId);
+            return pstmt.executeUpdate() > 0;
+            
+        } catch (java.sql.SQLException e) {
+            System.err.println(" [SQL Error] Cannot reset item for re-auction: " + e.getMessage());
+            return false;
+        }
+}
+}
