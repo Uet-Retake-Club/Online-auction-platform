@@ -24,6 +24,13 @@ public class SessionManager {
             client.sendResponse(response);
         }
     }
+    
+    public void sendToClient(String clientId, Response response) {
+        ClientHandler handler = activeClients.get(clientId);
+        if (handler != null) {
+            handler.sendResponse(response);
+        }
+    }
 
     public void shutdown() {
         System.out.println(" [SessionManager] Disconnecting all clients...");

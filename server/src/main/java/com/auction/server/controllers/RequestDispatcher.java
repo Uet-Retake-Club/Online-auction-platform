@@ -32,6 +32,7 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.GET_WALLET_HISTORY, new WalletHandler());
         handlerRegistry.put(MessageType.GET_MY_INVOICES, new GetMyInvoicesHandler());
         handlerRegistry.put(MessageType.GET_SELLER_DASHBOARD, new GetSellerDashboardHandler());
+        handlerRegistry.put(MessageType.GET_MY_BIDS, new GetMyBidsHandler());
         AdminHandler adminHandler = new AdminHandler();
         handlerRegistry.put(MessageType.ADMIN_GET_PENDING_TOPUPS, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_APPROVE_TOPUP, adminHandler);

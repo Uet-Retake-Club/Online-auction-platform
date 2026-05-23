@@ -116,6 +116,9 @@ public class AuctionService {
     public void broadcast(Response response) {
         sessionManager.broadcast(response);
     }
+    public void sendToClient(String clientId, Response response) {
+        sessionManager.sendToClient(clientId, response);
+    }
 
     // --- LOGIC LUẬT CHƠI ---
     public Response registerAutoBid(AutoBidSettings settings) {

@@ -1,10 +1,16 @@
 package com.auction.client.controllers;
 
+import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.TopNavUtils;
 import com.auction.client.utils.TransactionUiHelper;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Request;
+import com.auction.shared.dto.Response;
+import com.auction.shared.models.TopupRequest;
+import com.google.gson.Gson;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -26,16 +33,15 @@ import javafx.scene.layout.VBox;
  * WalletController handles balances, deposits, withdrawals, and history.
  *
  * <p>Four tabs: Overview (balance + recent), Deposit, Withdraw, History.
- * All monetary values are in USD. Replace dummy data and balance constants
- * with WalletService calls when the backend is ready.
+ * All monetary values are in USD.
  */
-public class WalletController implements Initializable {
+public class WalletController implements Initializable, NetworkClientService.ServerMessageListener {
 
-  /** Dummy available balance — replace with WalletService.getBalance(). */
-  private double currentAvailableBalance = 2450.00;
+  /** Available balance loaded from server. */
+  private double currentAvailableBalance = 0.0;
 
-  /** Dummy holding amount — funds locked in active bids. */
-  private double currentHoldingBalance = 780.00;
+  /** Holding amount — funds locked in active bids. */
+  private double currentHoldingBalance = 0.0;
 
   /** Deposit transaction type constant. */
   private static final String TYPE_DEPOSIT = "deposit";
@@ -49,11 +55,8 @@ public class WalletController implements Initializable {
   /** Refund transaction type constant. */
   private static final String TYPE_REFUND = "refund";
 
-  // ── FXML — Top nav ────────────────────────────────────────
-  
-  
-
   // ── FXML — Sidebar nav ────────────────────────────────────
+  @FXML private javafx.scene.layout.StackPane rootPane;
   @FXML private Button navOverview;
   @FXML private Button navDeposit;
   @FXML private Button navWithdraw;
@@ -97,27 +100,151 @@ public class WalletController implements Initializable {
   private Button activeNav;
   private Button activeFilter;
 
-  // ── Dummy transaction data ────────────────────────────────
+  // ── Transaction data ──────────────────────────────────────
   // Columns: description, amount (signed), date, type
-  private final List<String[]> allTransactions = new ArrayList<>(Arrays.asList(
-    new String[]{"Đặt cọc — Vintage Rolex Watch",   "-$780.00",   "15/05/2026", TYPE_HOLD},
-    new String[]{"Nạp tiền",                         "+$1,000.00", "14/05/2026", TYPE_DEPOSIT},
-    new String[]{"Thanh toán — Nike Air Jordan 1",   "-$210.00",   "12/05/2026", TYPE_WITHDRAW},
-    new String[]{"Hoàn tiền — Sony WH-1000XM5",      "+$190.00",   "05/05/2026", TYPE_REFUND}
-  ));
+  private final List<String[]> allTransactions = new ArrayList<>();
 
   // ── Lifecycle ─────────────────────────────────────────────
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    
-    
     activeNav = navOverview;
     activeFilter = filterAll;
     setupDepositTab();
     setupWithdrawTab();
+    
+    // Register network listener
+    NetworkClientService.getInstance().addListener(this);
+    
+    // Clean up listener to prevent leaks
+    rootPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+      if (newScene == null) {
+        NetworkClientService.getInstance().removeListener(this);
+      }
+    });
+
     loadOverview();
-    loadHistory(null);
+    refreshData();
+  }
+
+  private void refreshData() {
+    final String userId = UserSession.getInstance().getUserId();
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.GET_WALLET_BALANCE, userId, ""));
+    NetworkClientService.getInstance().sendRequest(new Request(MessageType.GET_WALLET_HISTORY, userId, ""));
+  }
+
+  @Override
+  public void onMessageReceived(final Response response) {
+    if (response == null) {
+      return;
+    }
+    Platform.runLater(() -> {
+      if (response.getType() == MessageType.WALLET_BALANCE_RESPONSE) {
+        if ("SUCCESS".equals(response.getStatus())) {
+          try {
+            currentAvailableBalance = Double.parseDouble(response.getPayload());
+            loadOverview();
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      } else if (response.getType() == MessageType.WALLET_HISTORY_RESPONSE) {
+        if ("SUCCESS".equals(response.getStatus())) {
+          try {
+            final TopupRequest[] history = new Gson().fromJson(
+                response.getPayload(), TopupRequest[].class);
+            updateTxHistory(history);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      } else if (response.getType() == MessageType.WALLET_TOPUP_APPROVE) {
+        if ("SUCCESS".equals(response.getStatus())) {
+          String msg = "Yêu cầu giao dịch đã được gửi!";
+          if (depositTab.isVisible()) {
+            msg = "Yêu cầu nạp tiền đã được gửi và đang chờ phê duyệt!";
+            depositAmountField.clear();
+          } else if (withdrawTab.isVisible()) {
+            msg = "Yêu cầu rút tiền đã được gửi và đang chờ phê duyệt!";
+            withdrawAmountField.clear();
+          }
+          ToastNotification.show(rootPane, msg, ToastNotification.Type.SUCCESS);
+          refreshData();
+          onTabOverview();
+        } else {
+          final String errMsg = response.getMessage() != null ? response.getMessage() : "Yêu cầu giao dịch thất bại";
+          if (depositTab.isVisible()) {
+            depositAmountError.setText(errMsg);
+          } else if (withdrawTab.isVisible()) {
+            withdrawAmountError.setText(errMsg);
+          }
+        }
+      }
+    });
+  }
+
+  private void updateTxHistory(final TopupRequest[] history) {
+    allTransactions.clear();
+    double totalDeposited = 0.0;
+    double totalSpent = 0.0;
+    
+    if (history != null) {
+      for (TopupRequest tr : history) {
+        final String desc;
+        final String amtStr;
+        final String type;
+        
+        if (tr.amount >= 0) {
+          // Deposit
+          amtStr = "+" + formatMoney(tr.amount);
+          if ("PENDING".equals(tr.status)) {
+            desc = "Nạp tiền (Chờ duyệt)";
+            type = TYPE_HOLD;
+          } else if ("APPROVED".equals(tr.status)) {
+            desc = "Nạp tiền thành công";
+            type = TYPE_DEPOSIT;
+            totalDeposited += tr.amount;
+          } else {
+            desc = "Yêu cầu nạp tiền bị từ chối";
+            type = TYPE_WITHDRAW;
+          }
+        } else {
+          // Withdrawal
+          amtStr = "-" + formatMoney(Math.abs(tr.amount));
+          if ("PENDING".equals(tr.status)) {
+            desc = "Rút tiền (Chờ duyệt)";
+            type = TYPE_HOLD;
+          } else if ("APPROVED".equals(tr.status)) {
+            desc = "Rút tiền thành công";
+            type = TYPE_WITHDRAW;
+            totalSpent += Math.abs(tr.amount);
+          } else {
+            desc = "Yêu cầu rút tiền bị từ chối";
+            type = TYPE_DEPOSIT;
+          }
+        }
+        
+        final String dateStr = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(
+            new java.util.Date(tr.timestamp));
+            
+        allTransactions.add(new String[]{
+            desc, amtStr, dateStr, type
+        });
+      }
+    }
+    
+    statDeposited.setText("+" + formatMoney(totalDeposited));
+    statSpent.setText("-" + formatMoney(totalSpent));
+    
+    loadOverview();
+    loadHistory(activeFilter == filterAll ? null : getFilterType(activeFilter));
+  }
+
+  private String getFilterType(final Button filterButton) {
+    if (filterButton == filterDeposit) return TYPE_DEPOSIT;
+    if (filterButton == filterWithdraw) return TYPE_WITHDRAW;
+    if (filterButton == filterHold) return TYPE_HOLD;
+    return null;
   }
 
   // ── Setup ─────────────────────────────────────────────────
@@ -200,7 +327,6 @@ public class WalletController implements Initializable {
 
   /**
    * Validates and processes the deposit form.
-   * TODO: replace with WalletService.deposit() when backend is ready.
    */
   @FXML
   private void onConfirmDeposit() {
@@ -225,22 +351,16 @@ public class WalletController implements Initializable {
       return;
     }
     
-    currentAvailableBalance += amount;
-    final String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-    allTransactions.add(0, new String[]{
-        "Nạp tiền", "+" + formatMoney(amount), dateStr, TYPE_DEPOSIT
-    });
-
-    ToastNotification.show(
-        depositTab, "Nạp " + formatMoney(amount) + " thành công!", ToastNotification.Type.SUCCESS);
-    depositAmountField.clear();
-    loadOverview();
-    onTabOverview();
+    final Request req = new Request(
+        MessageType.WALLET_TOPUP_REQUEST,
+        UserSession.getInstance().getUserId(),
+        String.valueOf(amount)
+    );
+    NetworkClientService.getInstance().sendRequest(req);
   }
 
   /**
    * Validates and processes the withdrawal form.
-   * TODO: replace with WalletService.withdraw() when backend is ready.
    */
   @FXML
   private void onConfirmWithdraw() {
@@ -270,19 +390,12 @@ public class WalletController implements Initializable {
       return;
     }
     
-    currentAvailableBalance -= amount;
-    final String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-    allTransactions.add(0, new String[]{
-        "Rút tiền", "-" + formatMoney(amount), dateStr, TYPE_WITHDRAW
-    });
-
-    ToastNotification.show(
-        withdrawTab,
-        "Yêu cầu rút " + formatMoney(amount) + " đã được gửi!",
-        ToastNotification.Type.SUCCESS);
-    withdrawAmountField.clear();
-    loadOverview();
-    onTabOverview();
+    final Request req = new Request(
+        MessageType.WALLET_TOPUP_REQUEST,
+        UserSession.getInstance().getUserId(),
+        String.valueOf(-amount)
+    );
+    NetworkClientService.getInstance().sendRequest(req);
   }
 
   // ── History + filter ──────────────────────────────────────
