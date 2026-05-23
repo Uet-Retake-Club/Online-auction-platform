@@ -30,6 +30,9 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.GET_WALLET_BALANCE, new WalletHandler());
         handlerRegistry.put(MessageType.WALLET_TOPUP_REQUEST, new WalletHandler());
         handlerRegistry.put(MessageType.GET_WALLET_HISTORY, new WalletHandler());
+        handlerRegistry.put(MessageType.GET_MY_INVOICES, new GetMyInvoicesHandler());
+        handlerRegistry.put(MessageType.GET_SELLER_DASHBOARD, new GetSellerDashboardHandler());
+        handlerRegistry.put(MessageType.GET_MY_BIDS, new GetMyBidsHandler());
         AdminHandler adminHandler = new AdminHandler();
         handlerRegistry.put(MessageType.ADMIN_GET_PENDING_TOPUPS, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_APPROVE_TOPUP, adminHandler);
@@ -40,6 +43,10 @@ public class RequestDispatcher {
         handlerRegistry.put(MessageType.ADMIN_BAN_USER, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_UNBAN_USER, adminHandler);
         handlerRegistry.put(MessageType.ADMIN_GET_BIDS, adminHandler);
+
+        InvoiceHandler invoiceHandler = new InvoiceHandler();
+        handlerRegistry.put(MessageType.valueOf("INVOICE_PAY"), invoiceHandler);
+        handlerRegistry.put(MessageType.valueOf("INVOICE_CANCEL"), invoiceHandler);
     }
 
 

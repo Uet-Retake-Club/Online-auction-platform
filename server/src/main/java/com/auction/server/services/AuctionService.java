@@ -4,6 +4,8 @@ import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.BidTransactionDAOImpl;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
+import com.auction.server.dao.InvoiceDAO;
+import com.auction.server.dao.InvoiceDAOImpl;
 import com.auction.server.network.ClientHandler;
 import com.auction.server.services.core.AuctionTimer;
 import com.auction.server.services.core.AutoBidEngine;
@@ -30,6 +32,7 @@ public class AuctionService {
     private final com.auction.server.dao.WalletDAO walletDAO = new com.auction.server.dao.WalletDAOImpl();
     private final com.auction.server.dao.AuctionDAO auctionDAO = new com.auction.server.dao.AuctionDAOImpl();
     private final com.auction.server.dao.UserDAO userDAO = new com.auction.server.dao.UserDAOImpl();
+    private final com.auction.server.dao.InvoiceDAO invoiceDAO = new com.auction.server.dao.InvoiceDAOImpl();
     
     private String currentAuctionItemId = null;
     private double startingPrice = 1240.00;
@@ -60,6 +63,10 @@ public class AuctionService {
     public double getMinIncrement() { return minIncrement; }
 
     private void loadAuctionState() {
+        if ("true".equals(System.getProperty("testMode"))) {
+            System.out.println(" [DATABASE] Test mode detected. Skipping loadAuctionState().");
+            return;
+        }
         Item item = itemDAO.getFirstOpenItem();
         if (item != null) {
             this.currentAuctionItemId = item.getId();
@@ -70,14 +77,29 @@ public class AuctionService {
             // Persist Auction session if not exists
             String auctionId = "AUC-" + item.getId();
             if (auctionDAO.getAuctionById(auctionId) == null) {
-                com.auction.shared.models.Seller seller = (com.auction.shared.models.Seller) userDAO.getUserById(item.getSellerId());
-                if (seller != null) {
+                com.auction.shared.models.User user = userDAO.getUserById(item.getSellerId());
+                if (user != null) {
+                    com.auction.shared.models.Seller seller = (user instanceof com.auction.shared.models.Seller)
+                        ? (com.auction.shared.models.Seller) user
+                        : new com.auction.shared.models.Seller(user.getId(), user.getUsername(), user.getEmail(), user.getStatus());
                     auctionDAO.addAuction(new com.auction.shared.models.Auction(auctionId, item, seller));
                     System.out.println(" [DATABASE] Created new persistent auction record: " + auctionId);
                 }
             }
 
             System.out.println(" [DATABASE] State restored for item " + currentAuctionItemId + " : $" + currentHighestBid + " from SQLite.");
+
+            // khoi phuc time sau khi khoi dong lai
+            long currentTime = System.currentTimeMillis();
+            if (item.getEndTime() > currentTime) {
+                // Nếu thời gian kết thúc vẫn ở trong tương lai, bật lại đồng hồ đếm ngược!
+                System.out.println(" [TIMER] Resuming countdown for item " + currentAuctionItemId);
+                auctionTimer.scheduleAuctionEnd(item.getEndTime());
+            } else {
+                // Nếu server sập mà thời gian đã quá hạn, ép kết thúc luôn để chốt đơn
+                System.out.println(" [TIMER] Item " + currentAuctionItemId + " is past end time. Ending now...");
+                endAuction();
+            }
         } else {
             System.out.println(" [DATABASE] No OPEN items found. Waiting for items to be added.");
         }
@@ -93,6 +115,9 @@ public class AuctionService {
     }
     public void broadcast(Response response) {
         sessionManager.broadcast(response);
+    }
+    public void sendToClient(String clientId, Response response) {
+        sessionManager.sendToClient(clientId, response);
     }
 
     // --- LOGIC LUẬT CHƠI ---
@@ -153,6 +178,10 @@ public class AuctionService {
             // Log transaction to DB
             String txId = "BID-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             BidTransaction tx = new BidTransaction(txId, currentAuctionItemId, bidderId, amount, System.currentTimeMillis());
+            com.auction.shared.models.User user = userDAO.getUserById(bidderId);
+            if (user != null) {
+                tx.setBidderUsername(user.getUsername());
+            }
             bidDAO.addTransaction(tx);
 
             currentHighestBid = amount;
@@ -191,6 +220,10 @@ public class AuctionService {
             // Log transaction to DB
             String txId = "BID-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             BidTransaction tx = new BidTransaction(txId, targetItemId, bidderId, amount, System.currentTimeMillis());
+            com.auction.shared.models.User user = userDAO.getUserById(bidderId);
+            if (user != null) {
+                tx.setBidderUsername(user.getUsername());
+            }
             bidDAO.addTransaction(tx);
 
             String responsePayload = new Gson().toJson(tx);
@@ -227,6 +260,10 @@ public class AuctionService {
             // Log transaction to DB
             String txId = "AUTO-" + java.util.UUID.randomUUID().toString().substring(0, 8);
             BidTransaction autoBidTx = new BidTransaction(txId, currentAuctionItemId, bidderId, nextBid, System.currentTimeMillis());
+            com.auction.shared.models.User user = userDAO.getUserById(bidderId);
+            if (user != null) {
+                autoBidTx.setBidderUsername(user.getUsername());
+            }
             bidDAO.addTransaction(autoBidTx);
 
             String autoBidPayload = new Gson().toJson(autoBidTx);
@@ -263,20 +300,42 @@ public class AuctionService {
             }
 
             // 4. Xác định người thắng và thông báo
-            String winnerMsg = (currentHighestBidder != null) 
-                ? "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")" 
-                : "Phiên kết thúc mà không có ai đặt giá.";
+            String winnerMsg;
+            if (currentHighestBidder != null) {
+                winnerMsg = "Người chiến thắng: " + currentHighestBidder + " ($" + currentHighestBid + ")";
                 
-            broadcast(new Response(MessageType.AUCTION_ENDED, "SUCCESS", winnerMsg, null));
-        } else {
-            System.err.println(" [ERROR] Database rejected auction closure!");
+                Item item = itemDAO.getItemById(currentAuctionItemId);
+                String sellerId = (item != null) ? item.getSellerId() : "UNKNOWN_SELLER";
+                String invoiceId = "INV-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+                String auctionId = "AUC-" + currentAuctionItemId; 
+                
+                // Initialize a PENDING invoice
+                com.auction.shared.models.Invoice invoice = new com.auction.shared.models.Invoice(
+                    invoiceId, auctionId, currentAuctionItemId,
+                    currentHighestBidder, sellerId, currentHighestBid,
+                    System.currentTimeMillis(), "PENDING"
+                );
+                
+                if (invoiceDAO.createInvoice(invoice)) {
+                    System.out.println("  [INVOICE] Created new invoice: " + invoiceId + " (Status: PENDING)");
+                }
+            } else {
+                winnerMsg = "Phiên kết thúc mà không có ai đặt giá.";
+            }
         }
     }
 
     public Response getCurrentStatusResponse() {
         List<BidTransaction> history = bidDAO.getHistoryByItem(currentAuctionItemId);
         String payload = new Gson().toJson(history);
-        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Current Status", payload);
+        long endTime = 0;
+        if (currentAuctionItemId != null) {
+            Item item = itemDAO.getItemById(currentAuctionItemId);
+            if (item != null) {
+                endTime = item.getEndTime();
+            }
+        }
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", String.valueOf(endTime), payload);
     }
 
     /**
@@ -295,7 +354,58 @@ public class AuctionService {
         }
         List<BidTransaction> history = bidDAO.getHistoryByItem(itemId);
         String payload = new Gson().toJson(history);
-        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Item Status", payload);
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", String.valueOf(item.getEndTime()), payload);
+    }
+    // --- PAYMENT PROCESSING ---
+    public synchronized Response processPayment(String invoiceId, String userId) {
+        com.auction.shared.models.Invoice invoice = invoiceDAO.getInvoiceById(invoiceId);
+        if (invoice == null) return new Response(MessageType.BID_ERROR, "FAIL", "Invoice not found!", null);
+        
+        // Authorization check: Only the winning bidder can pay
+        if (!invoice.getBidderId().equals(userId)) return new Response(MessageType.BID_ERROR, "FAIL", "Unauthorized payment attempt!", null);
+        
+        // Prevent double payment
+        if (!invoice.getStatus().equals("PENDING")) return new Response(MessageType.BID_ERROR, "FAIL", "Invoice already processed (" + invoice.getStatus() + ")!", null);
+        
+        // 1. Update DB status to PAID for both Invoice and Item
+        if (invoiceDAO.updateInvoiceStatus(invoiceId, "PAID") && itemDAO.updateStatus(invoice.getItemId(), "PAID")) {
+            // 2. Transfer funds to the Seller's wallet (Bidder's funds were deducted during bidding)
+            walletDAO.updateBalance(invoice.getSellerId(), invoice.getFinalPrice());
+            System.out.println("  [PAYMENT] Transferred $" + invoice.getFinalPrice() + " to Seller: " + invoice.getSellerId());
+            
+            return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Payment successful!", invoiceId);
+        }
+        return new Response(MessageType.BID_ERROR, "ERROR", "Database error during payment!", null);
+    }
+
+    // --- CANCELLATION PROCESSING ---
+   // --- CANCELLATION PROCESSING (PENALTY & RE-AUCTION) ---
+    public synchronized Response processCancellation(String invoiceId, String userId) {
+        com.auction.shared.models.Invoice invoice = invoiceDAO.getInvoiceById(invoiceId);
+        if (invoice == null || !invoice.getStatus().equals("PENDING")) {
+            return new Response(MessageType.BID_ERROR, "FAIL", "Cannot cancel this invoice!", null);
+        }
+        
+        // 1. Update Invoice status to CANCELED
+        invoiceDAO.updateInvoiceStatus(invoiceId, "CANCELED");
+        
+        // 2. PENALTY: Transfer the escrowed funds to the Seller as compensation
+        // (Do NOT refund the Bidder. The Seller receives the forfeited deposit)
+        walletDAO.updateBalance(invoice.getSellerId(), invoice.getFinalPrice());
+        System.out.println(" [PENALTY] Bidder forfeited deposit. Transferred $" + invoice.getFinalPrice() + " to Seller: " + invoice.getSellerId());
+        
+        // 3. RE-AUCTION: Reset the item's price and set status back to OPEN
+        if (itemDAO.resetItemForReauction(invoice.getItemId())) {
+            System.out.println(" [RE-AUCTION] Item " + invoice.getItemId() + " has been reset and is OPEN for bidding again.");
+            
+            // Broadcast to all clients that a new item is available on the floor
+            broadcast(new Response(MessageType.NEW_BID_BROADCAST, "INFO", "A canceled item has returned to the auction floor!", invoice.getItemId()));
+        } else {
+            // Fallback if reset fails
+            itemDAO.updateStatus(invoice.getItemId(), "CANCELED");
+        }
+        
+        return new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Invoice canceled. Penalty applied and item re-auctioned!", invoiceId);
     }
 
     // Nhạc trưởng gọi một tiếng, đàn em tự động dọn dẹp (Facade Pattern)

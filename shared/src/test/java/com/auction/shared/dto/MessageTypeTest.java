@@ -11,7 +11,7 @@ public class MessageTypeTest {
     @Test
     void testAllValuesExist() {
         MessageType[] values = MessageType.values();
-        assertEquals(45, values.length, "MessageType must have exactly 45 values");
+        assertEquals(52, values.length, "MessageType must have exactly 52 values");
     }
 
     @Test
@@ -57,10 +57,18 @@ public class MessageTypeTest {
         assertEquals(MessageType.ADMIN_USERS_RESPONSE, MessageType.valueOf("ADMIN_USERS_RESPONSE"));
         assertEquals(MessageType.ADMIN_GET_AUCTIONS, MessageType.valueOf("ADMIN_GET_AUCTIONS"));
         assertEquals(MessageType.ADMIN_AUCTIONS_RESPONSE, MessageType.valueOf("ADMIN_AUCTIONS_RESPONSE"));
+        // ... (wait, let's keep all elements including ADMIN_BAN_USER etc to be fully safe)
         assertEquals(MessageType.ADMIN_BAN_USER, MessageType.valueOf("ADMIN_BAN_USER"));
         assertEquals(MessageType.ADMIN_UNBAN_USER, MessageType.valueOf("ADMIN_UNBAN_USER"));
         assertEquals(MessageType.ADMIN_GET_BIDS, MessageType.valueOf("ADMIN_GET_BIDS"));
         assertEquals(MessageType.ADMIN_BIDS_RESPONSE, MessageType.valueOf("ADMIN_BIDS_RESPONSE"));
+        assertEquals(MessageType.INVOICE_PAY, MessageType.valueOf("INVOICE_PAY"));
+        assertEquals(MessageType.INVOICE_CANCEL, MessageType.valueOf("INVOICE_CANCEL"));
+        assertEquals(MessageType.GET_MY_BIDS, MessageType.valueOf("GET_MY_BIDS"));
+        assertEquals(MessageType.MY_BIDS_RESPONSE, MessageType.valueOf("MY_BIDS_RESPONSE"));
+        assertEquals(MessageType.GET_MY_INVOICES, MessageType.valueOf("GET_MY_INVOICES"));
+        assertEquals(MessageType.GET_MY_INVOICES_SUCCESS, MessageType.valueOf("GET_MY_INVOICES_SUCCESS"));
+        assertEquals(MessageType.GET_SELLER_DASHBOARD, MessageType.valueOf("GET_SELLER_DASHBOARD"));
     }
 
 

@@ -3,6 +3,7 @@ package com.auction.client.controllers;
 import com.auction.client.services.NetworkClientService;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.UserSession;
+import com.auction.client.utils.TopNavUtils;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.google.gson.Gson;
@@ -28,7 +29,6 @@ import javafx.scene.layout.VBox;
  */
 public class SellerController implements Initializable {
 
-  @FXML private Label userLabel;
   @FXML private Label listingCountLabel;
   @FXML private VBox listingsContainer;
   @FXML private VBox emptyState;
@@ -47,7 +47,6 @@ public class SellerController implements Initializable {
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
-    userLabel.setText(UserSession.getInstance().getInitials());
     activeFilter = filterAll;
     fetchListingsFromServer();
   }
@@ -205,7 +204,16 @@ public class SellerController implements Initializable {
     final Label badge = buildBadge(status);
     badge.setPrefWidth(100);
 
-    final Button action = buildActionButton(status, itemId, name, category, description, currentPrice, startPrice);
+    final long endTime = item.has("endTime") ? item.get("endTime").getAsLong() : 0L;
+    final String base64Image = item.has("imageData") && !item.get("imageData").isJsonNull() ? item.get("imageData").getAsString() : "";
+    byte[] imgBytes = null;
+    if (!base64Image.isEmpty()) {
+      try {
+        imgBytes = java.util.Base64.getDecoder().decode(base64Image);
+      } catch (IllegalArgumentException ignored) {}
+    }
+
+    final Button action = buildActionButton(status, itemId, name, category, description, currentPrice, startPrice, endTime, imgBytes);
     row.getChildren().addAll(titleLbl, currentBidLbl, startPriceLbl, timeLbl, badge, action);
     return row;
   }
@@ -254,7 +262,8 @@ public class SellerController implements Initializable {
 
   private Button buildActionButton(final String status, final String itemId,
       final String name, final String category, final String description,
-      final double currentPrice, final double startPrice) {
+      final double currentPrice, final double startPrice, final long endTime,
+      final byte[] imgBytes) {
     final Button btn = new Button();
     btn.getStyleClass().add("btn-outline");
     btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
@@ -266,6 +275,8 @@ public class SellerController implements Initializable {
       UserSession.getInstance().setSelectedAuctionCategory(category);
       UserSession.getInstance().setSelectedItemDescription(description);
       UserSession.getInstance().setSelectedItemPrice(currentPrice > 0 ? currentPrice : startPrice);
+      UserSession.getInstance().setSelectedItemEndTime(endTime);
+      UserSession.getInstance().setSelectedItemImageData(imgBytes);
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
     return btn;
@@ -284,18 +295,8 @@ public class SellerController implements Initializable {
   }
 
   @FXML
-  private void onProfile() {
-    SceneNavigator.navigateTo(SceneNavigator.View.PROFILE);
-  }
-
-  @FXML
   private void onLogout() {
     UserSession.getInstance().clear();
     SceneNavigator.navigateTo(SceneNavigator.View.LOGIN);
-  }
-
-  @FXML
-  private void onToggleTheme() {
-    SceneNavigator.toggleTheme();
   }
 }

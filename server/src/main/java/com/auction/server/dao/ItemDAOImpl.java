@@ -54,7 +54,7 @@ public class ItemDAOImpl implements ItemDAO {
 
     @Override
     public boolean addItem(Item item) {
-        String sqlCommon = "INSERT INTO items (id, name, description, category, start_price, current_price, highest_bidder_id, start_time, end_time, seller_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlCommon = "INSERT INTO items (id, name, description, category, start_price, current_price, highest_bidder_id, start_time, end_time, seller_id, status, image_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         Connection conn = null;
         try {
@@ -73,6 +73,7 @@ public class ItemDAOImpl implements ItemDAO {
                 pstmt.setLong(9, item.getEndTime());
                 pstmt.setString(10, item.getSellerId());
                 pstmt.setString(11, item.getStatus());
+                pstmt.setBytes(12, item.getImageData());
 
                 if (pstmt.executeUpdate() == 0) {
                     conn.rollback();
@@ -180,7 +181,7 @@ public class ItemDAOImpl implements ItemDAO {
                     return null;
                 }
 
-                ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+                ItemCategory category = getSafeCategory(rs.getString("category"));
                 return fetchFullItemDetails(conn, id, category);
             }
         } catch (SQLException e) {
@@ -202,7 +203,7 @@ public class ItemDAOImpl implements ItemDAO {
             }
 
             String id = rs.getString("id");
-            ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+            ItemCategory category = getSafeCategory(rs.getString("category"));
             return fetchFullItemDetails(conn, id, category);
             
         } catch (SQLException e) {
@@ -273,7 +274,7 @@ public class ItemDAOImpl implements ItemDAO {
         item.setId(rs.getString("id"));
         item.setName(rs.getString("name"));
         item.setDescription(rs.getString("description"));
-        item.setCategory(ItemCategory.valueOf(rs.getString("category")));
+        item.setCategory(getSafeCategory(rs.getString("category")));
         item.setStartingPrice(rs.getDouble("start_price"));
         item.setCurrentHighestBid(rs.getDouble("current_price"));
         item.setHighestBidderId(rs.getString("highest_bidder_id"));
@@ -281,6 +282,7 @@ public class ItemDAOImpl implements ItemDAO {
         item.setEndTime(rs.getLong("end_time"));
         item.setSellerId(rs.getString("seller_id"));
         item.setStatus(rs.getString("status"));
+        item.setImageData(rs.getBytes("image_data"));
     }
 
     private void mapVehicleFields(Vehicle vehicle, ResultSet rs) throws SQLException {
@@ -348,7 +350,7 @@ public class ItemDAOImpl implements ItemDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     String id = rs.getString("id");
-                    ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+                    ItemCategory category = getSafeCategory(rs.getString("category"));
                     Item item = fetchFullItemDetails(conn, id, category);
                     if (item != null) {
                         items.add(item);
@@ -371,7 +373,7 @@ public class ItemDAOImpl implements ItemDAO {
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 String id = rs.getString("id");
-                ItemCategory category = ItemCategory.valueOf(rs.getString("category"));
+                ItemCategory category = getSafeCategory(rs.getString("category"));
                 Item item = fetchFullItemDetails(conn, id, category);
                 if (item != null) {
                     items.add(item);
@@ -398,4 +400,31 @@ public class ItemDAOImpl implements ItemDAO {
         }
         return 0;
     }
-}
+
+    @Override
+    public boolean resetItemForReauction(String itemId) {
+        // Đưa trạng thái về OPEN, reset giá hiện tại về giá khởi điểm, và xóa người thắng cũ
+        String sql = "UPDATE items SET status = 'OPEN', current_price = start_price, highest_bidder_id = NULL WHERE id = ?";
+        try (java.sql.Connection conn = com.auction.server.database.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, itemId);
+            return pstmt.executeUpdate() > 0;
+            
+        } catch (java.sql.SQLException e) {
+            System.err.println(" [SQL Error] Cannot reset item for re-auction: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private ItemCategory getSafeCategory(String categoryStr) {
+        if (categoryStr == null) {
+            return ItemCategory.OTHER;
+        }
+        try {
+            return ItemCategory.valueOf(categoryStr);
+        } catch (IllegalArgumentException e) {
+            return ItemCategory.OTHER;
+        }
+    }
+}

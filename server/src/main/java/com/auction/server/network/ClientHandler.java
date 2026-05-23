@@ -56,6 +56,18 @@ public class ClientHandler implements Runnable {
     }
 
     private void processRequest(Request request) {
+        // Auto-rebind client ID if "Unknown" and request has a valid senderId
+        if ("Unknown".equals(clientId) && request.getSenderId() != null 
+                && !request.getSenderId().isEmpty() && !"Pending".equals(request.getSenderId())) {
+            com.auction.server.dao.UserDAO userDAO = new com.auction.server.dao.UserDAOImpl();
+            com.auction.shared.models.User user = userDAO.getUserById(request.getSenderId());
+            if (user != null && "ACTIVE".equals(user.getStatus())) {
+                setClientId(user.getId());
+                AuctionService.getInstance().registerClient(user.getId(), this);
+                System.out.println("[NETWORK] Auto-bound reconnected client for user: " + user.getId());
+            }
+        }
+
         // Quăng Request cho Dispatcher xử lý
         Response response = dispatcher.dispatch(request, this);
         

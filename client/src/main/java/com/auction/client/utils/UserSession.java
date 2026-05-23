@@ -53,6 +53,9 @@ public final class UserSession {
    */
   private String role;
 
+  /** Wallet balance of the logged-in user. */
+  private double walletBalance = 0.0;
+
   /** Title of the currently selected auction. */
   private String selectedAuctionTitle = "";
 
@@ -67,6 +70,12 @@ public final class UserSession {
 
   /** Description of the currently selected auction item. */
   private String selectedItemDescription = "";
+
+  /** End time of the currently selected auction item. */
+  private long selectedItemEndTime = 0;
+
+  /** Image data of the currently selected auction item. */
+  private byte[] selectedItemImageData;
 
   /** Filter to apply when navigating to My Bids view (e.g. "watching"). */
   private String pendingMyBidsFilter = "";
@@ -117,6 +126,22 @@ public final class UserSession {
 
   public void setSelectedItemDescription(final String description) {
     this.selectedItemDescription = description;
+  }
+
+  public long getSelectedItemEndTime() {
+    return selectedItemEndTime;
+  }
+
+  public void setSelectedItemEndTime(final long endTime) {
+    this.selectedItemEndTime = endTime;
+  }
+
+  public byte[] getSelectedItemImageData() {
+    return selectedItemImageData;
+  }
+
+  public void setSelectedItemImageData(final byte[] selectedItemImageData) {
+    this.selectedItemImageData = selectedItemImageData;
   }
 
   /**
@@ -174,6 +199,9 @@ public final class UserSession {
     username = null;
     email = null;
     role = null;
+    walletBalance = 0.0;
+    selectedItemEndTime = 0;
+    selectedItemImageData = null;
   }
 
   // ── Getters ───────────────────────────────────────────────
@@ -359,5 +387,23 @@ public final class UserSession {
       return first;
     }
     return first + " " + last;
+  }
+
+  /**
+   * Returns the wallet balance.
+   *
+   * @return the wallet balance
+   */
+  public double getWalletBalance() {
+    return walletBalance;
+  }
+
+  /**
+   * Sets the wallet balance.
+   *
+   * @param balance the new wallet balance
+   */
+  public void setWalletBalance(final double balance) {
+    this.walletBalance = balance;
   }
 }

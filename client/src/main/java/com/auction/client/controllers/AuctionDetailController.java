@@ -28,9 +28,10 @@ import javafx.util.Duration;
  *
  * <p>Features: Countdown timer, bidding, and dynamic history updates.
  */
+import javafx.scene.layout.BorderPane;
 public class AuctionDetailController implements Initializable {
 
-  @FXML private Label userLabel;
+  @FXML private BorderPane rootPane;
   @FXML private Label backLabel;
   @FXML private Label itemTitle;
   @FXML private Label itemMeta;
@@ -47,12 +48,13 @@ public class AuctionDetailController implements Initializable {
   @FXML private Button watchlistBtn;
   @FXML private VBox bidHistoryList;
   @FXML private Label noBidsLabel;
+  @FXML private VBox imageContainer;
   @FXML private TextField maxPriceField;
   @FXML private TextField autoBidIncrementField;
   @FXML private Label autoBidError;
   @FXML private Button setupAutoBidBtn;
   @FXML private CheckBox aggressiveModeCheckBox;
-  @FXML private Label walletBalanceLabel;
+  
 
   private String currentAuctionId;
   private String currentUserId;
@@ -65,7 +67,7 @@ public class AuctionDetailController implements Initializable {
     currentUserId = UserSession.getInstance().getUserId();
     // Read item info set by HomeController on card click
     currentAuctionId = UserSession.getInstance().getSelectedItemId();
-    userLabel.setText(UserSession.getInstance().getInitials());
+    
 
     // ── 0. Reset stale state from any previously viewed item ──
     BidService.getInstance().resetForItem();
@@ -79,6 +81,36 @@ public class AuctionDetailController implements Initializable {
         + "  ·  Seller: admin");
     itemDescription.setText(clickedDesc != null && !clickedDesc.isEmpty() ? clickedDesc
         : "No description available.");
+
+    final byte[] imgData = UserSession.getInstance().getSelectedItemImageData();
+    if (imgData != null && imgData.length > 0) {
+      final VBox placeholder = new VBox(new Label("Loading image..."));
+      placeholder.setAlignment(javafx.geometry.Pos.CENTER);
+      placeholder.setStyle("-fx-background-color: -bg-surface-alt; -fx-background-radius: 12px;");
+      placeholder.prefWidthProperty().bind(imageContainer.widthProperty().subtract(40));
+      placeholder.prefHeightProperty().bind(imageContainer.heightProperty().subtract(40));
+      imageContainer.getChildren().clear();
+      imageContainer.getChildren().add(placeholder);
+
+      java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+        try {
+          return new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imgData));
+        } catch (Exception e) {
+          return null;
+        }
+      }).thenAcceptAsync(img -> {
+        imageContainer.getChildren().clear();
+        if (img != null && !img.isError()) {
+          javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(img);
+          imgView.setPreserveRatio(true);
+          imgView.fitWidthProperty().bind(imageContainer.widthProperty().subtract(40));
+          imgView.fitHeightProperty().bind(imageContainer.heightProperty().subtract(40));
+          imageContainer.getChildren().add(imgView);
+        } else {
+          imageContainer.getChildren().add(new Label("Failed to load image"));
+        }
+      }, javafx.application.Platform::runLater);
+    }
 
     // ── 1. Wire ALL callbacks FIRST — before sending any network requests ──
     BidService.getInstance().setCallbacks(
@@ -95,11 +127,11 @@ public class AuctionDetailController implements Initializable {
               boolean isFresh = diff < 5000; // Less than 5 seconds old
 
               if (isMyBid && isFresh) {
-                ToastNotification.show(userLabel,
+                ToastNotification.show(rootPane,
                     "🎉 Bid placed! You are now the highest bidder at " + priceStr,
                     ToastNotification.Type.SUCCESS);
               } else if (currentHighestBidder.equals(currentUserId) && isFresh) {
-                ToastNotification.show(userLabel,
+                ToastNotification.show(rootPane,
                     "⚠️ You've been outbid! New price: " + priceStr,
                     ToastNotification.Type.WARNING);
               }
@@ -107,7 +139,7 @@ public class AuctionDetailController implements Initializable {
           currentHighestBidder = transaction.getBidderId();
           
           // Refresh wallet balance because it might have changed (bid placed or refund received)
-          fetchWalletBalance();
+          
         });
 
     BidService.getInstance().setOnAutoBidResult(response -> {
@@ -115,16 +147,30 @@ public class AuctionDetailController implements Initializable {
         setupAutoBidBtn.setText("Auto-Bid Active \u2713");
         setupAutoBidBtn.getStyleClass().removeAll("btn-primary", "btn-secondary");
         setupAutoBidBtn.getStyleClass().add("btn-autobid-active");
-        ToastNotification.show(userLabel, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
+        ToastNotification.show(rootPane, "Auto-Bid activated!", ToastNotification.Type.SUCCESS);
       } else {
         autoBidError.setText(response.getMessage());
-        ToastNotification.show(userLabel, response.getMessage(), ToastNotification.Type.DANGER);
+        ToastNotification.show(rootPane, response.getMessage(), ToastNotification.Type.DANGER);
       }
     });
 
     BidService.getInstance().setOnBidError(msg -> {
       bidError.setText(msg);
-      ToastNotification.show(userLabel, msg, ToastNotification.Type.DANGER);
+      ToastNotification.show(rootPane, msg, ToastNotification.Type.DANGER);
+    });
+
+    BidService.getInstance().setOnEndTimeReceived(newEndTime -> {
+      long currentNow = System.currentTimeMillis();
+      secondsRemaining = (newEndTime > currentNow) ? (int) ((newEndTime - currentNow) / 1000) : 0;
+      if (secondsRemaining <= 0) {
+        countdownTimer.setText("ENDED");
+        if (countdownTimeline != null) {
+          countdownTimeline.stop();
+        }
+        onAuctionEnded();
+      } else {
+        updateTimerDisplay();
+      }
     });
 
     bidAmountField.textProperty().addListener((obs, old, val) -> bidError.setText(""));
@@ -139,25 +185,29 @@ public class AuctionDetailController implements Initializable {
     auctionStatus.getStyleClass().add("status-open");
     noBidsLabel.setVisible(true);
     currentHighestBidder = "";
+
+    // Set countdown based on UserSession
+    long initialEndTime = UserSession.getInstance().getSelectedItemEndTime();
+    long now = System.currentTimeMillis();
+    secondsRemaining = (initialEndTime > now) ? (int) ((initialEndTime - now) / 1000) : 0;
+
     startCountdown();
 
     // ── 3. Request live status and wallet balance AFTER callbacks are wired ──
-    BidService.getInstance().setOnWalletBalanceUpdated(this::updateWalletUI);
+    
     BidService.getInstance().requestStatus();
-    fetchWalletBalance();
-  }
-
-  private void fetchWalletBalance() {
-    NetworkClientService.getInstance().sendRequest(
-        new Request(com.auction.shared.dto.MessageType.GET_WALLET_BALANCE,
-            currentUserId, ""));
-  }
-
-  private void updateWalletUI(final double balance) {
-    walletBalanceLabel.setText(String.format("$%,.2f", balance));
+    
   }
 
   private void startCountdown() {
+    if (secondsRemaining <= 0) {
+      countdownTimer.setText("ENDED");
+      onAuctionEnded();
+      return;
+    }
+    if (countdownTimeline != null) {
+      countdownTimeline.stop();
+    }
     countdownTimeline = new Timeline(
         new KeyFrame(Duration.seconds(1), e -> {
           if (secondsRemaining > 0) {
@@ -267,7 +317,7 @@ public class AuctionDetailController implements Initializable {
         new Request(com.auction.shared.dto.MessageType.WATCHLIST_ADD, currentUserId, currentAuctionId));
     watchlistBtn.setText("Watching \u2713");
     watchlistBtn.setDisable(true);
-    ToastNotification.show(userLabel, "[INFO] Added to Watchlist", ToastNotification.Type.INFO);
+    ToastNotification.show(rootPane, "[INFO] Added to Watchlist", ToastNotification.Type.INFO);
   }
 
   @FXML
@@ -338,7 +388,9 @@ public class AuctionDetailController implements Initializable {
       // Winning badge is shown ONLY on the highest bid if it belongs to the current user
       final String badge = (isHighest && isMyBid) ? "winning" : "";
 
-      final String displayName = isMyBid ? UserSession.getInstance().getUsername() : tx.getBidderId();
+      final String bidderUsername = (tx.getBidderUsername() != null && !tx.getBidderUsername().isEmpty()) 
+          ? tx.getBidderUsername() : tx.getBidderId();
+      final String displayName = isMyBid ? UserSession.getInstance().getUsername() : bidderUsername;
 
       String timeStr = "just now";
       if (tx.getTimestamp() > 0) {

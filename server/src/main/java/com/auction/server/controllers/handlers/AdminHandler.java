@@ -78,6 +78,20 @@ public class AdminHandler implements CommandHandler {
             boolean statusUpdated = walletDAO.updateRequestStatus(requestId, "APPROVED");
             if (statusUpdated) {
                 walletDAO.updateBalance(target.userId, target.amount);
+                
+                // Notify the user client immediately of the approval!
+                double newBalance = walletDAO.getBalance(target.userId);
+                com.auction.server.services.AuctionService.getInstance().sendToClient(
+                    target.userId,
+                    new Response(MessageType.WALLET_BALANCE_RESPONSE, "SUCCESS", "Balance updated", String.valueOf(newBalance))
+                );
+                // Also send their updated history!
+                List<TopupRequest> userHistory = walletDAO.getHistory(target.userId);
+                com.auction.server.services.AuctionService.getInstance().sendToClient(
+                    target.userId,
+                    new Response(MessageType.WALLET_HISTORY_RESPONSE, "SUCCESS", "History updated", gson.toJson(userHistory))
+                );
+                
                 return new Response(MessageType.ADMIN_APPROVE_TOPUP, "SUCCESS", "Request approved", null);
             }
         }
@@ -85,9 +99,27 @@ public class AdminHandler implements CommandHandler {
     }
 
     private Response rejectTopup(String requestId) {
-        boolean success = walletDAO.updateRequestStatus(requestId, "REJECTED");
-        return new Response(MessageType.ADMIN_REJECT_TOPUP, success ? "SUCCESS" : "FAIL",
-                success ? "Request rejected" : "Failed to reject request", null);
+        List<TopupRequest> pending = walletDAO.getPendingRequests();
+        TopupRequest target = null;
+        for (TopupRequest tr : pending) {
+            if (tr.id.equals(requestId)) {
+                target = tr;
+                break;
+            }
+        }
+        if (target != null) {
+            boolean success = walletDAO.updateRequestStatus(requestId, "REJECTED");
+            if (success) {
+                // Notify user client of the history update
+                List<TopupRequest> userHistory = walletDAO.getHistory(target.userId);
+                com.auction.server.services.AuctionService.getInstance().sendToClient(
+                    target.userId,
+                    new Response(MessageType.WALLET_HISTORY_RESPONSE, "SUCCESS", "History updated", gson.toJson(userHistory))
+                );
+                return new Response(MessageType.ADMIN_REJECT_TOPUP, "SUCCESS", "Request rejected", null);
+            }
+        }
+        return new Response(MessageType.ADMIN_REJECT_TOPUP, "FAIL", "Failed to reject request", null);
     }
 
     private Response banUser(String userId) {

@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    WalletView.fxml
+    Controller : com.auction.client.controllers.WalletController
+    Màn hình ví tiền — xem số dư, nạp tiền, rút tiền, lịch sử giao dịch.
+-->
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.auction.client.controllers.WalletController"
+           fx:id="rootPane"
+           maxWidth="Infinity" maxHeight="Infinity"
+           style="-fx-background-color: -bg-main;">
+    <BorderPane maxWidth="Infinity" maxHeight="Infinity"
+                style="-fx-background-color: transparent;">
+
+
+
+    <!-- ══ LEFT SIDEBAR ════════════════════════════════════ -->
+    <left>
+        <VBox prefWidth="190" spacing="3" styleClass="sidebar">
+            <Label text="WALLET"
+                   style="-fx-font-size:10px;-fx-font-weight:bold;
+                          -fx-text-fill: -text-muted;-fx-padding:0 8px 8px 8px;"/>
+            <Button fx:id="navOverview"  text="Overview"
+                    maxWidth="Infinity" onAction="#onTabOverview"
+                    styleClass="nav-item-active" style="-fx-effect:null;"/>
+            <Button fx:id="navDeposit"   text="Nạp tiền"
+                    maxWidth="Infinity" onAction="#onTabDeposit"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="navWithdraw"  text="Rút tiền"
+                    maxWidth="Infinity" onAction="#onTabWithdraw"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button fx:id="navHistory"   text="Lịch sử"
+                    maxWidth="Infinity" onAction="#onTabHistory"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-opacity:0.5;"/>
+            <Button text="Home"     maxWidth="Infinity" onAction="#onHome"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+            <Button text="Sign out" maxWidth="Infinity" onAction="#onLogout"
+                    styleClass="nav-item" style="-fx-effect:null;"/>
+        </VBox>
+    </left>
+
+    <!-- ══ MAIN CONTENT ═════════════════════════════════════ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="0" style="-fx-padding:24px;">
+
+                <!-- ── OVERVIEW TAB ───────────────────────── -->
+                <VBox fx:id="overviewTab" spacing="16">
+
+                    <!-- Balance card -->
+                    <VBox styleClass="card" style="-fx-padding:24px;">
+                        <Label text="Số dư khả dụng"
+                               style="-fx-font-size:12px;-fx-text-fill: -text-secondary;
+                                      -fx-font-family:'Segoe UI';"/>
+                        <Label fx:id="availableBalance" text="\$2,450.00"
+                               style="-fx-font-size:34px;-fx-font-weight:bold;
+                                      -fx-text-fill: -text-main;-fx-font-family:'Segoe UI';
+                                      -fx-padding:4px 0 6px 0;"/>
+                        <HBox spacing="16">
+                            <Label fx:id="holdingBalance"
+                                   text="Đang giữ: $780.00"
+                                   style="-fx-font-size:12px;-fx-text-fill: -warning;
+                                          -fx-font-family:'Segoe UI';"/>
+                            <Label fx:id="totalBalance"
+                                   text="Tổng: $3,230.00"
+                                   style="-fx-font-size:12px;-fx-text-fill: -text-secondary;
+                                          -fx-font-family:'Segoe UI';"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Quick action buttons -->
+                    <HBox spacing="12">
+                        <VBox HBox.hgrow="ALWAYS" alignment="CENTER"
+                              onMouseClicked="#onTabDeposit"
+                              styleClass="card, card-hover"
+                              style="-fx-padding:16px 12px;">
+                            <Label text="+"
+                                   style="-fx-font-size:22px;-fx-text-fill: -info;
+                                          -fx-font-weight:bold;"/>
+                            <Label text="Nạp tiền"
+                                   style="-fx-font-size:12px;-fx-text-fill: -text-secondary;
+                                          -fx-padding:4px 0 0 0;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" alignment="CENTER"
+                              onMouseClicked="#onTabWithdraw"
+                              styleClass="card, card-hover"
+                              style="-fx-padding:16px 12px;">
+                            <Label text="↑"
+                                   style="-fx-font-size:22px;-fx-text-fill: -primary;
+                                          -fx-font-weight:bold;"/>
+                            <Label text="Rút tiền"
+                                   style="-fx-font-size:12px;-fx-text-fill: -text-secondary;
+                                          -fx-padding:4px 0 0 0;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" alignment="CENTER"
+                              onMouseClicked="#onTabHistory"
+                              styleClass="card, card-hover"
+                              style="-fx-padding:16px 12px;">
+                            <Label text="↕"
+                                   style="-fx-font-size:22px;-fx-text-fill: -text-muted;
+                                          -fx-font-weight:bold;"/>
+                            <Label text="Lịch sử"
+                                   style="-fx-font-size:12px;-fx-text-fill: -text-secondary;
+                                          -fx-padding:4px 0 0 0;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Recent transactions -->
+                    <Label text="Giao dịch gần đây"
+                           style="-fx-font-size:14px;-fx-font-weight:bold;
+                                  -fx-text-fill: -text-main;"/>
+                    <VBox fx:id="recentTxContainer" styleClass="card"/>
+                </VBox>
+
+                <!-- ── DEPOSIT TAB (hidden) ────────────────── -->
+                <VBox fx:id="depositTab" spacing="16"
+                      visible="false" managed="false">
+
+                    <Label text="Nạp tiền vào ví"
+                           style="-fx-font-size:18px;-fx-font-weight:bold;
+                                  -fx-text-fill: -text-main;-fx-font-family:'Segoe UI';"/>
+
+                    <VBox maxWidth="540" spacing="14" styleClass="card" style="-fx-padding:24px;">
+
+                        <!-- Amount field -->
+                        <VBox spacing="6">
+                            <Label text="Số tiền nạp (USD)"
+                                   style="-fx-font-size:12px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                            <TextField fx:id="depositAmountField"
+                                       promptText="0.00"
+                                       styleClass="text-field-base"
+                                       maxWidth="Infinity"
+                                       style="-fx-font-size:22px;-fx-font-weight:bold;"/>
+                            <Label fx:id="depositAmountError" text=""
+                                   styleClass="field-error"
+                                   style="-fx-min-height:16px;"/>
+                        </VBox>
+
+                        <!-- Payment method -->
+                        <VBox spacing="6">
+                            <Label text="Phương thức thanh toán"
+                                   style="-fx-font-size:12px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                            <ComboBox fx:id="depositMethodCombo"
+                                      maxWidth="Infinity"
+                                      style="-fx-font-size:13px;"/>
+                        </VBox>
+
+                        <!-- Summary rows -->
+                        <Separator/>
+                        <HBox>
+                            <Label text="Số dư hiện tại"
+                                   style="-fx-font-size:13px;-fx-text-fill: -text-secondary;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="depositCurrentBalance" text="\$2,450.00"
+                                   style="-fx-font-size:13px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Sau khi nạp"
+                                   style="-fx-font-size:13px;-fx-text-fill: -text-secondary;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="depositAfterBalance" text="\$2,450.00"
+                                   style="-fx-font-size:13px;-fx-font-weight:bold;
+                                          -fx-text-fill: -success;"/>
+                        </HBox>
+                        <Separator/>
+
+                        <!-- Confirm button -->
+                        <Button fx:id="confirmDepositBtn"
+                                text="Xác nhận nạp tiền"
+                                maxWidth="Infinity"
+                                onAction="#onConfirmDeposit"
+                                styleClass="button"
+                                style="-fx-background-color: -info;-fx-text-fill: -text-on-primary;
+                                       -fx-font-weight:bold;-fx-font-size:14px;"/>
+                    </VBox>
+
+                    <!-- Info box -->
+                    <HBox maxWidth="540" spacing="10" alignment="TOP_LEFT"
+                          styleClass="badge-info"
+                          style="-fx-border-color: -info;-fx-border-width:1px;
+                                 -fx-border-radius:6px;-fx-background-radius:6px;
+                                 -fx-padding:12px;">
+                        <Label text="ℹ"
+                               style="-fx-font-size:14px;-fx-text-fill: -info;"/>
+                        <Label text="Tiền sẽ có sẵn ngay sau khi giao dịch được xác nhận (thường dưới 5 phút)."
+                               style="-fx-font-size:12px;-fx-text-fill: -info;
+                                      -fx-wrap-text:true;"
+                               HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                </VBox>
+
+                <!-- ── WITHDRAW TAB (hidden) ───────────────── -->
+                <VBox fx:id="withdrawTab" spacing="16"
+                      visible="false" managed="false">
+
+                    <Label text="Rút tiền về tài khoản"
+                           style="-fx-font-size:18px;-fx-font-weight:bold;
+                                  -fx-text-fill: -text-main;-fx-font-family:'Segoe UI';"/>
+
+                    <VBox maxWidth="540" spacing="14" styleClass="card" style="-fx-padding:24px;">
+
+                        <!-- Amount -->
+                        <VBox spacing="6">
+                            <Label text="Số tiền rút (USD)"
+                                   style="-fx-font-size:12px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                            <TextField fx:id="withdrawAmountField"
+                                       promptText="0.00"
+                                       styleClass="text-field-base"
+                                       maxWidth="Infinity"
+                                       style="-fx-font-size:22px;-fx-font-weight:bold;"/>
+                            <Label fx:id="withdrawAmountError" text=""
+                                   styleClass="field-error"
+                                   style="-fx-min-height:16px;"/>
+                        </VBox>
+
+                        <!-- Bank account -->
+                        <VBox spacing="6">
+                            <Label text="Tài khoản ngân hàng"
+                                   style="-fx-font-size:12px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                            <ComboBox fx:id="withdrawBankCombo"
+                                      maxWidth="Infinity"
+                                      style="-fx-font-size:13px;"/>
+                        </VBox>
+
+                        <!-- Summary -->
+                        <Separator/>
+                        <HBox>
+                            <Label text="Số dư khả dụng"
+                                   style="-fx-font-size:13px;-fx-text-fill: -text-secondary;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="withdrawAvailableBalance" text="\$2,450.00"
+                                   style="-fx-font-size:13px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Phí rút"
+                                   style="-fx-font-size:13px;-fx-text-fill: -text-secondary;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Label text="\$0.00"
+                                   style="-fx-font-size:13px;-fx-font-weight:bold;
+                                          -fx-text-fill: -text-main;"/>
+                        </HBox>
+                        <HBox>
+                            <Label text="Bạn nhận được"
+                                   style="-fx-font-size:13px;-fx-text-fill: -text-secondary;"
+                                   HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="withdrawReceiveAmount" text="\$0.00"
+                                   style="-fx-font-size:13px;-fx-font-weight:bold;
+                                          -fx-text-fill: -success;"/>
+                        </HBox>
+                        <Separator/>
+
+                        <!-- Confirm -->
+                        <Button fx:id="confirmWithdrawBtn"
+                                text="Xác nhận rút tiền"
+                                maxWidth="Infinity"
+                                onAction="#onConfirmWithdraw"
+                                styleClass="button, btn-primary"
+                                style="-fx-font-size:14px;"/>
+                    </VBox>
+
+                    <!-- Warning box -->
+                    <HBox maxWidth="540" spacing="10" alignment="TOP_LEFT"
+                          styleClass="badge-warning"
+                          style="-fx-border-color: -warning;-fx-border-width:1px;
+                                 -fx-border-radius:6px;-fx-background-radius:6px;
+                                 -fx-padding:12px;">
+                        <Label text="⏱"
+                               style="-fx-font-size:14px;-fx-text-fill: -warning;"/>
+                        <Label text="Tiền sẽ về tài khoản trong 1–3 ngày làm việc. Số tiền đang giữ (hold) không thể rút."
+                               style="-fx-font-size:12px;-fx-text-fill: -warning;
+                                      -fx-wrap-text:true;"
+                               HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                </VBox>
+
+                <!-- ── HISTORY TAB (hidden) ────────────────── -->
+                <VBox fx:id="historyTab" spacing="16"
+                      visible="false" managed="false">
+
+                    <!-- Stats row -->
+                    <HBox spacing="12">
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: -bg-surface-alt;
+                                     -fx-border-radius:8px;-fx-background-radius:8px;
+                                     -fx-padding:14px;">
+                            <Label fx:id="statDeposited" text="+$1,500"
+                                   style="-fx-font-size:20px;-fx-font-weight:bold;
+                                          -fx-text-fill: -success;"/>
+                            <Label text="Đã nạp tháng này"
+                                   style="-fx-font-size:11px;-fx-text-fill: -text-secondary;
+                                          -fx-padding:2px 0 0 0;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: -bg-surface-alt;
+                                     -fx-border-radius:8px;-fx-background-radius:8px;
+                                     -fx-padding:14px;">
+                            <Label fx:id="statSpent" text="-$990"
+                                   style="-fx-font-size:20px;-fx-font-weight:bold;
+                                          -fx-text-fill: -primary;"/>
+                            <Label text="Đã chi tháng này"
+                                   style="-fx-font-size:11px;-fx-text-fill: -text-secondary;
+                                          -fx-padding:2px 0 0 0;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Filter row -->
+                    <HBox spacing="8">
+                        <Button fx:id="filterAll"     text="Tất cả"
+                                onAction="#onFilterAll"
+                                styleClass="button, btn-secondary"
+                                style="-fx-effect:null;-fx-padding:6px 14px;"/>
+                        <Button fx:id="filterDeposit" text="Nạp"
+                                onAction="#onFilterDeposit"
+                                styleClass="button, btn-secondary"
+                                style="-fx-effect:null;-fx-padding:6px 14px;"/>
+                        <Button fx:id="filterWithdraw" text="Rút"
+                                onAction="#onFilterWithdraw"
+                                styleClass="button, btn-secondary"
+                                style="-fx-effect:null;-fx-padding:6px 14px;"/>
+                        <Button fx:id="filterHold"    text="Đang giữ"
+                                onAction="#onFilterHold"
+                                styleClass="button, btn-secondary"
+                                style="-fx-effect:null;-fx-padding:6px 14px;"/>
+                    </HBox>
+
+                    <!-- Transaction list -->
+                    <Label text="Tất cả giao dịch"
+                           style="-fx-font-size:14px;-fx-font-weight:bold;
+                                  -fx-text-fill: -text-main;"/>
+                    <VBox fx:id="historyTxContainer" styleClass="card"/>
+
+                    <!-- Empty state -->
+                    <VBox fx:id="historyEmpty" alignment="CENTER" spacing="8"
+                          style="-fx-padding:40px;" visible="false" managed="false">
+                        <Label text="Không có giao dịch nào"
+                               style="-fx-font-size:15px;-fx-text-fill: -text-muted;"/>
+                    </VBox>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    </BorderPane>
+</StackPane>

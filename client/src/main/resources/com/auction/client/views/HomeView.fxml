@@ -17,54 +17,7 @@
             fx:id="rootPane"
             maxWidth="Infinity" maxHeight="Infinity">
 
-    <!-- ════════════════════════════════════════════════════
-         TOP NAVIGATION BAR
-         ════════════════════════════════════════════════════ -->
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="top-nav">
 
-            <!-- Logo -->
-            <HBox alignment="CENTER_LEFT" spacing="0" onMouseClicked="#onHome" style="-fx-cursor: hand;">
-                <Label text="Auction" styleClass="heading-3" style="-fx-text-fill: -primary; -fx-font-size: 22px;"/>
-                <Label text="Hub"     styleClass="heading-3" style="-fx-text-fill: -text-main; -fx-font-size: 22px;"/>
-            </HBox>
-
-            <!-- Search bar -->
-            <HBox alignment="CENTER" HBox.hgrow="ALWAYS" maxWidth="600" styleClass="search-bar-container">
-                <TextField fx:id="searchField"
-                           promptText="Search for anything..."
-                           HBox.hgrow="ALWAYS"
-                           styleClass="search-field"
-                           onAction="#onSearch"/>
-                <Button text="Search"
-                        onAction="#onSearch"
-                        styleClass="button, btn-primary"
-                        style="-fx-background-radius: 0 24px 24px 0; -fx-padding: 8px 24px;"/>
-            </HBox>
-
-            <!-- Push nav actions to the right -->
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Nav Actions -->
-            <HBox alignment="CENTER" spacing="8">
-                <Button fx:id="watchlistBtn" text="Watchlist" onAction="#onWatchlist" styleClass="btn-ghost"/>
-                <Button fx:id="myBidsBtn"    text="My bids"   onAction="#onMyBids"    styleClass="btn-ghost"/>
-                <Button fx:id="adminBtn"     text="🛡 Admin"  onAction="#onAdmin"    visible="false" managed="false" styleClass="btn-primary" style="-fx-background-color: -info;"/>
-                <Button fx:id="sellBtn"      text="+ Sell"    onAction="#onSell"     styleClass="btn-primary"/>
-                
-                <Separator orientation="VERTICAL" style="-fx-padding: 0 10px;"/>
-                
-                <Button text="☀/🌙" onAction="#onToggleTheme" styleClass="btn-ghost" style="-fx-font-size: 16px;"/>
-                
-                <Label fx:id="userLabel"
-                       text="JD"
-                       onMouseClicked="#onProfile"
-                       styleClass="badge"
-                       style="-fx-background-color: -primary-light; -fx-text-fill: -primary; -fx-padding: 8px 14px; -fx-background-radius: 20px; -fx-cursor: hand;"/>
-            </HBox>
-
-        </HBox>
-    </top>
 
     <!-- ════════════════════════════════════════════════════
          LEFT SIDEBAR — category navigation
@@ -99,6 +52,19 @@
     <center>
         <ScrollPane fitToWidth="true" styleClass="scroll-pane">
             <VBox spacing="30" style="-fx-padding: 30px;">
+
+                <!-- Search bar -->
+                <HBox alignment="CENTER" maxWidth="600" styleClass="search-bar-container">
+                    <TextField fx:id="searchField"
+                               promptText="Search for anything..."
+                               HBox.hgrow="ALWAYS"
+                               styleClass="search-field"
+                               onAction="#onSearch"/>
+                    <Button text="Search"
+                            onAction="#onSearch"
+                            styleClass="button, btn-primary"
+                            style="-fx-background-radius: 0 24px 24px 0; -fx-padding: 8px 24px;"/>
+                </HBox>
 
                 <!-- ── Section: Ending Soon ─────────────────── -->
                 <VBox spacing="15">

@@ -31,19 +31,23 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
     @Override
     public List<BidTransaction> getHistoryByItem(String itemId) {
         List<BidTransaction> history = new ArrayList<>();
-        String sql = "SELECT * FROM bid_transactions WHERE item_id = ? ORDER BY timestamp ASC";
+        String sql = "SELECT bt.*, u.username AS bidder_username FROM bid_transactions bt "
+                   + "LEFT JOIN users u ON bt.bidder_id = u.id "
+                   + "WHERE bt.item_id = ? ORDER BY bt.timestamp ASC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, itemId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    history.add(new BidTransaction(
+                    BidTransaction tx = new BidTransaction(
                         rs.getString("id"),
                         rs.getString("item_id"),
                         rs.getString("bidder_id"),
                         rs.getDouble("bid_amount"),
                         rs.getLong("timestamp")
-                    ));
+                    );
+                    tx.setBidderUsername(rs.getString("bidder_username"));
+                    history.add(tx);
                 }
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -53,18 +57,22 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
     @Override
     public List<BidTransaction> getAllTransactions() {
         List<BidTransaction> history = new ArrayList<>();
-        String sql = "SELECT * FROM bid_transactions ORDER BY timestamp DESC";
+        String sql = "SELECT bt.*, u.username AS bidder_username FROM bid_transactions bt "
+                   + "LEFT JOIN users u ON bt.bidder_id = u.id "
+                   + "ORDER BY bt.timestamp DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
-                history.add(new BidTransaction(
+                BidTransaction tx = new BidTransaction(
                     rs.getString("id"),
                     rs.getString("item_id"),
                     rs.getString("bidder_id"),
                     rs.getDouble("bid_amount"),
                     rs.getLong("timestamp")
-                ));
+                );
+                tx.setBidderUsername(rs.getString("bidder_username"));
+                history.add(tx);
             }
         } catch (SQLException e) { e.printStackTrace(); }
         return history;
@@ -119,5 +127,23 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
             e.printStackTrace();
         }
         return bidders;
+    }
+
+    @Override
+    public List<String> getBiddedItemIds(String userId) {
+        List<String> items = new ArrayList<>();
+        String sql = "SELECT DISTINCT item_id FROM bid_transactions WHERE bidder_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, userId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    items.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return items;
     }
 }

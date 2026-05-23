@@ -12,6 +12,7 @@ public abstract class Item extends Entity {
     protected long endTime;
     protected String sellerId;
     protected String status; 
+    protected byte[] imageData;
 
 
     public Item(String id, String name, String description, ItemCategory category, double startingPrice, long startTime, long endTime, String sellerId) {
@@ -56,6 +57,9 @@ public abstract class Item extends Entity {
 
     public String getSellerId() {return sellerId;}
     public void setSellerId(String sellerId) {this.sellerId = sellerId;}
+
+    public byte[] getImageData() { return imageData; }
+    public void setImageData(byte[] imageData) { this.imageData = imageData; }
 
     public abstract void printInfo();
 }

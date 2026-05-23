@@ -23,6 +23,10 @@ import java.util.concurrent.TimeUnit;
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 public class AuctionServiceTest {
 
+    static {
+        System.setProperty("testMode", "true");
+    }
+
     private AuctionService manager;
 
     @BeforeEach
@@ -55,6 +59,7 @@ public class AuctionServiceTest {
                 @Override public java.util.List<Item> getItemsBySellerId(String sellerId) { return java.util.Collections.emptyList(); }
                 @Override public java.util.List<Item> getAllItems() { return java.util.Collections.emptyList(); }
                 @Override public int getActiveAuctionCount() { return 0; }
+                @Override public boolean resetItemForReauction(String itemId) { return true; }
             });
 
             java.lang.reflect.Field bidDaoField = AuctionService.class.getDeclaredField("bidDAO");
@@ -103,6 +108,17 @@ public class AuctionServiceTest {
                         }
                     }
                     return bidders;
+                }
+
+                @Override
+                public java.util.List<String> getBiddedItemIds(String userId) {
+                    java.util.List<String> items = new java.util.ArrayList<>();
+                    for (BidTransaction tx : mockBids) {
+                        if (tx.getBidderId().equals(userId) && !items.contains(tx.getItemId())) {
+                            items.add(tx.getItemId());
+                        }
+                    }
+                    return items;
                 }
             });
 
@@ -257,4 +273,5 @@ public class AuctionServiceTest {
         // Subsequent calls should be safe
         manager.shutdown();
     }
+
 }
