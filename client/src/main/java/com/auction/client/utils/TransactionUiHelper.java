@@ -36,25 +36,26 @@ public final class TransactionUiHelper {
     final HBox row = new HBox(12);
     row.setAlignment(Pos.CENTER_LEFT);
     row.setStyle("-fx-padding:12px 14px;"
-        + (last ? "" : "-fx-border-color:transparent transparent border-color transparent;"
+        + (last ? "" : "-fx-border-color:transparent transparent -border-color transparent;"
             + "-fx-border-width:0 0 1px 0;"));
 
     final Label icon = new Label(getIcon(type));
     icon.setStyle("-fx-min-width:36px;-fx-min-height:36px;-fx-background-radius:18px;"
-        + "-fx-alignment:center;-fx-font-weight:bold;" + getIconStyle(type));
+        + "-fx-alignment:center;-fx-font-weight:bold;");
+    icon.getStyleClass().add(getIconStyleClass(type));
 
     final Label descLabel = new Label(desc);
     descLabel.setStyle("-fx-font-size:13px;-fx-font-weight:bold;");
 
     final Label dateLabel = new Label(date);
-    dateLabel.setStyle("-fx-font-size:11px;-fx-text-fill:text-secondary;");
+    dateLabel.setStyle("-fx-font-size:11px;-fx-text-fill:-text-secondary;");
 
     final VBox body = new VBox(2, descLabel, dateLabel);
     HBox.setHgrow(body, Priority.ALWAYS);
 
     final Label amtLabel = new Label(amt);
     amtLabel.setStyle("-fx-font-weight:bold;"
-        + (amt.startsWith("+") ? "-fx-text-fill:#5BA55B;" : "-fx-text-fill:#E53238;"));
+        + (amt.startsWith("+") ? "-fx-text-fill:-success;" : "-fx-text-fill:-primary;"));
 
     row.getChildren().addAll(icon, body, amtLabel);
     return row;
@@ -76,16 +77,16 @@ public final class TransactionUiHelper {
   }
 
   /**
-   * Returns the CSS background and text-fill style for the icon circle.
+   * Returns the style class for the icon badge based on transaction type.
    *
    * @param type transaction type
-   * @return CSS style string
+   * @return style class string
    */
-  private static String getIconStyle(final String type) {
+  private static String getIconStyleClass(final String type) {
     return switch (type) {
-      case "deposit", "refund" -> "-fx-background-color:#EAF5EA;-fx-text-fill:#5BA55B;";
-      case "hold"              -> "-fx-background-color:#FEF6E6;-fx-text-fill:#F5A623;";
-      default                  -> "-fx-background-color:#FDECEA;-fx-text-fill:#E53238;";
+      case "deposit", "refund" -> "badge-success";
+      case "hold"              -> "badge-warning";
+      default                  -> "badge-danger";
     };
   }
 }

@@ -190,8 +190,45 @@ public class HomeController implements Initializable {
     final String price = String.format("$%.2f", item.getCurrentHighestBid());
     final String category = item.getCategory().name();
     
-    final StackPane imgBox = new StackPane(new Label("No image"));
+    final StackPane imgBox = new StackPane();
     imgBox.getStyleClass().add("card-img-placeholder");
+    imgBox.setPrefWidth(180);
+    imgBox.setPrefHeight(120);
+    imgBox.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+    imgBox.setMaxWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+    imgBox.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+    imgBox.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+
+    byte[] imgData = item.getImageData();
+    if (imgData != null && imgData.length > 0) {
+      final VBox placeholder = new VBox(new Label("Loading..."));
+      placeholder.setAlignment(Pos.CENTER);
+      placeholder.setStyle("-fx-background-color: -bg-surface-alt; -fx-background-radius: 8px;");
+      placeholder.prefWidthProperty().bind(imgBox.widthProperty());
+      placeholder.prefHeightProperty().bind(imgBox.heightProperty());
+      imgBox.getChildren().add(placeholder);
+
+      java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+        try {
+          return new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imgData));
+        } catch (Exception e) {
+          return null;
+        }
+      }).thenAcceptAsync(img -> {
+        imgBox.getChildren().clear();
+        if (img != null && !img.isError()) {
+          javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(img);
+          imgView.setPreserveRatio(true);
+          imgView.fitWidthProperty().bind(imgBox.widthProperty());
+          imgView.fitHeightProperty().bind(imgBox.heightProperty());
+          imgBox.getChildren().add(imgView);
+        } else {
+          imgBox.getChildren().add(new Label("No image"));
+        }
+      }, Platform::runLater);
+    } else {
+      imgBox.getChildren().add(new Label("No image"));
+    }
 
     final Label catChip = new Label(category);
     catChip.getStyleClass().addAll("badge", "badge-info");
@@ -224,6 +261,7 @@ public class HomeController implements Initializable {
       UserSession.getInstance().setSelectedItemDescription(item.getDescription());
       UserSession.getInstance().setSelectedItemPrice(item.getCurrentHighestBid());
       UserSession.getInstance().setSelectedItemEndTime(item.getEndTime());
+      UserSession.getInstance().setSelectedItemImageData(item.getImageData());
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
     return card;

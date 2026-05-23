@@ -31,7 +31,7 @@
                     <VBox HBox.hgrow="ALWAYS" spacing="16">
 
                         <!-- Image placeholder card -->
-                        <VBox alignment="CENTER" styleClass="auction-image-card"
+                        <VBox fx:id="imageContainer" alignment="CENTER" styleClass="auction-image-card"
                                minHeight="240" prefHeight="360" maxHeight="450">
                             <Label text="📷" style="-fx-font-size: 36px; -fx-opacity: 0.2;"/>
                             <Label text="No product image available" styleClass="body-small"

@@ -48,6 +48,7 @@ public class AuctionDetailController implements Initializable {
   @FXML private Button watchlistBtn;
   @FXML private VBox bidHistoryList;
   @FXML private Label noBidsLabel;
+  @FXML private VBox imageContainer;
   @FXML private TextField maxPriceField;
   @FXML private TextField autoBidIncrementField;
   @FXML private Label autoBidError;
@@ -80,6 +81,36 @@ public class AuctionDetailController implements Initializable {
         + "  ·  Seller: admin");
     itemDescription.setText(clickedDesc != null && !clickedDesc.isEmpty() ? clickedDesc
         : "No description available.");
+
+    final byte[] imgData = UserSession.getInstance().getSelectedItemImageData();
+    if (imgData != null && imgData.length > 0) {
+      final VBox placeholder = new VBox(new Label("Loading image..."));
+      placeholder.setAlignment(javafx.geometry.Pos.CENTER);
+      placeholder.setStyle("-fx-background-color: -bg-surface-alt; -fx-background-radius: 12px;");
+      placeholder.prefWidthProperty().bind(imageContainer.widthProperty().subtract(40));
+      placeholder.prefHeightProperty().bind(imageContainer.heightProperty().subtract(40));
+      imageContainer.getChildren().clear();
+      imageContainer.getChildren().add(placeholder);
+
+      java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+        try {
+          return new javafx.scene.image.Image(new java.io.ByteArrayInputStream(imgData));
+        } catch (Exception e) {
+          return null;
+        }
+      }).thenAcceptAsync(img -> {
+        imageContainer.getChildren().clear();
+        if (img != null && !img.isError()) {
+          javafx.scene.image.ImageView imgView = new javafx.scene.image.ImageView(img);
+          imgView.setPreserveRatio(true);
+          imgView.fitWidthProperty().bind(imageContainer.widthProperty().subtract(40));
+          imgView.fitHeightProperty().bind(imageContainer.heightProperty().subtract(40));
+          imageContainer.getChildren().add(imgView);
+        } else {
+          imageContainer.getChildren().add(new Label("Failed to load image"));
+        }
+      }, javafx.application.Platform::runLater);
+    }
 
     // ── 1. Wire ALL callbacks FIRST — before sending any network requests ──
     BidService.getInstance().setCallbacks(

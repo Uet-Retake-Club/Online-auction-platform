@@ -68,6 +68,7 @@ public class GetMyBidsHandlerTest {
             @Override public List<Item> getItemsBySellerId(String sellerId) { return Collections.emptyList(); }
             @Override public List<Item> getAllItems() { return Collections.emptyList(); }
             @Override public int getActiveAuctionCount() { return 0; }
+            @Override public boolean resetItemForReauction(String itemId) { return true; }
         };
 
         BidTransactionDAO mockBidDAO = new BidTransactionDAO() {

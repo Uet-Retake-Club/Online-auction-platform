@@ -205,7 +205,15 @@ public class SellerController implements Initializable {
     badge.setPrefWidth(100);
 
     final long endTime = item.has("endTime") ? item.get("endTime").getAsLong() : 0L;
-    final Button action = buildActionButton(status, itemId, name, category, description, currentPrice, startPrice, endTime);
+    final String base64Image = item.has("imageData") && !item.get("imageData").isJsonNull() ? item.get("imageData").getAsString() : "";
+    byte[] imgBytes = null;
+    if (!base64Image.isEmpty()) {
+      try {
+        imgBytes = java.util.Base64.getDecoder().decode(base64Image);
+      } catch (IllegalArgumentException ignored) {}
+    }
+
+    final Button action = buildActionButton(status, itemId, name, category, description, currentPrice, startPrice, endTime, imgBytes);
     row.getChildren().addAll(titleLbl, currentBidLbl, startPriceLbl, timeLbl, badge, action);
     return row;
   }
@@ -254,7 +262,8 @@ public class SellerController implements Initializable {
 
   private Button buildActionButton(final String status, final String itemId,
       final String name, final String category, final String description,
-      final double currentPrice, final double startPrice, final long endTime) {
+      final double currentPrice, final double startPrice, final long endTime,
+      final byte[] imgBytes) {
     final Button btn = new Button();
     btn.getStyleClass().add("btn-outline");
     btn.setStyle("-fx-font-size: 11px; -fx-padding: 4px 12px;");
@@ -267,6 +276,7 @@ public class SellerController implements Initializable {
       UserSession.getInstance().setSelectedItemDescription(description);
       UserSession.getInstance().setSelectedItemPrice(currentPrice > 0 ? currentPrice : startPrice);
       UserSession.getInstance().setSelectedItemEndTime(endTime);
+      UserSession.getInstance().setSelectedItemImageData(imgBytes);
       SceneNavigator.navigateTo(SceneNavigator.View.AUCTION_DETAIL);
     });
     return btn;

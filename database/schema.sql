@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS items (
     end_time INTEGER NOT NULL,   -- Đổi TEXT -> INTEGER để dùng rs.getLong()
     seller_id TEXT NOT NULL,
     status TEXT DEFAULT 'OPEN',
+    image_data BLOB,
     FOREIGN KEY (highest_bidder_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
 );

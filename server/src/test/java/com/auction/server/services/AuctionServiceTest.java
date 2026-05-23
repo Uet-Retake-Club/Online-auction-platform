@@ -59,6 +59,7 @@ public class AuctionServiceTest {
                 @Override public java.util.List<Item> getItemsBySellerId(String sellerId) { return java.util.Collections.emptyList(); }
                 @Override public java.util.List<Item> getAllItems() { return java.util.Collections.emptyList(); }
                 @Override public int getActiveAuctionCount() { return 0; }
+                @Override public boolean resetItemForReauction(String itemId) { return true; }
             });
 
             java.lang.reflect.Field bidDaoField = AuctionService.class.getDeclaredField("bidDAO");

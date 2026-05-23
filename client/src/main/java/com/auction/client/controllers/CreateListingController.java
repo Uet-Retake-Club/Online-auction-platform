@@ -57,6 +57,7 @@ public class CreateListingController implements Initializable {
   @FXML private Label generalError;
   @FXML private Button publishBtn;
   @FXML private Button draftBtn;
+  private byte[] selectedImageBytes;
 
   @Override
   public void initialize(final URL url, final ResourceBundle rb) {
@@ -166,6 +167,9 @@ public class CreateListingController implements Initializable {
     json.addProperty("startPrice", startPrice);
     json.addProperty("startTime", startTime);
     json.addProperty("endTime", endTime);
+    if (selectedImageBytes != null && selectedImageBytes.length > 0) {
+      json.addProperty("imageData", java.util.Base64.getEncoder().encodeToString(selectedImageBytes));
+    }
 
     final Request req = new Request(MessageType.CREATE_ITEM,
         UserSession.getInstance().getUserId(), json.toString());
@@ -203,7 +207,55 @@ public class CreateListingController implements Initializable {
 
   @FXML
   private void onSelectImage() {
-    imageLabel.setText("image_selected.jpg");
+    javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+    fileChooser.setTitle("Select Product Image");
+    fileChooser.getExtensionFilters().addAll(
+        new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+    );
+    java.io.File file = fileChooser.showOpenDialog(rootPane.getScene().getWindow());
+    if (file != null) {
+      try {
+        byte[] original = java.nio.file.Files.readAllBytes(file.toPath());
+        selectedImageBytes = resizeImage(original, 600, 400);
+        imageLabel.setText(file.getName() + " (Compressed)");
+      } catch (java.io.IOException e) {
+        showGeneralError("Failed to read image file: " + e.getMessage());
+      }
+    }
+  }
+
+  private byte[] resizeImage(byte[] originalBytes, int maxWidth, int maxHeight) {
+    try {
+      java.io.ByteArrayInputStream in = new java.io.ByteArrayInputStream(originalBytes);
+      java.awt.image.BufferedImage originalImage = javax.imageio.ImageIO.read(in);
+      if (originalImage == null) {
+        return originalBytes;
+      }
+
+      int originalWidth = originalImage.getWidth();
+      int originalHeight = originalImage.getHeight();
+
+      if (originalWidth <= maxWidth && originalHeight <= maxHeight) {
+        return originalBytes;
+      }
+
+      double ratio = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
+      int newWidth = (int) (originalWidth * ratio);
+      int newHeight = (int) (originalHeight * ratio);
+
+      java.awt.image.BufferedImage outputImage = new java.awt.image.BufferedImage(newWidth, newHeight, java.awt.image.BufferedImage.TYPE_INT_RGB);
+      java.awt.Graphics2D g2d = outputImage.createGraphics();
+      g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+      g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
+      g2d.dispose();
+
+      java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+      javax.imageio.ImageIO.write(outputImage, "jpg", out);
+      return out.toByteArray();
+    } catch (Exception e) {
+      System.err.println("Failed to resize image: " + e.getMessage());
+      return originalBytes;
+    }
   }
 
   @FXML

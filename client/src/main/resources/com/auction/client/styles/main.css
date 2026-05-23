@@ -67,6 +67,7 @@
 /* ── 3. BASE COMPONENTS ──────────────────────────────────── */
 
 /* Typography */
+.label { -fx-text-fill: -text-main; }
 .heading-1 { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: -text-main; font-size: 28px; font-weight: bold; color: -text-main; }
 .heading-2 { -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: -text-main; font-size: 22px; font-weight: bold; color: -text-main; }
 .heading-3 { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -text-main; font-size: 18px; font-weight: bold; color: -text-main; }
@@ -116,7 +117,7 @@
 .btn-ghost:hover { -fx-background-color: -primary-light; -fx-text-fill: -primary; }
 
 /* Inputs */
-.text-field-base, .text-area {
+.text-field-base, .text-area, .text-area-base {
     -fx-background-color: -bg-surface;
     -fx-border-color: -border-color;
     -fx-border-width: 1.5px;
@@ -126,7 +127,13 @@
     -fx-text-fill: -text-main;
     -fx-prompt-text-fill: -text-muted;
 }
-.text-field-base:focused { -fx-border-color: -primary; -fx-effect: dropshadow(three-pass-box, rgba(229, 50, 56, 0.1), 8, 0, 0, 0); }
+.text-field-base:focused, .text-area:focused, .text-area-base:focused {
+    -fx-border-color: -primary;
+    -fx-effect: dropshadow(three-pass-box, rgba(229, 50, 56, 0.1), 8, 0, 0, 0);
+}
+.text-area .content, .text-area-base .content {
+    -fx-background-color: -bg-surface;
+}
 
 /* ── 4. LAYOUT COMPONENTS ────────────────────────────────── */
 

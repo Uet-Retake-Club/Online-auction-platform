@@ -33,46 +33,51 @@ public class GetMyBidsHandler implements CommandHandler {
             return new Response(MessageType.MY_BIDS_RESPONSE, "FAIL", "Not authenticated", "[]");
         }
 
-        // Get bidded item IDs
-        List<String> biddedItemIds = bidDAO.getBiddedItemIds(userId);
-        
-        // Get watchlist items
-        List<Item> watchlistItems = watchlistDAO.getWatchlist(userId);
-        Set<String> watchlistIds = new HashSet<>();
-        for (Item wItem : watchlistItems) {
-            watchlistIds.add(wItem.getId());
-        }
-
-        // Combine unique item IDs
-        Set<String> allItemIds = new HashSet<>(biddedItemIds);
-        allItemIds.addAll(watchlistIds);
-
-        List<UserBidDTO> userBidDTOs = new ArrayList<>();
-        for (String itemId : allItemIds) {
-            Item item = itemDAO.getItemById(itemId);
-            if (item == null) {
-                continue;
+        try {
+            // Get bidded item IDs
+            List<String> biddedItemIds = bidDAO.getBiddedItemIds(userId);
+            
+            // Get watchlist items
+            List<Item> watchlistItems = watchlistDAO.getWatchlist(userId);
+            Set<String> watchlistIds = new HashSet<>();
+            for (Item wItem : watchlistItems) {
+                watchlistIds.add(wItem.getId());
             }
 
-            double myHighestBid = bidDAO.getMaxBidAmount(userId, itemId);
-            boolean isWatchlisted = watchlistIds.contains(itemId);
+            // Combine unique item IDs
+            Set<String> allItemIds = new HashSet<>(biddedItemIds);
+            allItemIds.addAll(watchlistIds);
 
-            UserBidDTO dto = new UserBidDTO(
-                item.getId(),
-                item.getName(),
-                item.getCategory() != null ? item.getCategory().name() : "OTHER",
-                item.getDescription(),
-                item.getStartingPrice(),
-                item.getCurrentHighestBid(),
-                item.getHighestBidderId(),
-                item.getEndTime(),
-                item.getStatus(),
-                myHighestBid,
-                isWatchlisted
-            );
-            userBidDTOs.add(dto);
+            List<UserBidDTO> userBidDTOs = new ArrayList<>();
+            for (String itemId : allItemIds) {
+                Item item = itemDAO.getItemById(itemId);
+                if (item == null) {
+                    continue;
+                }
+
+                double myHighestBid = bidDAO.getMaxBidAmount(userId, itemId);
+                boolean isWatchlisted = watchlistIds.contains(itemId);
+
+                UserBidDTO dto = new UserBidDTO(
+                    item.getId(),
+                    item.getName(),
+                    item.getCategory() != null ? item.getCategory().name() : "OTHER",
+                    item.getDescription(),
+                    item.getStartingPrice(),
+                    item.getCurrentHighestBid(),
+                    item.getHighestBidderId(),
+                    item.getEndTime(),
+                    item.getStatus() != null ? item.getStatus() : "OPEN",
+                    myHighestBid,
+                    isWatchlisted
+                );
+                userBidDTOs.add(dto);
+            }
+
+            return new Response(MessageType.MY_BIDS_RESPONSE, "SUCCESS", "User bids fetched successfully", gson.toJson(userBidDTOs));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response(MessageType.MY_BIDS_RESPONSE, "FAIL", "Internal server error: " + e.getMessage(), "[]");
         }
-
-        return new Response(MessageType.MY_BIDS_RESPONSE, "SUCCESS", "User bids fetched successfully", gson.toJson(userBidDTOs));
     }
 }

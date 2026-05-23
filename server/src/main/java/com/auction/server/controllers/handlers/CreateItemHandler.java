@@ -9,7 +9,9 @@ import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.Electronics;
+import com.auction.shared.models.Item;
 import com.auction.shared.models.ItemCategory;
+import com.auction.shared.models.ItemFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.util.UUID;
@@ -52,19 +54,41 @@ public class CreateItemHandler implements CommandHandler {
             // Map category string to enum
             ItemCategory category;
             try {
-                category = ItemCategory.valueOf(categoryStr.toUpperCase().replace(" & ", "_AND_").replace(" ", "_"));
+                String normalized = categoryStr.toUpperCase().replace(" & ", "_AND_").replace(" ", "_");
+                if ("VEHICLES".equals(normalized)) {
+                    category = ItemCategory.VEHICLE;
+                } else if ("ART".equals(normalized)) {
+                    category = ItemCategory.OTHER;
+                } else {
+                    category = ItemCategory.valueOf(normalized);
+                }
             } catch (IllegalArgumentException e) {
                 category = ItemCategory.ELECTRONICS; // fallback
             }
 
             String itemId = "ITEM-" + UUID.randomUUID().toString().substring(0, 8);
 
-            // Use Electronics as a generic concrete subclass
-            Electronics item = new Electronics(itemId, title, description,
-                startPrice, startTime, endTime, "", "", sellerId);
+            String base64Image = json.has("imageData") ? json.get("imageData").getAsString() : null;
+            byte[] imgBytes = null;
+            if (base64Image != null && !base64Image.isEmpty()) {
+                try {
+                    imgBytes = java.util.Base64.getDecoder().decode(base64Image);
+                } catch (IllegalArgumentException ignored) {}
+            }
+
+            // Instantiate concrete Item type using ItemFactory
+            Item item = ItemFactory.createItem(category);
+            item.setId(itemId);
+            item.setName(title);
+            item.setDescription(description);
             item.setCategory(category);
-            item.setStatus("OPEN");
+            item.setStartingPrice(startPrice);
             item.setCurrentHighestBid(startPrice);
+            item.setStartTime(startTime);
+            item.setEndTime(endTime);
+            item.setSellerId(sellerId);
+            item.setStatus("OPEN");
+            item.setImageData(imgBytes);
 
             boolean success = itemDAO.addItem(item);
             if (success) {

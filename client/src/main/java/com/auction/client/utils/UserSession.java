@@ -74,6 +74,9 @@ public final class UserSession {
   /** End time of the currently selected auction item. */
   private long selectedItemEndTime = 0;
 
+  /** Image data of the currently selected auction item. */
+  private byte[] selectedItemImageData;
+
   /** Filter to apply when navigating to My Bids view (e.g. "watching"). */
   private String pendingMyBidsFilter = "";
 
@@ -133,6 +136,14 @@ public final class UserSession {
     this.selectedItemEndTime = endTime;
   }
 
+  public byte[] getSelectedItemImageData() {
+    return selectedItemImageData;
+  }
+
+  public void setSelectedItemImageData(final byte[] selectedItemImageData) {
+    this.selectedItemImageData = selectedItemImageData;
+  }
+
   /**
    * Private constructor — singleton.
    */
@@ -190,6 +201,7 @@ public final class UserSession {
     role = null;
     walletBalance = 0.0;
     selectedItemEndTime = 0;
+    selectedItemImageData = null;
   }
 
   // ── Getters ───────────────────────────────────────────────

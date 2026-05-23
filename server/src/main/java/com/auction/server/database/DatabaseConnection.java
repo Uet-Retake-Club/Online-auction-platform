@@ -2,11 +2,19 @@ package com.auction.server.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import javax.imageio.ImageIO;
 
 public class DatabaseConnection {
     private static final String DB_DIR = new java.io.File("database").exists() ? "database" : "../database";
@@ -39,6 +47,12 @@ public class DatabaseConnection {
                 System.out.println("[DATABASE] Migration: added 'status' column to users.");
             } catch (SQLException ignored) {}
 
+            // Migration: add image_data column to items
+            try {
+                stmt.execute("ALTER TABLE items ADD COLUMN image_data BLOB");
+                System.out.println("[DATABASE] Migration: added 'image_data' column to items.");
+            } catch (SQLException ignored) {}
+
             // Migration: ensure all users have wallets
             try {
                 stmt.execute("INSERT OR IGNORE INTO wallets (user_id, balance) SELECT id, 0.0 FROM users");
@@ -49,6 +63,9 @@ public class DatabaseConnection {
 
             // Reset seed items to be active in the future if they are expired or finished
             resetSeedItems(connection);
+
+            // Optimize any existing large images in the database to speed up load time
+            optimizeExistingImages(connection);
             
         } catch (SQLException | IOException e) {
             System.err.println("[DATABASE ERROR] Failed to initialize database: " + e.getMessage());
@@ -138,6 +155,66 @@ public class DatabaseConnection {
         } catch (SQLException e) {
             System.err.println("Database connection failed: " + e.getMessage());
             throw e; // Ném ngoại lệ SQL để tầng DAO tự xử lý
+        }
+    }
+
+    private static void optimizeExistingImages(Connection conn) {
+        String query = "SELECT id, image_data FROM items WHERE image_data IS NOT NULL";
+        String update = "UPDATE items SET image_data = ? WHERE id = ?";
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query);
+             PreparedStatement pstmt = conn.prepareStatement(update)) {
+            
+            while (rs.next()) {
+                String id = rs.getString("id");
+                byte[] imgData = rs.getBytes("image_data");
+                if (imgData != null && imgData.length > 150 * 1024) { // > 150 KB
+                    System.out.println("[DATABASE] Optimizing large image for item: " + id + " (" + (imgData.length / 1024) + " KB)...");
+                    byte[] optimized = resizeImage(imgData, 600, 400);
+                    if (optimized != null && optimized.length < imgData.length) {
+                        pstmt.setBytes(1, optimized);
+                        pstmt.setString(2, id);
+                        pstmt.executeUpdate();
+                        System.out.println("[DATABASE] Optimized item: " + id + " to " + (optimized.length / 1024) + " KB.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[DATABASE ERROR] Failed to optimize existing images: " + e.getMessage());
+        }
+    }
+
+    private static byte[] resizeImage(byte[] originalBytes, int maxWidth, int maxHeight) {
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(originalBytes);
+            BufferedImage originalImage = ImageIO.read(in);
+            if (originalImage == null) {
+                return null;
+            }
+
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
+
+            if (originalWidth <= maxWidth && originalHeight <= maxHeight) {
+                return originalBytes;
+            }
+
+            double ratio = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
+            int newWidth = (int) (originalWidth * ratio);
+            int newHeight = (int) (originalHeight * ratio);
+
+            BufferedImage outputImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = outputImage.createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
+            g2d.dispose();
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(outputImage, "jpg", out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            System.err.println("Failed to resize image: " + e.getMessage());
+            return null;
         }
     }
 }
