@@ -237,6 +237,12 @@ public class AuctionService {
         if (currentAuctionItemId == null) return false;
         if (this.auctionStatus.equals("FINISHED")) return false;
 
+        if (nextBid <= this.currentHighestBid) {
+            System.out.println("[AUTO-BID] Rejected! Market price ($" + this.currentHighestBid + 
+                               ") is already higher than or equal to Robot's bid ($" + nextBid + ")");
+            return false;
+        }
+
         // 1. Kiểm tra số dư ví (Cumulative Stake check)
         double previousStake = bidDAO.getMaxBidAmount(bidderId, currentAuctionItemId);
         double deductionNeeded = nextBid - previousStake;
