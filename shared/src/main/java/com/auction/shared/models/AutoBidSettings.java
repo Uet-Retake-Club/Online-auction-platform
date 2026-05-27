@@ -44,6 +44,19 @@ public class AutoBidSettings {
     return auctionId;
   }
 
+  /**
+   * Convenience alias for {@link #getAuctionId()}.
+   *
+   * <p>In the multi-item auction model the {@code auctionId} field identifies which item this
+   * auto-bid configuration belongs to. This method makes call-sites in {@link
+   * com.auction.server.services.core.AutoBidEngine} self-documenting.
+   *
+   * @return the item ID this auto-bid is registered for
+   */
+  public String getItemId() {
+    return auctionId;
+  }
+
   public double getMaxPrice() {
     return maxPrice;
   }
