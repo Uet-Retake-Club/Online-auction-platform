@@ -1,11 +1,11 @@
 package com.auction.server.services;
 
+import java.util.List;
+
 import com.auction.server.dao.BidTransactionDAO;
 import com.auction.server.dao.BidTransactionDAOImpl;
 import com.auction.server.dao.ItemDAO;
 import com.auction.server.dao.ItemDAOImpl;
-import com.auction.server.dao.InvoiceDAO;
-import com.auction.server.dao.InvoiceDAOImpl;
 import com.auction.server.network.ClientHandler;
 import com.auction.server.services.core.AuctionTimer;
 import com.auction.server.services.core.AutoBidEngine;
@@ -16,7 +16,6 @@ import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
 import com.auction.shared.models.Item;
 import com.google.gson.Gson;
-import java.util.List;
 
 public class AuctionService {
     private static volatile AuctionService instance;
@@ -171,6 +170,9 @@ public class AuctionService {
                 return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
             }
 
+            // Trigger anti-sniping logic after DB confirms price update
+            handleAntiSniping(currentAuctionItemId);
+
             // 2. TRỪ TIỀN người đặt giá mới (Chỉ trừ phần chênh lệch)
             walletDAO.updateBalance(bidderId, -deductionNeeded);
             System.out.println("[WALLET] Cumulative Stake: Deducted additional $" + deductionNeeded + " from " + bidderId + " (Total: $" + amount + ")");
@@ -207,6 +209,8 @@ public class AuctionService {
                 return new Response(MessageType.BID_ERROR, "FAIL",
                     String.format("Minimum bid is $%.2f", requiredMinBid), null);
             }
+
+            handleAntiSniping(targetItemId);
 
             boolean dbUpdated = itemDAO.updateCurrentPrice(targetItemId, amount, bidderId);
             if (!dbUpdated) {
@@ -268,16 +272,65 @@ public class AuctionService {
 
             String autoBidPayload = new Gson().toJson(autoBidTx);
             broadcast(new Response(MessageType.NEW_BID_BROADCAST, "SUCCESS", "Auto-bid placed", autoBidPayload));
+            // Trigger anti-sniping logic for auto-bids as well
+            handleAntiSniping(currentAuctionItemId);
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Anti-sniping handler: if remaining time <= 30s, extend by 60s using a conditional DB update.
+     * If the DB update succeeds and this item is the active auction, reschedule the timer.
+     */
+    private void handleAntiSniping(String itemId) {
+        Item currentItem = itemDAO.getItemById(itemId);
+        if (currentItem != null) {
+            long currentTime = System.currentTimeMillis();
+            long timeLeft = currentItem.getEndTime() - currentTime;
+
+            // Condition: time left must be >0 and <=30s
+            if (timeLeft > 0 && timeLeft <= 30 * 1000) {
+                long expectedEnd = currentItem.getEndTime();
+                long newEndTime = expectedEnd + 60 * 1000;
+
+                // Use CAS update to avoid lost updates under concurrency
+                boolean updated = itemDAO.compareAndSetEndTime(itemId, expectedEnd, newEndTime);
+                if (updated) {
+                    System.out.println(" [ANTI-SNIPING] Extended end_time by 60s for item " + itemId);
+                    // Only reschedule timer if this is the active auction in memory
+                    if (itemId.equals(this.currentAuctionItemId)) {
+                        auctionTimer.scheduleAuctionEnd(newEndTime);
+
+                    }
+
+                    Response timeUpdate = new Response(
+                        MessageType.TIME_EXTENDED, 
+                        "SUCCESS", 
+                        "Anti-sniping activated", 
+                        String.valueOf(newEndTime) // Send time in String type for consistency with other time fields
+                    );
+                    broadcast(timeUpdate);
+
+
+                } else {
+                    System.out.println(" [ANTI-SNIPING] CAS failed (another extender raced). No-op.");
+                }
+            }
+        }
     }
 
     public synchronized void endAuction() {
         if (currentAuctionItemId == null) return;
         if (this.auctionStatus.equals("FINISHED")) return;
-        
-        // 1. Cập nhật trạng thái xuống SQLite trước
+        // DOUBLE-CHECK: ensure DB still indicates the auction should end (anti-sniping may have extended it)
+        Item checkItem = itemDAO.getItemById(currentAuctionItemId);
+        if (checkItem != null && checkItem.getEndTime() > System.currentTimeMillis()) {
+            System.out.println(" [MANAGER] Ignoring endAuction because end_time was extended in DB.");
+            return;
+        }
+
+        // 1. Persist FINISHED status to SQLite
         boolean success = itemDAO.updateStatus(currentAuctionItemId, "FINISHED");
         
         if (success) {

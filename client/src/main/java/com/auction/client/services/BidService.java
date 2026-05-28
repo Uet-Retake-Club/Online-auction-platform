@@ -330,6 +330,25 @@ public class BidService implements NetworkClientService.ServerMessageListener {
         }
       });
 
+    } else if (response.getType() == MessageType.TIME_EXTENDED) { 
+      if (response.getPayload() != null && !response.getPayload().isEmpty()) {
+        try {
+          // Wrap the time to long
+          final long newEndTime = Long.parseLong(response.getPayload());
+          
+          Platform.runLater(() -> {
+            // Gọi callback để đẩy giờ mới sang AuctionDetailController
+            // Tại đó, hàm setOnEndTimeReceived sẽ tự động tính lại số giây và chạy lại Timeline
+            if (onEndTimeReceived != null) {
+              onEndTimeReceived.accept(newEndTime);
+            }
+          });
+          System.out.println("[CLIENT] Received new endtime extensions! New end time: " + newEndTime);
+        } catch (NumberFormatException e) {
+          System.err.println("[CLIENT] Failed to read TIME_EXTENDED: " + e.getMessage());
+        }
+      }
+
     } else if (response.getType() == MessageType.AUCTION_ENDED) {
       this.isAuctionOpen = false;
 

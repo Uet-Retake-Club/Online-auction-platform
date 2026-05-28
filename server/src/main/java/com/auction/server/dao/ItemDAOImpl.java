@@ -427,4 +427,47 @@ public class ItemDAOImpl implements ItemDAO {
             return ItemCategory.OTHER;
         }
     }
+
+    @Override
+    public boolean updateEndTime(String itemId, long newEndTime) {
+        String sql = "UPDATE items SET end_time = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setLong(1, newEndTime);
+            pstmt.setString(2, itemId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println(" [DATABASE] Item " + itemId + " end_time extended to: " + newEndTime);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println(" [SQL Error] Cannot update end_time: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) {
+        String sql = "UPDATE items SET end_time = ? WHERE id = ? AND end_time = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, newEndTime);
+            pstmt.setString(2, itemId);
+            pstmt.setLong(3, expectedEndTime);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println(" [DATABASE] Item " + itemId + " end_time CAS succeeded: " + newEndTime);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println(" [SQL Error] Cannot CAS end_time: " + e.getMessage());
+        }
+        return false;
+    }
 }
