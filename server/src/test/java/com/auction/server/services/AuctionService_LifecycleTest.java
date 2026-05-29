@@ -184,8 +184,10 @@ class AuctionService_LifecycleTest {
     }
 
     private Item buildItem(String id, String sellerId) {
+        // GHI CHÚ: Lùi endTime về quá khứ 1 giây (currentTimeMillis - 1000L) 
+        // để qua mặt lớp rào chắn chống cướp giây cuối của hàm endAuction.
         Electronics e = new Electronics(id, "Test Item", "Desc", 1000.0,
-                System.currentTimeMillis(), System.currentTimeMillis() + 3600000L,
+                System.currentTimeMillis() - 3600000L, System.currentTimeMillis() - 1000L,
                 "BrandX", "12 months", sellerId);
         e.setStatus("OPEN");
         return e;

@@ -1,5 +1,9 @@
 package com.auction.client.services;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
 import com.auction.client.utils.UserSession;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Request;
@@ -7,9 +11,7 @@ import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
 import com.google.gson.Gson;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
+
 import javafx.application.Platform;
 
 /**
@@ -339,6 +341,22 @@ public class BidService implements NetworkClientService.ServerMessageListener {
           onBidError.accept(response.getMessage());
         }
       });
+
+    } else if (response.getType() == MessageType.TIME_EXTENDED) {
+      if (response.getPayload() != null && !response.getPayload().isEmpty()) {
+        try {
+          final long newEndTime = Long.parseLong(response.getPayload());
+          Platform.runLater(() -> {
+            if (onEndTimeReceived != null) {
+              onEndTimeReceived.accept(newEndTime);
+            }
+          });
+          System.out.println("[CLIENT] Received time extension! New end time: " + newEndTime);
+        } catch (NumberFormatException e) {
+          System.err.println("[CLIENT] Error parsing TIME_EXTENDED payload: " + e.getMessage());
+        }
+      }
+
     } else if (response.getType() == MessageType.WALLET_BALANCE_RESPONSE) {
       try {
         UserSession.getInstance().setWalletBalance(Double.parseDouble(response.getPayload()));

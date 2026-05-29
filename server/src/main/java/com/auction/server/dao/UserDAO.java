@@ -10,5 +10,7 @@ public interface UserDAO {
     java.util.List<User> getAllUsers();
     int getUserCount();
     boolean updateUserStatus(String userId, String status);
+
+    
 }
 
