@@ -114,3 +114,8 @@ mvn checkstyle:check -pl shared
 # fixstyle
 mvn checkstyle:check -pl shared -Dcheckstyle.fixHarmlessViolations
 ```
+
+## 8. Tài liệu Báo cáo và Video Demo
+
+- **Báo cáo kỹ thuật chi tiết (PDF):** [Báo cáo dự án PDF (5 trang)](Bao_cao_Online_Auction_Platform.pdf)
+- **Video Demo chạy thực tế:** [Video Demonstration trên YouTube](https://youtu.be/placeholder-link-demo)
