@@ -87,7 +87,7 @@
                                 </transformer>
                             </transformers>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <finalName>auction-server</finalName>
+                            <finalName>server</finalName>
                             <outputDirectory>../build</outputDirectory>
                         </configuration>
                     </execution>
