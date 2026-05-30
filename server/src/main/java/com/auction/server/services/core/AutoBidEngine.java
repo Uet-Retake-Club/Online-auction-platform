@@ -3,6 +3,7 @@ package com.auction.server.services.core;
 import com.auction.server.services.AuctionService;
 import com.auction.shared.models.AuctionState;
 import com.auction.shared.models.AutoBidSettings;
+import com.auction.shared.utils.BidIncrementPolicy;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -118,8 +119,10 @@ public class AutoBidEngine {
 
                 double currentHighestBid = state.getCurrentHighestBid();
                 String currentHighestBidder = state.getCurrentHighestBidder();
-                double minIncrement = state.getMinIncrement();
-                double requiredMinBid = currentHighestBid + minIncrement;
+
+                // Floor is recalculated from the CURRENT price, not the starting price.
+                double floor = BidIncrementPolicy.calculate(currentHighestBid);
+                double requiredMinBid = currentHighestBid + floor;
 
                 AutoBidSettings bestCandidate = null;
 
@@ -139,9 +142,12 @@ public class AutoBidEngine {
                 }
 
                 if (bestCandidate != null) {
-                    double step = bestCandidate.isAggressiveMode()
-                        ? bestCandidate.getBidIncrement()
-                        : minIncrement;
+                    // Always use the bidder's configured increment — it was already validated
+                    // to be >= the policy floor at registration time (AuctionService.registerAutoBid).
+                    // Aggressive mode honours the same field; the only difference is that
+                    // passive mode could in future be extended to use a smaller step, but
+                    // for now both modes use the same user-supplied value.
+                    double step    = bestCandidate.getBidIncrement();
                     double nextBid = currentHighestBid + step;
 
                     // Cắt ngọn: never exceed the bidder's declared maxPrice

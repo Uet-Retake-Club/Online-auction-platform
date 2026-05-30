@@ -58,7 +58,7 @@ class AutoBidEngine_MultiItemTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, itemId, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, itemId, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(itemId);
@@ -135,7 +135,7 @@ class AutoBidEngine_MultiItemTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_B);
@@ -209,7 +209,7 @@ class AutoBidEngine_MultiItemTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settingsA = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settingsA);
 
         // Add a NEW product type's item at runtime

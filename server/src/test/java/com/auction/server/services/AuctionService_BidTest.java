@@ -86,11 +86,13 @@ class AuctionService_BidTest {
 
         primeActiveAuction(ITEM_ID, STARTING, STARTING, BIDDER_A, "OPEN");
 
-        Response res = service.processBid(BIDDER_A, 1280.0, buildPayload(ITEM_ID, 1280.0));
+        // Floor at $1,240 = $50 → minimum next bid = $1,290
+        // Bidder A increases from $1,240 → $1,290; deduction = $1,290 - $1,240 = $50
+        Response res = service.processBid(BIDDER_A, 1290.0, buildPayload(ITEM_ID, 1290.0));
 
         assertEquals("SUCCESS", res.getStatus());
-        assertEquals(5000.0 - 40.0, fakeWalletDAO.getBalance(BIDDER_A), 0.001);
-        assertEquals(-40.0, fakeWalletDAO.balanceUpdates.get(BIDDER_A).get(0), 0.001);
+        assertEquals(5000.0 - 50.0, fakeWalletDAO.getBalance(BIDDER_A), 0.001);
+        assertEquals(-50.0, fakeWalletDAO.balanceUpdates.get(BIDDER_A).get(0), 0.001);
     }
 
     @Test

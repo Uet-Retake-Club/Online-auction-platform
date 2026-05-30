@@ -6,6 +6,7 @@ import com.auction.server.services.AuctionServiceTestFixtures.*;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.*;
+import com.auction.shared.utils.BidIncrementPolicy;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -122,7 +123,9 @@ class AuctionService_AutoBidTest {
     @Test
     @DisplayName("registerAutoBid: accepts valid settings when no bids yet (maxPrice >= startingPrice)")
     void should_returnSuccess_when_autoBidValidFirstRegistration() {
-        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 2000.0, 20.0, false);
+        // Use the policy floor for STARTING=$1,240 → $50 (tier: $1,000–$4,999)
+        double bidIncrement = BidIncrementPolicy.calculate(STARTING);
+        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 2000.0, bidIncrement, false);
 
         Response res = service.registerAutoBid(settings);
 
@@ -145,7 +148,9 @@ class AuctionService_AutoBidTest {
     @DisplayName("registerAutoBid: rejects when maxPrice is below currentHighestBid + minIncrement")
     void should_returnFail_when_maxPriceBelowCurrentBidPlusIncrement() {
         primeActiveAuction(ITEM_ID, STARTING, 1500.0, BIDDER_B, "OPEN");
-        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 1510.0, 20.0, false);
+        // Use the policy floor for $1,500 → $50 (tier: $1,000–$4,999)
+        double bidIncrement = BidIncrementPolicy.calculate(1500.0);
+        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 1510.0, bidIncrement, false);
 
         Response res = service.registerAutoBid(settings);
 

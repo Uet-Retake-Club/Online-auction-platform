@@ -123,13 +123,17 @@ public class AuctionServiceTest {
 
     @Test
     void testProcessSecondBidRequiresIncrement() {
+        // First bid at starting price succeeds
         Response first = manager.processBid("client1", 1240.0, payload(TEST_ITEM, 1240.0));
         assertEquals("SUCCESS", first.getStatus());
 
+        // Floor at $1,240 = $50 → min next = $1,290
+        // $1,250 is only +$10, below the $50 floor — must FAIL
         Response tooLow = manager.processBid("client2", 1250.0, payload(TEST_ITEM, 1250.0));
         assertEquals("FAIL", tooLow.getStatus());
 
-        Response enough = manager.processBid("client2", 1260.0, payload(TEST_ITEM, 1260.0));
+        // $1,290 = $1,240 + $50 — exactly at the minimum — must SUCCESS
+        Response enough = manager.processBid("client2", 1290.0, payload(TEST_ITEM, 1290.0));
         assertEquals("SUCCESS", enough.getStatus());
     }
 
@@ -157,7 +161,9 @@ public class AuctionServiceTest {
 
     @Test
     void testRegisterAutoBidSuccess() {
-        AutoBidSettings settings = new AutoBidSettings("client1", TEST_ITEM, 2000.0, 20.0, false);
+        // STARTING=$1,240 → floor=$50 (tier $1,000–$4,999)
+        double validIncrement = com.auction.shared.utils.BidIncrementPolicy.calculate(STARTING);
+        AutoBidSettings settings = new AutoBidSettings("client1", TEST_ITEM, 2000.0, validIncrement, false);
         Response res = manager.registerAutoBid(settings);
         assertEquals("SUCCESS", res.getStatus());
     }

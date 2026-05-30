@@ -60,6 +60,19 @@
                                 <VBox fx:id="bidHistoryList" spacing="6"/>
                             </ScrollPane>
                         </VBox>
+
+                        <!-- Price History Chart card -->
+                        <VBox spacing="10" styleClass="card bid-chart-card" style="-fx-padding: 20px 22px 14px 22px;" minHeight="290">
+                            <HBox alignment="CENTER_LEFT" spacing="8">
+                                <Label text="📊" style="-fx-font-size: 14px;"/>
+                                <Label text="Price History" styleClass="auction-section-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="Last 10 min" styleClass="body-small"
+                                       style="-fx-text-fill: -text-muted; -fx-font-size: 10px;"/>
+                            </HBox>
+                            <!-- BidChartCanvas injects its VBox root here at runtime -->
+                            <StackPane fx:id="chartContainer" VBox.vgrow="ALWAYS" minHeight="220"/>
+                        </VBox>
                     </VBox>
 
                     <!-- ═══ RIGHT: Bid Panel ═════════════════ -->

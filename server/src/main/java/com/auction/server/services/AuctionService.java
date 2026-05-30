@@ -16,6 +16,7 @@ import com.auction.shared.models.AuctionState;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
 import com.auction.shared.models.Item;
+import com.auction.shared.utils.BidIncrementPolicy;
 import com.google.gson.Gson;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,7 @@ public class AuctionService {
     public double getMinIncrement() {
         return activeAuctions.values().stream()
                 .mapToDouble(AuctionState::getMinIncrement)
-                .findFirst().orElse(20.0);
+                .findFirst().orElse(BidIncrementPolicy.calculate(0));
     }
 
     /**
@@ -230,15 +231,23 @@ public class AuctionService {
                     "No active auction found for item: " + itemId, null);
         }
 
+        double currentBid = state.getCurrentHighestBid();
+        // When no bids have been placed yet, use the starting price as the
+        // tier reference so the increment floor is sensible from auction open.
+        double refPrice = (state.getCurrentHighestBidder() == null)
+                ? state.getStartingPrice()
+                : currentBid;
         double requiredMinBid = (state.getCurrentHighestBidder() == null)
                 ? state.getStartingPrice()
-                : state.getCurrentHighestBid() + state.getMinIncrement();
+                : BidIncrementPolicy.minNextBid(currentBid);
 
         if (settings.getMaxPrice() < requiredMinBid) {
             return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Giá tối đa không đủ", null);
         }
-        if (settings.getBidIncrement() < state.getMinIncrement()) {
-            return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Bước giá quá thấp", null);
+        double floor = BidIncrementPolicy.calculate(refPrice);
+        if (!BidIncrementPolicy.isValidIncrement(refPrice, settings.getBidIncrement())) {
+            return new Response(MessageType.SETUP_AUTO_BID, "FAIL",
+                    String.format("Bước giá quá thấp (tối thiểu $%.0f)", floor), null);
         }
 
         autoBidEngine.addAutoBidder(settings);
@@ -279,10 +288,11 @@ public class AuctionService {
                 String.format("Số dư ví không đủ! Cần thêm $%.2f (Đã đặt: $%.2f)", deductionNeeded, previousStake), null);
         }
 
-        // 2. Validate minimum bid
+        // 2. Validate minimum bid — floor recalculated from current price each time
+        double currentBid = state.getCurrentHighestBid();
         double requiredMinBid = (state.getCurrentHighestBidder() == null)
                 ? state.getStartingPrice()
-                : state.getCurrentHighestBid() + state.getMinIncrement();
+                : BidIncrementPolicy.minNextBid(currentBid);
         if (amount < requiredMinBid) {
             return new Response(MessageType.BID_ERROR, "FAIL",
                 String.format("Minimum bid is $%.2f", requiredMinBid), null);

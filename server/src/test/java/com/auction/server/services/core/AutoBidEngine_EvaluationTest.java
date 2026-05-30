@@ -36,7 +36,7 @@ class AutoBidEngine_EvaluationTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_A);
@@ -96,7 +96,7 @@ class AutoBidEngine_EvaluationTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_B, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_B, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_A);
@@ -116,7 +116,7 @@ class AutoBidEngine_EvaluationTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         settings.setActive(false);
         engine.addAutoBidder(settings);
 
@@ -137,7 +137,7 @@ class AutoBidEngine_EvaluationTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 1015.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 1015.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_A);
@@ -156,7 +156,7 @@ class AutoBidEngine_EvaluationTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_A);

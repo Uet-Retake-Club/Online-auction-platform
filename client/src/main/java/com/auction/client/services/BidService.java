@@ -6,6 +6,7 @@ import com.auction.shared.dto.Request;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AutoBidSettings;
 import com.auction.shared.models.BidTransaction;
+import com.auction.shared.utils.BidIncrementPolicy;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,6 @@ public class BidService implements NetworkClientService.ServerMessageListener {
 
   private static BidService instance;
   private double currentBidAmount = 0.0;
-  private final double minimumIncrement = 20.00;
   private boolean isAuctionOpen = true;
 
   private final List<BidTransaction> bidHistory = new ArrayList<>();
@@ -126,12 +126,16 @@ public class BidService implements NetworkClientService.ServerMessageListener {
   }
 
   /**
-   * Returns the minimum bid increment.
+   * Returns the minimum bid increment for the current price tier.
    *
-   * @return minimum increment value
+   * <p>Delegates to {@link BidIncrementPolicy#calculate(double)} using the live
+   * {@code currentBidAmount}, so the returned value updates automatically as
+   * the price crosses tier boundaries.
+   *
+   * @return minimum increment value for the current price
    */
   public double getMinimumIncrement() {
-    return minimumIncrement;
+    return BidIncrementPolicy.calculate(currentBidAmount);
   }
 
   /**
