@@ -2,11 +2,13 @@ package com.auction.client.controllers;
 
 import com.auction.client.services.NetworkClientService;
 import com.auction.client.services.BidService;
+import com.auction.client.chart.BidChartCanvas;
 import com.auction.shared.dto.Request;
 import com.auction.client.utils.ConfirmBidDialog;
 import com.auction.client.utils.SceneNavigator;
 import com.auction.client.utils.ToastNotification;
 import com.auction.client.utils.UserSession;
+import com.auction.shared.utils.BidIncrementPolicy;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.animation.KeyFrame;
@@ -20,6 +22,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
@@ -54,7 +57,14 @@ public class AuctionDetailController implements Initializable {
   @FXML private Label autoBidError;
   @FXML private Button setupAutoBidBtn;
   @FXML private CheckBox aggressiveModeCheckBox;
-  
+  /** Injected container for the bid price chart canvas. */
+  @FXML private StackPane chartContainer;
+
+  /** Real-time bid price history chart. */
+  private BidChartCanvas bidChart;
+
+  /** Default rolling window: 10 minutes. */
+  private static final long DEFAULT_CHART_WINDOW_MS = 600_000L;
 
   private String currentAuctionId;
   private String currentUserId;
@@ -71,6 +81,30 @@ public class AuctionDetailController implements Initializable {
 
     // ── 0. Reset stale state from any previously viewed item ──
     BidService.getInstance().resetForItem();
+
+    // ── 0a. Initialise the bid price chart ────────────────────────────────
+    bidChart = new BidChartCanvas(
+        currentAuctionId != null ? currentAuctionId : "",
+        DEFAULT_CHART_WINDOW_MS);
+    // Mirror the current theme into the chart
+    bidChart.setDarkMode(SceneNavigator.isDarkMode());
+
+    // Emit a toast whenever the chart detects a new global price high
+    bidChart.setOnNewHighBid(highBid -> {
+      final String priceStr = String.format("$%.2f", highBid.getBidAmount());
+      ToastNotification.show(rootPane,
+          "📈 New price high! " + highBid.getBidderUsername() + " → " + priceStr,
+          ToastNotification.Type.INFO);
+    });
+
+    // Inject chart root into the FXML container
+    if (chartContainer != null) {
+      chartContainer.getChildren().clear();
+      final VBox chartRoot = bidChart.getRoot();
+      chartRoot.prefWidthProperty().bind(chartContainer.widthProperty());
+      chartRoot.prefHeightProperty().bind(chartContainer.heightProperty());
+      chartContainer.getChildren().add(chartRoot);
+    }
 
     final String clickedTitle = UserSession.getInstance().getSelectedAuctionTitle();
     final String clickedCategory = UserSession.getInstance().getSelectedAuctionCategory();
@@ -118,6 +152,12 @@ public class AuctionDetailController implements Initializable {
         transaction -> {
           rebuildBidHistoryUI();
 
+          // Feed the new bid into the real-time chart
+          if (bidChart != null) {
+            bidChart.addDataPoint(transaction.getBidAmount(),
+                transaction.getTimestamp());
+          }
+
           final String priceStr = String.format("$%.2f", transaction.getBidAmount());
           final boolean isMyBid = transaction.getBidderId().equals(currentUserId)
               || transaction.getBidderId().equals(UserSession.getInstance().getUsername());
@@ -137,9 +177,8 @@ public class AuctionDetailController implements Initializable {
               }
           }
           currentHighestBidder = transaction.getBidderId();
-          
+
           // Refresh wallet balance because it might have changed (bid placed or refund received)
-          
         });
 
     BidService.getInstance().setOnAutoBidResult(response -> {
@@ -174,7 +213,8 @@ public class AuctionDetailController implements Initializable {
     });
 
     bidAmountField.textProperty().addListener((obs, old, val) -> bidError.setText(""));
-    autoBidIncrementField.setText(String.valueOf(BidService.getInstance().getMinimumIncrement()));
+    autoBidIncrementField.setPromptText("Min: " + formatPrice(BidIncrementPolicy.calculate(0)));
+    autoBidIncrementField.setText("");
     maxPriceField.textProperty().addListener((obs, old, val) -> autoBidError.setText(""));
     autoBidIncrementField.textProperty().addListener((o, old, val) -> autoBidError.setText(""));
 
@@ -291,9 +331,17 @@ public class AuctionDetailController implements Initializable {
     }
 
     try {
-      final double maxPrice = Double.parseDouble(maxStr.replace(",", ""));
+      final double maxPrice  = Double.parseDouble(maxStr.replace(",", ""));
       final double increment = Double.parseDouble(incStr.replace(",", ""));
       final boolean isAggressive = aggressiveModeCheckBox.isSelected();
+
+      // Client-side floor check — server validates too, but fail fast here.
+      final double currentAmt = BidService.getInstance().getCurrentBidAmount();
+      if (!BidIncrementPolicy.isValidIncrement(currentAmt, increment)) {
+        autoBidError.setText("Increment must be at least "
+            + formatPrice(BidIncrementPolicy.calculate(currentAmt)));
+        return;
+      }
 
       final String errorMsg = BidService.getInstance()
           .setupAutoBid(currentUserId, currentAuctionId, maxPrice, increment, isAggressive);
@@ -353,8 +401,74 @@ public class AuctionDetailController implements Initializable {
 
   private void updatePrice(final double amount) {
     currentPrice.setText(String.format("$%.2f", amount));
-    final double nextMin = amount + BidService.getInstance().getMinimumIncrement();
-    minBidHint.setText(String.format("Minimum bid: $%.2f", nextMin));
+    final double minBid = BidIncrementPolicy.minNextBid(amount);
+    final double floor  = BidIncrementPolicy.calculate(amount);
+    minBidHint.setText("Minimum bid: " + formatPrice(minBid));
+    bidAmountField.setPromptText("Min: " + formatPrice(minBid));
+    autoBidIncrementField.setPromptText("Min: " + formatPrice(floor));
+    revalidateAutoBidIncrement(amount);
+  }
+
+  private void showWarning(final String message) {
+    ToastNotification.show(rootPane, message, ToastNotification.Type.WARNING);
+    autoBidError.setText(message);
+  }
+
+  private void pauseAutoBid() {
+    setupAutoBidBtn.setText("Activate");
+    setupAutoBidBtn.getStyleClass().remove("btn-autobid-active");
+    setupAutoBidBtn.getStyleClass().removeAll("btn-primary", "btn-secondary");
+    setupAutoBidBtn.getStyleClass().add("btn-primary");
+  }
+
+  /**
+   * Warns the user when the current price crosses into a tier with a higher
+   * increment floor, but does <em>not</em> silently overwrite their value.
+   *
+   * <p>The user's stored increment is displayed as-is. If the stored increment
+   * falls below the new floor and auto-bid was active, the auto-bid is paused
+   * and a warning is shown.
+   *
+   * @param currentAmt the new current highest bid price
+   */
+  private void revalidateAutoBidIncrement(final double currentAmt) {
+    final String text = autoBidIncrementField.getText();
+    if (text == null || text.isBlank()) return;
+    try {
+      final double stored   = Double.parseDouble(text.replace(",", ""));
+      final double newFloor = BidIncrementPolicy.calculate(currentAmt);
+      if (stored < newFloor) {
+        if (setupAutoBidBtn.getStyleClass().contains("btn-autobid-active")) {
+          showWarning("Current increment $" + stored
+              + " is below new minimum $" + newFloor
+              + ". Auto-bid paused. Please update increment.");
+          pauseAutoBid();
+        } else {
+          autoBidError.setText("⚠ Increment " + formatPrice(stored)
+              + " is below new minimum " + formatPrice(newFloor)
+              + ". Update before activating.");
+        }
+      } else {
+        // Clear any stale tier-warning once the field is back in range.
+        final String currentErr = autoBidError.getText();
+        if (currentErr != null && (currentErr.startsWith("⚠ Increment") || currentErr.startsWith("Current increment"))) {
+          autoBidError.setText("");
+        }
+      }
+    } catch (NumberFormatException ignored) {}
+  }
+
+
+  /**
+   * Formats a price for display using compact K/M notation.
+   *
+   * @param p price value
+   * @return formatted string, e.g. {@code "$50"} or {@code "$1.2K"}
+   */
+  private String formatPrice(final double p) {
+    if (p >= 1_000_000) return String.format("$%.1fM", p / 1_000_000);
+    if (p >= 1_000)     return String.format("$%.1fK", p / 1_000);
+    return String.format("$%.0f", p);
   }
 
   private void rebuildBidHistoryUI() {

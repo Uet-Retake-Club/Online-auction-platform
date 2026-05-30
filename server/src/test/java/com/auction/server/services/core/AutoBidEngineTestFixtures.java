@@ -80,6 +80,10 @@ class AutoBidEngineTestFixtures {
                     getAllItems() { return java.util.Collections.emptyList(); }
             @Override public int getActiveAuctionCount() { return 0; }
             @Override public boolean resetItemForReauction(String id) { return true; }
+            
+            // --- BỔ SUNG 2 HÀM MỚI CHO ANTI-SNIPING ---
+            @Override public boolean updateEndTime(String itemId, long newEndTime) { return true; }
+            @Override public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) { return true; }
         };
 
         com.auction.server.dao.BidTransactionDAO bidStub = new com.auction.server.dao.BidTransactionDAO() {
@@ -115,4 +119,5 @@ class AutoBidEngineTestFixtures {
         f.setAccessible(true);
         f.set(obj, value);
     }
+    
 }

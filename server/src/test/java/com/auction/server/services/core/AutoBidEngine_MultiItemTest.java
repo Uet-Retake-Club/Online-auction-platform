@@ -1,21 +1,25 @@
 package com.auction.server.services.core;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.auction.server.services.AuctionService;
-import com.auction.shared.models.AuctionState;
-import com.auction.shared.models.AutoBidSettings;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import com.auction.server.services.AuctionService;
+import com.auction.shared.models.AuctionState;
+import com.auction.shared.models.AutoBidSettings;
 
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 @DisplayName("AutoBidEngine — Multi-Item & Product Agnostic Tests")
@@ -58,7 +62,7 @@ class AutoBidEngine_MultiItemTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, itemId, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, itemId, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(itemId);
@@ -118,6 +122,10 @@ class AutoBidEngine_MultiItemTest {
             @Override public java.util.List<com.auction.shared.models.Item> getAllItems() { return java.util.Collections.emptyList(); }
             @Override public int getActiveAuctionCount() { return 0; }
             @Override public boolean resetItemForReauction(String id) { return true; }
+            
+            // --- ANTI-SNIPING METHODS ADDED ---
+            @Override public boolean updateEndTime(String itemId, long newEndTime) { return true; }
+            @Override public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) { return true; }
         });
 
         Field bidDaoField = AuctionService.class.getDeclaredField("bidDAO");
@@ -135,7 +143,7 @@ class AutoBidEngine_MultiItemTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settings = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settings);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_B);
@@ -192,6 +200,10 @@ class AutoBidEngine_MultiItemTest {
             @Override public java.util.List<com.auction.shared.models.Item> getAllItems() { return java.util.Collections.emptyList(); }
             @Override public int getActiveAuctionCount() { return 0; }
             @Override public boolean resetItemForReauction(String id) { return true; }
+            
+            // --- ANTI-SNIPING METHODS ADDED ---
+            @Override public boolean updateEndTime(String itemId, long newEndTime) { return true; }
+            @Override public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) { return true; }
         });
 
         Field bidDaoField = AuctionService.class.getDeclaredField("bidDAO");
@@ -209,7 +221,7 @@ class AutoBidEngine_MultiItemTest {
         engine = new AutoBidEngine(stub);
 
         AutoBidSettings settingsA = new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false);
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false);
         engine.addAutoBidder(settingsA);
 
         // Add a NEW product type's item at runtime
