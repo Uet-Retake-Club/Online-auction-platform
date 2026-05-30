@@ -1,8 +1,23 @@
 package com.auction.server.services;
 
-import com.auction.server.dao.*;
-import com.auction.shared.models.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.auction.server.dao.AuctionDAO;
+import com.auction.server.dao.BidTransactionDAO;
+import com.auction.server.dao.InvoiceDAO;
+import com.auction.server.dao.ItemDAO;
+import com.auction.server.dao.UserDAO;
+import com.auction.server.dao.WalletDAO;
+import com.auction.shared.models.Auction;
+import com.auction.shared.models.BidTransaction;
+import com.auction.shared.models.Invoice;
+import com.auction.shared.models.Item;
+import com.auction.shared.models.TopupRequest;
+import com.auction.shared.models.User;
 
 class AuctionServiceTestFixtures {
 
@@ -15,6 +30,10 @@ class AuctionServiceTestFixtures {
         boolean updatePriceResult = true;
         boolean updateStatusResult = true;
         boolean resetResult = true;
+
+        @Override public boolean updateEndTime(String itemId, long newEndTime) { return true; }
+        @Override public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) { return true; } 
+
 
         @Override
         public Item getItemById(String id) {

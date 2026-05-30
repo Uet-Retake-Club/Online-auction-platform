@@ -1,6 +1,7 @@
 package com.auction.shared.dto;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -11,7 +12,7 @@ public class MessageTypeTest {
     @Test
     void testAllValuesExist() {
         MessageType[] values = MessageType.values();
-        assertEquals(52, values.length, "MessageType must have exactly 52 values");
+        assertEquals(53, values.length, "MessageType must have exactly 53 values");
     }
 
     @Test
@@ -69,6 +70,7 @@ public class MessageTypeTest {
         assertEquals(MessageType.GET_MY_INVOICES, MessageType.valueOf("GET_MY_INVOICES"));
         assertEquals(MessageType.GET_MY_INVOICES_SUCCESS, MessageType.valueOf("GET_MY_INVOICES_SUCCESS"));
         assertEquals(MessageType.GET_SELLER_DASHBOARD, MessageType.valueOf("GET_SELLER_DASHBOARD"));
+        assertEquals(MessageType.TIME_EXTENDED, MessageType.valueOf("TIME_EXTENDED"));
     }
 
 

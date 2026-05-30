@@ -17,6 +17,33 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import com.auction.server.services.AuctionServiceTestFixtures.*;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeBidTransactionDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeItemDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeUserDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeWalletDAO;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Response;
+import com.auction.shared.models.AuctionState;
+import com.auction.shared.models.AutoBidSettings;
+import com.auction.shared.models.Collectibles;
+import com.auction.shared.models.Electronics;
+import com.auction.shared.models.Fashion;
+import com.auction.shared.models.Item;
+import com.auction.shared.models.Sports;
+import com.auction.shared.models.Vehicle;
+
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 @DisplayName("AuctionService — Auto-Bid Tests")
 class AuctionService_AutoBidTest {
@@ -141,7 +168,7 @@ class AuctionService_AutoBidTest {
         Response res = service.registerAutoBid(settings);
 
         assertEquals("FAIL", res.getStatus());
-        assertTrue(res.getMessage().contains("Giá tối đa không đủ"));
+        assertTrue(res.getMessage().contains("Maximum price is insufficient"));
     }
 
     @Test
@@ -165,7 +192,7 @@ class AuctionService_AutoBidTest {
         Response res = service.registerAutoBid(settings);
 
         assertEquals("FAIL", res.getStatus());
-        assertTrue(res.getMessage().contains("Bước giá quá thấp"));
+        assertTrue(res.getMessage().contains("Bid increment is too low"));
     }
 
     @Test

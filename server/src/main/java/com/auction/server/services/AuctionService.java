@@ -242,7 +242,7 @@ public class AuctionService {
                 : BidIncrementPolicy.minNextBid(currentBid);
 
         if (settings.getMaxPrice() < requiredMinBid) {
-            return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Giá tối đa không đủ", null);
+            return new Response(MessageType.SETUP_AUTO_BID, "FAIL", "Maximum price is insufficient", null);
         }
         double floor = BidIncrementPolicy.calculate(refPrice);
         if (!BidIncrementPolicy.isValidIncrement(refPrice, settings.getBidIncrement())) {
@@ -252,7 +252,42 @@ public class AuctionService {
 
         autoBidEngine.addAutoBidder(settings);
         autoBidEngine.triggerEvaluation(itemId);
-        return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Cấu hình Auto-Bid kích hoạt!", null);
+        return new Response(MessageType.SETUP_AUTO_BID, "SUCCESS", "Auto-Bid configuration activated!", null);
+    }
+
+    // --- ANTI-SNIPING CORE LOGIC ---
+    private void handleAntiSniping(String itemId) {
+        Item currentItem = itemDAO.getItemById(itemId);
+        if (currentItem != null) {
+            long currentTime = System.currentTimeMillis();
+            long timeLeft = currentItem.getEndTime() - currentTime;
+
+            // Trigger if bid placed within the last 30 seconds
+            if (timeLeft > 0 && timeLeft <= 30 * 1000) {
+                long expectedEnd = currentItem.getEndTime();
+                long newEndTime = expectedEnd + 60 * 1000;
+
+                // Use CAS update to avoid lost updates under concurrency
+                boolean updated = itemDAO.compareAndSetEndTime(itemId, expectedEnd, newEndTime);
+                if (updated) {
+                    System.out.println(" [ANTI-SNIPING] Extended end_time by 60s for item " + itemId);
+                    
+                    if (activeAuctions.containsKey(itemId)) {
+                        auctionTimer.scheduleAuctionEnd(itemId, newEndTime);
+                    }
+
+                    Response timeUpdate = new Response(
+                        MessageType.TIME_EXTENDED, 
+                        "SUCCESS", 
+                        "Anti-sniping activated", 
+                        String.valueOf(newEndTime)
+                    );
+                    broadcast(timeUpdate);
+                } else {
+                    System.out.println(" [ANTI-SNIPING] CAS failed (another extender raced). No-op.");
+                }
+            }
+        }
     }
 
     public synchronized Response processBid(String bidderId, double amount, String payload) {
@@ -285,7 +320,7 @@ public class AuctionService {
 
         if (userBalance < deductionNeeded) {
             return new Response(MessageType.BID_ERROR, "FAIL",
-                String.format("Số dư ví không đủ! Cần thêm $%.2f (Đã đặt: $%.2f)", deductionNeeded, previousStake), null);
+                String.format("Insufficient wallet balance! Need additional $%.2f (Already staked: $%.2f)", deductionNeeded, previousStake), null);
         }
 
         // 2. Validate minimum bid — floor recalculated from current price each time
@@ -303,6 +338,9 @@ public class AuctionService {
         if (!dbUpdated) {
             return new Response(MessageType.BID_ERROR, "FAIL", "Database sync error", null);
         }
+
+        // === TRIGGER ANTI-SNIPING ===
+        handleAntiSniping(targetItemId);
 
         // 4. Deduct wallet (only the incremental difference)
         walletDAO.updateBalance(bidderId, -deductionNeeded);
@@ -360,6 +398,9 @@ public class AuctionService {
 
         boolean dbUpdated = itemDAO.updateCurrentPrice(itemId, nextBid, bidderId);
         if (dbUpdated) {
+            // === TRIGGER ANTI-SNIPING ===
+            handleAntiSniping(itemId);
+
             // 2. TRỪ TIỀN (Chỉ trừ phần chênh lệch)
             walletDAO.updateBalance(bidderId, -deductionNeeded);
             System.out.println("[AUTO-BID] Cumulative Stake: Deducted additional $" + deductionNeeded
@@ -401,6 +442,13 @@ public class AuctionService {
         if (state == null) return;
         if ("FINISHED".equals(state.getStatus())) return;
 
+        // MULTI-THREAD GUARD: Prevent timer thread from closing if extended by user thread
+        Item item = itemDAO.getItemById(itemId);
+        if (item != null && item.getEndTime() > System.currentTimeMillis()) {
+            System.out.println(" [MANAGER] Skipping endAuction for " + itemId + " due to anti-sniping extension!");
+            return;
+        }
+
         // 1. Persist FINISHED status to DB
         boolean success = itemDAO.updateStatus(itemId, "FINISHED");
 
@@ -426,11 +474,10 @@ public class AuctionService {
 
             // 4. Xác định người thắng và thông báo
             if (winnerId != null) {
-                String winnerMsg = "Người chiến thắng: " + winnerId
+                String winnerMsg = "Winner: " + winnerId
                         + " ($" + state.getCurrentHighestBid() + ")";
                 System.out.println(" [MANAGER] " + winnerMsg);
 
-                Item item = itemDAO.getItemById(itemId);
                 String sellerId = (item != null) ? item.getSellerId() : "UNKNOWN_SELLER";
                 String invoiceId = "INV-" + java.util.UUID.randomUUID().toString().substring(0, 8);
                 String auctionId = "AUC-" + itemId;
@@ -446,7 +493,7 @@ public class AuctionService {
                     System.out.println("  [INVOICE] Created new invoice: " + invoiceId + " (Status: PENDING)");
                 }
             } else {
-                System.out.println(" [MANAGER] Phiên kết thúc mà không có ai đặt giá (item " + itemId + ").");
+                System.out.println(" [MANAGER] Auction ended with no bids (item " + itemId + ").");
             }
 
             // 5. Remove from active map — item is done

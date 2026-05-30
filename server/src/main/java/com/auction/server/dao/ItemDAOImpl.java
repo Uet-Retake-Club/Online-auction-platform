@@ -50,8 +50,6 @@ public class ItemDAOImpl implements ItemDAO {
         }
     }
 
-
-
     @Override
     public boolean addItem(Item item) {
         String sqlCommon = "INSERT INTO items (id, name, description, category, start_price, current_price, highest_bidder_id, start_time, end_time, seller_id, status, image_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -363,7 +361,6 @@ public class ItemDAOImpl implements ItemDAO {
         return items;
     }
 
-
     @Override
     public List<Item> getAllItems() {
         List<Item> items = new ArrayList<>();
@@ -426,5 +423,50 @@ public class ItemDAOImpl implements ItemDAO {
         } catch (IllegalArgumentException e) {
             return ItemCategory.OTHER;
         }
+    }
+
+    // --- ANTI-SNIPING IMPLEMENTATION ---
+
+    @Override
+    public boolean updateEndTime(String itemId, long newEndTime) {
+        String sql = "UPDATE items SET end_time = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setLong(1, newEndTime);
+            pstmt.setString(2, itemId);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("[DATABASE] Item " + itemId + " end_time extended to: " + newEndTime);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("[SQL Error] Cannot update end_time: " + e.getMessage());
+        }
+        return false;
+    }
+
+    @Override
+    public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) {
+        String sql = "UPDATE items SET end_time = ? WHERE id = ? AND end_time = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, newEndTime);
+            pstmt.setString(2, itemId);
+            pstmt.setLong(3, expectedEndTime);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("[DATABASE] Item " + itemId + " end_time CAS succeeded: " + newEndTime);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("[SQL Error] Cannot CAS end_time: " + e.getMessage());
+        }
+        return false;
     }
 }
