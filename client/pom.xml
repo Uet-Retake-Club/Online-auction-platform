@@ -65,7 +65,7 @@
                                 </transformer>
                             </transformers>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <finalName>auction-client</finalName>
+                            <finalName>client</finalName>
                             <outputDirectory>../build</outputDirectory>
                         </configuration>
                     </execution>

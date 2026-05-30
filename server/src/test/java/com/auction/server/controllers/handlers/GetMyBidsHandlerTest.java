@@ -69,6 +69,10 @@ public class GetMyBidsHandlerTest {
             @Override public List<Item> getAllItems() { return Collections.emptyList(); }
             @Override public int getActiveAuctionCount() { return 0; }
             @Override public boolean resetItemForReauction(String itemId) { return true; }
+            
+            // --- BỔ SUNG 2 HÀM MỚI CHO ANTI-SNIPING ---
+            @Override public boolean updateEndTime(String itemId, long newEndTime) { return true; }
+            @Override public boolean compareAndSetEndTime(String itemId, long expectedEndTime, long newEndTime) { return true; }
         };
 
         BidTransactionDAO mockBidDAO = new BidTransactionDAO() {

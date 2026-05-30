@@ -63,7 +63,7 @@ public class CreateItemHandler implements CommandHandler {
                     category = ItemCategory.valueOf(normalized);
                 }
             } catch (IllegalArgumentException e) {
-                category = ItemCategory.ELECTRONICS; // fallback
+                category = ItemCategory.OTHER; // fallback: unknown category → OTHER (not ELECTRONICS)
             }
 
             String itemId = "ITEM-" + UUID.randomUUID().toString().substring(0, 8);
@@ -93,9 +93,14 @@ public class CreateItemHandler implements CommandHandler {
             boolean success = itemDAO.addItem(item);
             if (success) {
                 System.out.println("[CREATE_ITEM] New listing: " + title + " (ID: " + itemId + ") by " + sellerId);
+
+                // Register the new item as an active auction so auto-bidding starts immediately
+                // for any product type — no server restart needed, no type check required.
+                AuctionService.getInstance().registerItemAsActiveAuction(item);
+
                 // Broadcast to all clients to refresh HomeView
                 AuctionService.getInstance().broadcast(new Response(MessageType.NEW_ITEM_BROADCAST, "SUCCESS", "New item available!", null));
-                
+
                 return new Response(MessageType.CREATE_ITEM_SUCCESS, "SUCCESS",
                     "Listing created successfully", itemId);
             } else {

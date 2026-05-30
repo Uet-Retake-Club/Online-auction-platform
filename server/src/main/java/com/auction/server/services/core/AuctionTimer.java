@@ -1,5 +1,7 @@
 package com.auction.server.services.core;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -8,75 +10,81 @@ import java.util.concurrent.TimeUnit;
 import com.auction.server.services.AuctionService;
 
 public class AuctionTimer {
-    // Use a ThreadFactory to make scheduler threads daemon so the JVM can exit cleanly on shutdown
-    private final ScheduledExecutorService auctionScheduler = Executors.newScheduledThreadPool(1, runnable -> {
+    private final ScheduledExecutorService auctionScheduler = Executors.newScheduledThreadPool(4, runnable -> {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true);
         thread.setName("AuctionTimer-Scheduler");
         return thread;
     });
-    
     private final AuctionService auctionService;
-    
-    private ScheduledFuture<?> currentEndTask = null;
-    // Guard: only a task whose end time matches `currentEndTime` may end the auction
-    private long currentEndTime = -1;
+
+    // Track tasks and end times per item for multi-auction support
+    private final Map<String, ScheduledFuture<?>> currentTasks = new ConcurrentHashMap<>();
+    private final Map<String, Long> currentEndTimes = new ConcurrentHashMap<>();
 
     public AuctionTimer(AuctionService auctionService) {
         this.auctionService = auctionService;
     }
 
-    public synchronized void scheduleAuctionEnd(long endTimeInMillis) {
-        // 1. Cancel previous task if it hasn't run yet
-        if (currentEndTask != null && !currentEndTask.isDone()) {
-            currentEndTask.cancel(false);
+    /**
+     * Schedules the end of the auction for a specific item.
+     *
+     * <p>Replaces the old no-arg {@code scheduleAuctionEnd(long)} which called the global
+     * {@code endAuction()} without knowing which item to close. Now each item has its own
+     * scheduled task so multiple auctions can run and end independently.
+     *
+     * @param itemId the item whose auction will be closed at {@code endTimeInMillis}
+     * @param endTimeInMillis absolute epoch timestamp (ms) when the auction ends
+     */
+    public void scheduleAuctionEnd(String itemId, long endTimeInMillis) {
+        // Cancel old task for this specific item if it exists
+        ScheduledFuture<?> oldTask = currentTasks.get(itemId);
+        if (oldTask != null && !oldTask.isDone()) {
+            oldTask.cancel(false);
         }
 
-        // 2. Update the latest valid end time
-        this.currentEndTime = endTimeInMillis;
+        // Update with the newest valid end time
+        currentEndTimes.put(itemId, endTimeInMillis);
         long delay = endTimeInMillis - System.currentTimeMillis();
-        
-        if (delay <= 0) {
-            // If the provided time is already past, clear state and end the auction immediately
-            clearState();
-            auctionService.endAuction();
-        } else {
-            System.out.println(" [AuctionTimer] Scheduled auction end in " + (delay / 1000) + " seconds.");
 
-            // Schedule and save the new background task
-            currentEndTask = auctionScheduler.schedule(() -> {
+        if (delay <= 0) {
+            clearState(itemId);
+            auctionService.endAuction(itemId);
+        } else {
+            System.out.println(" [AuctionTimer] Item " + itemId
+                    + " will end automatically in " + (delay / 1000) + " seconds.");
+            
+            ScheduledFuture<?> newTask = auctionScheduler.schedule(() -> {
                 boolean shouldExecute = false;
+                Long expectedTime = currentEndTimes.get(itemId);
                 
-                // Synchronized check to verify whether this task is stale
-                synchronized (this) {
-                    if (endTimeInMillis == currentEndTime) {
-                        shouldExecute = true;
-                        // Dọn dẹp trạng thái ngay khi xác nhận thực thi thành công
-                        // Clear state immediately when confirming execution
-                        clearState();
-                    }
+                // Double-check to prevent stale tasks from closing an extended auction
+                if (expectedTime != null && expectedTime == endTimeInMillis) {
+                    shouldExecute = true;
+                    clearState(itemId);
                 }
                 
-                // Execute auction end outside the Timer's synchronized block to avoid deadlocks with the Service
                 if (shouldExecute) {
-                    System.out.println(" [AuctionTimer] Time reached. Triggering auction end...");
-                    auctionService.endAuction();
+                    System.out.println(" [AuctionTimer] Reached end time. Triggering endAuction for item " + itemId);
+                    auctionService.endAuction(itemId);
                 } else {
-                    System.out.println(" [AuctionTimer] Detected stale countdown task; no-op to prevent duplicate end calls.");
+                    System.out.println(" [AuctionTimer] Stale task no-op for item " + itemId + ". Prevented premature end!");
                 }
             }, delay, TimeUnit.MILLISECONDS);
+
+            currentTasks.put(itemId, newTask);
         }
     }
 
-    // Utility to clear scheduler state
-    private void clearState() {
-        this.currentEndTask = null;
-        this.currentEndTime = -1;
+    private void clearState(String itemId) {
+        currentTasks.remove(itemId);
+        currentEndTimes.remove(itemId);
     }
 
-    public synchronized void shutdown() {
+    public void shutdown() {
         System.out.println(" [AuctionTimer] Stopping countdown timer...");
-        clearState();
+        currentTasks.clear();
+        currentEndTimes.clear();
         auctionScheduler.shutdownNow();
     }
 }

@@ -50,8 +50,6 @@ public class ItemDAOImpl implements ItemDAO {
         }
     }
 
-
-
     @Override
     public boolean addItem(Item item) {
         String sqlCommon = "INSERT INTO items (id, name, description, category, start_price, current_price, highest_bidder_id, start_time, end_time, seller_id, status, image_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -363,7 +361,6 @@ public class ItemDAOImpl implements ItemDAO {
         return items;
     }
 
-
     @Override
     public List<Item> getAllItems() {
         List<Item> items = new ArrayList<>();
@@ -428,6 +425,8 @@ public class ItemDAOImpl implements ItemDAO {
         }
     }
 
+    // --- ANTI-SNIPING IMPLEMENTATION ---
+
     @Override
     public boolean updateEndTime(String itemId, long newEndTime) {
         String sql = "UPDATE items SET end_time = ? WHERE id = ?";
@@ -440,11 +439,11 @@ public class ItemDAOImpl implements ItemDAO {
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println(" [DATABASE] Item " + itemId + " end_time extended to: " + newEndTime);
+                System.out.println("[DATABASE] Item " + itemId + " end_time extended to: " + newEndTime);
                 return true;
             }
         } catch (SQLException e) {
-            System.err.println(" [SQL Error] Cannot update end_time: " + e.getMessage());
+            System.err.println("[SQL Error] Cannot update end_time: " + e.getMessage());
         }
         return false;
     }
@@ -462,11 +461,11 @@ public class ItemDAOImpl implements ItemDAO {
 
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println(" [DATABASE] Item " + itemId + " end_time CAS succeeded: " + newEndTime);
+                System.out.println("[DATABASE] Item " + itemId + " end_time CAS succeeded: " + newEndTime);
                 return true;
             }
         } catch (SQLException e) {
-            System.err.println(" [SQL Error] Cannot CAS end_time: " + e.getMessage());
+            System.err.println("[SQL Error] Cannot CAS end_time: " + e.getMessage());
         }
         return false;
     }

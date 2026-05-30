@@ -592,3 +592,46 @@
     -fx-border-color: -primary;
     -fx-border-width: 1px;
 }
+
+/* ── 7. BID CHART CARD ───────────────────────────────────── */
+
+/* Chart wrapper card — extends .card with a coloured accent line on top */
+.bid-chart-card {
+    -fx-background-color: -bg-surface;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    /* Accent top border: info-blue to mark it as an analytics section */
+    -fx-border-color: -info -border-color -border-color -border-color;
+    -fx-border-width: 3px 1px 1px 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.07), 14, 0, 0, 4);
+}
+
+.dark-theme .bid-chart-card {
+    -fx-background-color: #1A1C26;
+    -fx-border-color: #3498DB #2D3142 #2D3142 #2D3142;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0, 0, 4);
+}
+
+/* Legend row dot (drawn via Canvas; this class is for any Label-based dots) */
+.bid-chart-legend-dot {
+    -fx-min-width: 10px;
+    -fx-pref-width: 10px;
+    -fx-min-height: 10px;
+    -fx-pref-height: 10px;
+    -fx-background-radius: 50%;
+}
+
+/* Legend bidder name label */
+.bid-chart-legend-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-secondary;
+}
+
+/* Empty-state label shown when no bids have arrived yet */
+.bid-chart-empty {
+    -fx-font-size: 13px;
+    -fx-text-fill: -text-muted;
+    -fx-font-style: italic;
+    -fx-alignment: center;
+    -fx-padding: 20px;
+}
