@@ -148,6 +148,28 @@ class AuctionService_AutoBidTest {
     }
 
     @Test
+    @DisplayName("processAutoBid: returns false when bid is below starting price (no previous bidder)")
+    void should_returnFalse_when_autoBidBelowStartingPrice() {
+        fakeWalletDAO.balances.put(BIDDER_A, 5000.0);
+
+        boolean result = service.processAutoBid(BIDDER_A, STARTING - 10.0, ITEM_ID);
+
+        assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("processAutoBid: returns false when bid is below minimum next bid (with previous bidder)")
+    void should_returnFalse_when_autoBidBelowMinNextBid() {
+        primeActiveAuction(ITEM_ID, STARTING, 1500.0, BIDDER_B, "OPEN");
+        fakeWalletDAO.balances.put(BIDDER_A, 5000.0);
+
+        // Required min next bid for 1500.0 is 1500.0 + policy increment (50.0) = 1550.0
+        boolean result = service.processAutoBid(BIDDER_A, 1510.0, ITEM_ID);
+
+        assertFalse(result);
+    }
+
+    @Test
     @DisplayName("registerAutoBid: accepts valid settings when no bids yet (maxPrice >= startingPrice)")
     void should_returnSuccess_when_autoBidValidFirstRegistration() {
         // Use the policy floor for STARTING=$1,240 → $50 (tier: $1,000–$4,999)

@@ -247,7 +247,7 @@ public class AuctionService {
         double floor = BidIncrementPolicy.calculate(refPrice);
         if (!BidIncrementPolicy.isValidIncrement(refPrice, settings.getBidIncrement())) {
             return new Response(MessageType.SETUP_AUTO_BID, "FAIL",
-                    String.format("Bước giá quá thấp (tối thiểu $%.0f)", floor), null);
+                    String.format("Bid increment is too low (minimum $%.0f)", floor), null);
         }
 
         autoBidEngine.addAutoBidder(settings);
@@ -384,6 +384,17 @@ public class AuctionService {
         AuctionState state = activeAuctions.get(itemId);
         if (state == null) return false;
         if ("FINISHED".equals(state.getStatus())) return false;
+
+        // Validate minimum bid — floor recalculated from current price each time
+        double currentBid = state.getCurrentHighestBid();
+        double requiredMinBid = (state.getCurrentHighestBidder() == null)
+                ? state.getStartingPrice()
+                : BidIncrementPolicy.minNextBid(currentBid);
+        if (nextBid < requiredMinBid) {
+            System.err.println("[AUTO-BID] Bid amount $" + nextBid + " is below minimum required bid $" + requiredMinBid
+                    + " for item " + itemId);
+            return false;
+        }
 
         // 1. Kiểm tra số dư ví (Cumulative Stake check)
         double previousStake = bidDAO.getMaxBidAmount(bidderId, itemId);
