@@ -117,5 +117,11 @@ mvn checkstyle:check -pl shared -Dcheckstyle.fixHarmlessViolations
 
 ## 8. Tài liệu Báo cáo và Video Demo
 
-- **Báo cáo kỹ thuật chi tiết (PDF):** [Báo cáo dự án PDF (5 trang)]((https://drive.google.com/file/d/1wuxd5ZxvgAfPN6qYWjaocN0hyCsY3lFT/view?usp=sharing))
-- **Video Demo chạy thực tế:** [Video Demonstration trên YouTube]((https://youtu.be/n_uMbL9m76A))
+- **Báo cáo kỹ thuật chi tiết (PDF):** 
+```
+https://drive.google.com/file/d/1wuxd5ZxvgAfPN6qYWjaocN0hyCsY3lFT/view?usp=sharing
+```
+- **Video Demo chạy thực tế:** 
+```
+https://youtu.be/n_uMbL9m76A
+```
