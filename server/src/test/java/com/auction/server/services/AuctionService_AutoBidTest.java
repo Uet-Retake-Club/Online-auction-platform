@@ -6,6 +6,7 @@ import com.auction.server.services.AuctionServiceTestFixtures.*;
 import com.auction.shared.dto.MessageType;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.*;
+import com.auction.shared.utils.BidIncrementPolicy;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -15,6 +16,33 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import com.auction.server.services.AuctionServiceTestFixtures.*;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeBidTransactionDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeItemDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeUserDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeWalletDAO;
+import com.auction.shared.dto.MessageType;
+import com.auction.shared.dto.Response;
+import com.auction.shared.models.AuctionState;
+import com.auction.shared.models.AutoBidSettings;
+import com.auction.shared.models.Collectibles;
+import com.auction.shared.models.Electronics;
+import com.auction.shared.models.Fashion;
+import com.auction.shared.models.Item;
+import com.auction.shared.models.Sports;
+import com.auction.shared.models.Vehicle;
 
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 @DisplayName("AuctionService — Auto-Bid Tests")
@@ -120,9 +148,33 @@ class AuctionService_AutoBidTest {
     }
 
     @Test
+    @DisplayName("processAutoBid: returns false when bid is below starting price (no previous bidder)")
+    void should_returnFalse_when_autoBidBelowStartingPrice() {
+        fakeWalletDAO.balances.put(BIDDER_A, 5000.0);
+
+        boolean result = service.processAutoBid(BIDDER_A, STARTING - 10.0, ITEM_ID);
+
+        assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("processAutoBid: returns false when bid is below minimum next bid (with previous bidder)")
+    void should_returnFalse_when_autoBidBelowMinNextBid() {
+        primeActiveAuction(ITEM_ID, STARTING, 1500.0, BIDDER_B, "OPEN");
+        fakeWalletDAO.balances.put(BIDDER_A, 5000.0);
+
+        // Required min next bid for 1500.0 is 1500.0 + policy increment (50.0) = 1550.0
+        boolean result = service.processAutoBid(BIDDER_A, 1510.0, ITEM_ID);
+
+        assertFalse(result);
+    }
+
+    @Test
     @DisplayName("registerAutoBid: accepts valid settings when no bids yet (maxPrice >= startingPrice)")
     void should_returnSuccess_when_autoBidValidFirstRegistration() {
-        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 2000.0, 20.0, false);
+        // Use the policy floor for STARTING=$1,240 → $50 (tier: $1,000–$4,999)
+        double bidIncrement = BidIncrementPolicy.calculate(STARTING);
+        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 2000.0, bidIncrement, false);
 
         Response res = service.registerAutoBid(settings);
 
@@ -138,14 +190,16 @@ class AuctionService_AutoBidTest {
         Response res = service.registerAutoBid(settings);
 
         assertEquals("FAIL", res.getStatus());
-        assertTrue(res.getMessage().contains("Giá tối đa không đủ"));
+        assertTrue(res.getMessage().contains("Maximum price is insufficient"));
     }
 
     @Test
     @DisplayName("registerAutoBid: rejects when maxPrice is below currentHighestBid + minIncrement")
     void should_returnFail_when_maxPriceBelowCurrentBidPlusIncrement() {
         primeActiveAuction(ITEM_ID, STARTING, 1500.0, BIDDER_B, "OPEN");
-        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 1510.0, 20.0, false);
+        // Use the policy floor for $1,500 → $50 (tier: $1,000–$4,999)
+        double bidIncrement = BidIncrementPolicy.calculate(1500.0);
+        AutoBidSettings settings = new AutoBidSettings(BIDDER_A, ITEM_ID, 1510.0, bidIncrement, false);
 
         Response res = service.registerAutoBid(settings);
 
@@ -160,7 +214,7 @@ class AuctionService_AutoBidTest {
         Response res = service.registerAutoBid(settings);
 
         assertEquals("FAIL", res.getStatus());
-        assertTrue(res.getMessage().contains("Bước giá quá thấp"));
+        assertTrue(res.getMessage().contains("Bid increment is too low"));
     }
 
     @Test

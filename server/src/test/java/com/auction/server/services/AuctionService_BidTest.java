@@ -1,21 +1,29 @@
 package com.auction.server.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.auction.server.services.AuctionServiceTestFixtures.*;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeAuctionDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeBidTransactionDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeItemDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeUserDAO;
+import com.auction.server.services.AuctionServiceTestFixtures.FakeWalletDAO;
 import com.auction.shared.dto.Response;
 import com.auction.shared.models.AuctionState;
 import com.auction.shared.models.BidTransaction;
 import com.auction.shared.models.Electronics;
 import com.auction.shared.models.Item;
-
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Timeout(value = 5, unit = TimeUnit.SECONDS)
 @DisplayName("AuctionService — Bid Processing Tests")
@@ -59,7 +67,6 @@ class AuctionService_BidTest {
         injectField("userDAO", fakeUserDAO);
         injectField("auctionDAO", fakeAuctionDAO);
 
-        // Put active item in DB fake
         Item item = buildItem(ITEM_ID, SELLER_ID);
         fakeItemDAO.addItem(item);
 
@@ -86,11 +93,13 @@ class AuctionService_BidTest {
 
         primeActiveAuction(ITEM_ID, STARTING, STARTING, BIDDER_A, "OPEN");
 
-        Response res = service.processBid(BIDDER_A, 1280.0, buildPayload(ITEM_ID, 1280.0));
+        // Floor at $1,240 = $50 → minimum next bid = $1,290
+        // Bidder A increases from $1,240 → $1,290; deduction = $1,290 - $1,240 = $50
+        Response res = service.processBid(BIDDER_A, 1290.0, buildPayload(ITEM_ID, 1290.0));
 
         assertEquals("SUCCESS", res.getStatus());
-        assertEquals(5000.0 - 40.0, fakeWalletDAO.getBalance(BIDDER_A), 0.001);
-        assertEquals(-40.0, fakeWalletDAO.balanceUpdates.get(BIDDER_A).get(0), 0.001);
+        assertEquals(5000.0 - 50.0, fakeWalletDAO.getBalance(BIDDER_A), 0.001);
+        assertEquals(-50.0, fakeWalletDAO.balanceUpdates.get(BIDDER_A).get(0), 0.001);
     }
 
     @Test
@@ -101,7 +110,7 @@ class AuctionService_BidTest {
         Response res = service.processBid(BIDDER_A, STARTING, buildPayload(ITEM_ID, STARTING));
 
         assertEquals("FAIL", res.getStatus());
-        assertTrue(res.getMessage().contains("Số dư ví không đủ"));
+        assertTrue(res.getMessage().contains("Insufficient wallet balance"));
         assertTrue(fakeItemDAO.updatedPrices.isEmpty());
     }
 

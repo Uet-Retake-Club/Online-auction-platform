@@ -48,7 +48,7 @@ class AutoBidEngine_RegistrationTest {
 
         assertDoesNotThrow(() ->
             engine.addAutoBidder(new AutoBidSettings(
-                AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false)));
+                AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false)));
     }
 
     @Test
@@ -61,7 +61,7 @@ class AutoBidEngine_RegistrationTest {
         engine = new AutoBidEngine(stub);
 
         engine.addAutoBidder(new AutoBidSettings(
-            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 20.0, false));
+            AutoBidEngineTestFixtures.BIDDER_A, AutoBidEngineTestFixtures.ITEM_A, 2000.0, 50.0, false));
         engine.removeAutoBidder(AutoBidEngineTestFixtures.BIDDER_A);
 
         engine.triggerEvaluation(AutoBidEngineTestFixtures.ITEM_A);

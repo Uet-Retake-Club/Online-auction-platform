@@ -83,6 +83,15 @@ public final class SceneNavigator {
   private static boolean isDarkMode = false;
 
   /**
+   * Returns whether the application is currently in dark mode.
+   *
+   * @return {@code true} if dark mode is active
+   */
+  public static boolean isDarkMode() {
+    return isDarkMode;
+  }
+
+  /**
    * Toggles the global theme between light and dark mode.
    */
   public static void toggleTheme() {

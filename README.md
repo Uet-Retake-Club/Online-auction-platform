@@ -41,8 +41,8 @@ Online-auction-platform/
 
 ## 4. Vị trí các file .jar
 Sau khi thực hiện lệnh build, các file executable JAR (đã bao gồm đầy đủ thư viện - Fat JAR) sẽ được xuất hiện tại thư mục:
-- **Server:** `build/auction-server.jar`
-- **Client:** `build/auction-client.jar`
+- **Server:** `build/server.jar`
+- **Client:** `build/client.jar`
 
 ## 5. Hướng dẫn chạy chương trình
 
@@ -56,7 +56,7 @@ Server sẽ lắng nghe các kết nối từ Client tại cổng mặc định 
 mvn -pl server exec:java
 
 # Cách 2: Dùng file JAR (sau khi build)
-java -jar build/auction-server.jar
+java -jar build/server.jar
 ```
 
 #### Bước 2: Khởi chạy Client
@@ -66,7 +66,7 @@ Bạn có thể mở nhiều terminal để chạy nhiều Client cùng lúc nh�
 mvn -pl client javafx:run
 
 # Cách 2: Dùng file JAR (sau khi build)
-java -jar build/auction-client.jar
+java -jar build/client.jar
 ```
 
 ## 6. Danh sách chức năng đã hoàn thành
@@ -114,3 +114,8 @@ mvn checkstyle:check -pl shared
 # fixstyle
 mvn checkstyle:check -pl shared -Dcheckstyle.fixHarmlessViolations
 ```
+
+## 8. Tài liệu Báo cáo và Video Demo
+
+- **Báo cáo kỹ thuật chi tiết (PDF):** [Báo cáo dự án PDF (5 trang)](Bao_cao_Online_Auction_Platform.pdf)
+- **Video Demo chạy thực tế:** [Video Demonstration trên YouTube](https://youtu.be/placeholder-link-demo)
