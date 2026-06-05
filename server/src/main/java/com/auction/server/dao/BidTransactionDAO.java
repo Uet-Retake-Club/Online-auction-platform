@@ -11,4 +11,5 @@ public interface BidTransactionDAO {
     double getMaxBidAmount(String userId, String itemId);
     List<String> getBiddersForItem(String itemId);
     List<String> getBiddedItemIds(String userId);
+    BidTransaction getSecondHighestBid(String itemId);
 }

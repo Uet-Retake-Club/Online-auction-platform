@@ -134,9 +134,20 @@ public class AutoBidEngine {
                     if (ab.getBidderId().equals(currentHighestBidder)) continue;
 
                     if (ab.getMaxPrice() >= requiredMinBid) {
-                        // Prefer the bidder with the highest ceiling (they will win in the end)
-                        if (bestCandidate == null || ab.getMaxPrice() > bestCandidate.getMaxPrice()) {
+                        //
+                        if (bestCandidate == null) {
                             bestCandidate = ab;
+                        } else {
+                            // 1. Ưu tiên giá trần cao hơn
+                            if (ab.getMaxPrice() > bestCandidate.getMaxPrice()) {
+                                bestCandidate = ab;
+                            } 
+                            // 2. NẾU giá trần bằng nhau -> Chọn người đăng ký sớm hơn
+                            else if (ab.getMaxPrice() == bestCandidate.getMaxPrice()) {
+                                if (ab.getRegistrationTime() < bestCandidate.getRegistrationTime()) {
+                                    bestCandidate = ab;
+                                }
+                            }
                         }
                     }
                 }

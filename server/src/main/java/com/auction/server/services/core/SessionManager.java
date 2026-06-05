@@ -18,6 +18,19 @@ public class SessionManager {
     public void removeClient(String clientId) {
         activeClients.remove(clientId);
     }
+    public void kickClient(String clientId) {
+        // Lấy và xóa client khỏi danh sách online
+        ClientHandler handler = activeClients.remove(clientId);
+        if (handler != null) {
+            // 1. Gửi cho họ một thông báo lỗi trước khi ngắt (Dùng cờ BID_ERROR để hiện Toast báo đỏ)
+            handler.sendResponse(new Response(MessageType.BID_ERROR, "BANNED", 
+                "Tài khoản của bạn đã bị khóa bởi Admin! Kết nối bị ngắt.", null));
+            
+            // 2. Rút cáp mạng (Ngắt Socket)
+            handler.closeConnection();
+            System.out.println(" [SessionManager] Đã KICK ép buộc người dùng: " + clientId);
+        }
+    }
 
     public void broadcast(Response response) {
         for (ClientHandler client : activeClients.values()) {

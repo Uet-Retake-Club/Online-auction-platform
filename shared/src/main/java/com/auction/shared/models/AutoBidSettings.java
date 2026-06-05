@@ -8,6 +8,7 @@ public class AutoBidSettings {
   private double bidIncrement;
   private boolean active;
   private boolean aggressiveMode;
+  private final long registrationTime;
 
   /**
    * Constructs a new AutoBidSettings.
@@ -30,6 +31,7 @@ public class AutoBidSettings {
     this.bidIncrement = bidIncrement;
     this.active = true;
     this.aggressiveMode = aggressiveMode;
+    this.registrationTime = System.currentTimeMillis();
   }
 
   public String getBidderId() {
@@ -84,4 +86,8 @@ public class AutoBidSettings {
   public boolean isAggressiveMode() {
     return aggressiveMode;
   }
+
+  public long getRegistrationTime() {
+    return registrationTime;
+}
 }

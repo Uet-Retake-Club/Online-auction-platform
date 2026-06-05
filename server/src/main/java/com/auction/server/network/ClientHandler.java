@@ -83,7 +83,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void closeConnection() {
+    public void closeConnection() {
         try {
             if (socket != null)
                 socket.close();

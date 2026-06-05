@@ -122,8 +122,16 @@ public class AdminHandler implements CommandHandler {
         return new Response(MessageType.ADMIN_REJECT_TOPUP, "FAIL", "Failed to reject request", null);
     }
 
-    private Response banUser(String userId) {
+   private Response banUser(String userId) {
         boolean success = userDAO.updateUserStatus(userId, "SUSPENDED");
+        
+        if (success) {
+            // [MỚI THÊM]: Đá văng người dùng đang online ra khỏi hệ thống ngay lập tức
+            com.auction.server.services.AuctionService.getInstance().kickClient(userId);
+            // [CẬP NHẬT]: Xử lý lùi giá đấu giá trước khi đá văng user
+            com.auction.server.services.AuctionService.getInstance().handleUserBan(userId);
+        }
+        
         return new Response(MessageType.ADMIN_BAN_USER, success ? "SUCCESS" : "FAIL",
                 success ? "User suspended" : "Failed to suspend user", null);
     }

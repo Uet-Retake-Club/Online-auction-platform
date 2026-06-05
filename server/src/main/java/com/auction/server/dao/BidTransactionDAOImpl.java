@@ -25,6 +25,24 @@ public class BidTransactionDAOImpl implements BidTransactionDAO {
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
 
+    @Override
+    public BidTransaction getSecondHighestBid(String itemId) {
+        // Lấy tất cả bids của item, sắp xếp giảm dần và lấy cái thứ 2
+        String sql = "SELECT * FROM bid_transactions WHERE item_id = ? ORDER BY bid_amount DESC LIMIT 1 OFFSET 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, itemId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return new BidTransaction(rs.getString("id"), rs.getString("item_id"), 
+                                            rs.getString("bidder_id"), rs.getDouble("bid_amount"), 
+                                            rs.getLong("timestamp"));
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
+
 
 
     

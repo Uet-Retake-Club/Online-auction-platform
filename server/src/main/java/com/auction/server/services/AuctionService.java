@@ -214,6 +214,11 @@ public class AuctionService {
         sessionManager.removeClient(clientId);
         autoBidEngine.removeAutoBidder(clientId);
     }
+    // Thêm hàm này để xử lý riêng trường hợp bị Ban
+    public void kickClient(String clientId) {
+        sessionManager.kickClient(clientId);
+        autoBidEngine.removeAutoBidder(clientId); // Hủy luôn cấu hình Robot Auto-bid của người này (nếu có)
+    }
     public void broadcast(Response response) {
         sessionManager.broadcast(response);
     }
@@ -438,6 +443,37 @@ public class AuctionService {
         }
         return false;
     }
+    //
+    public synchronized void handleUserBan(String userId) {
+    // Duyệt qua tất cả các phiên đấu giá đang mở
+    for (String itemId : activeAuctions.keySet()) {
+        AuctionState state = activeAuctions.get(itemId);
+        
+        // Nếu người bị ban đang giữ giá cao nhất ở phiên này
+        if (userId.equals(state.getCurrentHighestBidder())) {
+            BidTransaction secondBid = bidDAO.getSecondHighestBid(itemId);
+            
+            if (secondBid != null) {
+                // Lùi giá về người thứ 2
+                state.setCurrentHighestBid(secondBid.getBidAmount());
+                state.setCurrentHighestBidder(secondBid.getBidderId());
+                itemDAO.updateCurrentPrice(itemId, secondBid.getBidAmount(), secondBid.getBidderId());
+                
+                broadcast(new Response(MessageType.NEW_BID_BROADCAST, "INFO", 
+                    "Highest bidder banned. Auction price reverted to $" + secondBid.getBidAmount(), itemId));
+            } else {
+                // Không có người thứ 2, reset về giá khởi điểm (hoặc kết thúc phiên)
+                Item item = itemDAO.getItemById(itemId);
+                state.setCurrentHighestBid(item.getStartingPrice());
+                state.setCurrentHighestBidder(null);
+                itemDAO.updateCurrentPrice(itemId, item.getStartingPrice(), null);
+                
+                broadcast(new Response(MessageType.NEW_BID_BROADCAST, "INFO", 
+                    "Highest bidder banned. Auction reset to starting price.", itemId));
+            }
+        }
+    }
+}
 
     /**
      * Ends the auction for the specified item.
